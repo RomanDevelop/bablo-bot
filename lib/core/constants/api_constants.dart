@@ -1,10 +1,13 @@
 class ApiConstants {
   ApiConstants._();
 
-  static const String baseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'http://18.197.147.209:8000/api/v1',
-  );
+  /// Production HTTPS API (AWS behind api.bablochatik.com).
+  static const String _defaultBaseUrl = 'https://api.bablochatik.com/api/v1';
+
+  static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
+
+  static String get baseUrl =>
+      _envBaseUrl.isNotEmpty ? _envBaseUrl : _defaultBaseUrl;
 
   static const List<String> binanceIntervals = [
     '1m',

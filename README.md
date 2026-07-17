@@ -9,4 +9,4 @@ fvm flutter pub get
 fvm flutter run -d chrome
 ```
 
-API (default): `http://18.197.147.209:8000/api/v1`
+API (default): `https://api.bablochatik.com/api/v1`

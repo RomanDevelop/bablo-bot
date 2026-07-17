@@ -38,12 +38,8 @@ class _DashboardPageState
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
-                  const Expanded(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: BabloBrandMark(),
-                    ),
-                  ),
+                  const BabloBrandMark(),
+                  const Spacer(),
                   StatsActionButton(
                     onPressed: () {
                       Navigator.of(context).push(
@@ -51,33 +47,22 @@ class _DashboardPageState
                       );
                     },
                   ),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: state.health == null
-                          ? const SizedBox.shrink()
-                          : Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                StatusChip(
-                                  label: state.health!.networkLabel,
-                                  color: state.health!.testnet
-                                      ? AppColors.testnet
-                                      : AppColors.mainnet,
-                                ),
-                                const SizedBox(width: 8),
-                                StatusChip(
-                                  label: state.health!.isOk
-                                      ? 'Online'
-                                      : 'Offline',
-                                  color: state.health!.isOk
-                                      ? AppColors.online
-                                      : AppColors.offline,
-                                ),
-                              ],
-                            ),
+                  if (state.health != null) ...[
+                    const SizedBox(width: 16),
+                    StatusChip(
+                      label: state.health!.networkLabel,
+                      color: state.health!.testnet
+                          ? AppColors.testnet
+                          : AppColors.mainnet,
                     ),
-                  ),
+                    const SizedBox(width: 8),
+                    StatusChip(
+                      label: state.health!.isOk ? 'Online' : 'Offline',
+                      color: state.health!.isOk
+                          ? AppColors.online
+                          : AppColors.offline,
+                    ),
+                  ],
                 ],
               ),
             ),

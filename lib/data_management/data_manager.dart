@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/constants/api_constants.dart';
 import '../core/network/network_client.dart';
 import '../features/trading/cache/api_cache.dart';
 import '../features/trading/data_providers/trading_data_provider.dart';
@@ -39,7 +40,10 @@ class DataManager {
     );
     final tradingRepository =
         TradingRepository(dataProvider: tradingDataProvider);
-    final marketDataProvider = MarketDataProvider(cache: candleCache);
+    final marketDataProvider = MarketDataProvider(
+      cache: candleCache,
+      botApiBaseUrl: ApiConstants.baseUrl,
+    );
     final chartRepository = ChartRepository(
       tradingRepository: tradingRepository,
       marketDataProvider: marketDataProvider,

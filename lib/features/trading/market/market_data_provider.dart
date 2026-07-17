@@ -1,30 +1,34 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../core/errors/data_error.dart';
 import '../models/candle_model.dart';
 import 'candle_cache.dart';
 
-/// Free public market data: parallel race + local cache.
+/// Market candles: prefer bot HTTPS API (web-safe), then public exchanges.
 class MarketDataProvider {
   MarketDataProvider({
     Dio? dio,
     CandleCache? cache,
+    String? botApiBaseUrl,
   })  : _dio = dio ??
             Dio(
               BaseOptions(
-                connectTimeout: const Duration(seconds: 6),
-                receiveTimeout: const Duration(seconds: 8),
+                connectTimeout: const Duration(seconds: 8),
+                receiveTimeout: const Duration(seconds: 10),
                 headers: const {'Accept': 'application/json'},
               ),
             ),
-        _cache = cache;
+        _cache = cache,
+        _botApiBaseUrl = botApiBaseUrl;
 
   final Dio _dio;
   CandleCache? _cache;
+  final String? _botApiBaseUrl;
 
-  static const _freshFor = Duration(minutes: 3);
+  static const _freshFor = Duration(minutes: 10);
 
   void attachCache(CandleCache cache) => _cache = cache;
 
@@ -36,8 +40,9 @@ class MarketDataProvider {
     bool allowStaleCache = true,
   }) async {
     final cached = _cache?.read(symbol: symbol, interval: interval);
+
+    // Cache-first: show immediately even if a bit old, refresh in background.
     if (cached != null && cached.isFresh(_freshFor)) {
-      // Refresh in background, return cache immediately.
       unawaited(_fetchAndCache(symbol, interval, limit, testnet));
       return MarketCandlesResult(
         candles: _takeLast(cached.candles, limit),
@@ -50,10 +55,11 @@ class MarketDataProvider {
     try {
       return await _raceSources(symbol, interval, limit, testnet);
     } catch (_) {
-      if (allowStaleCache && cached != null) {
+      // Any cached candles are better than empty chart (delay OK).
+      if (allowStaleCache && cached != null && cached.candles.length >= 8) {
         return MarketCandlesResult(
           candles: _takeLast(cached.candles, limit),
-          source: cached.source,
+          source: '${cached.source} (кэш)',
           fromCache: true,
           savedAt: cached.savedAt,
         );
@@ -79,8 +85,15 @@ class MarketDataProvider {
     int limit,
     bool testnet,
   ) async {
+    // Web: free CORS-friendly APIs only (Binance/Kraken block browser).
+    // Native: full race including Binance.
+    if (kIsWeb) {
+      return _fetchWebCached(symbol, interval, limit);
+    }
+
     final sources = <_Source>[
-      // Coinbase allows browser CORS — preferred for Flutter Web.
+      if (_botApiBaseUrl != null && _botApiBaseUrl.isNotEmpty)
+        _Source('Bot API', () => _fromBotApi(symbol, interval, limit)),
       _Source('Coinbase', () => _fromCoinbase(symbol, interval, limit)),
       _Source('OKX', () => _fromOkx(symbol, interval, limit)),
       _Source('Kraken', () => _fromKraken(symbol, interval, limit)),
@@ -105,10 +118,11 @@ class MarketDataProvider {
     for (final source in sources) {
       scheduleMicrotask(() async {
         try {
-          final candles = await source
-              .fetch()
-              .timeout(const Duration(seconds: 7));
-          if (candles.length < 8) throw StateError('${source.name}: too few');
+          final candles =
+              await source.fetch().timeout(const Duration(seconds: 8));
+          if (candles.length < 8) {
+            throw StateError('${source.name}: too few');
+          }
           if (!completer.isCompleted) {
             final trimmed = _takeLast(candles, limit);
             completer.complete(
@@ -137,7 +151,7 @@ class MarketDataProvider {
     }
 
     return completer.future.timeout(
-      const Duration(seconds: 9),
+      const Duration(seconds: 12),
       onTimeout: () {
         throw const DataError(
           errorCode: ErrorCode.network,
@@ -147,41 +161,132 @@ class MarketDataProvider {
     );
   }
 
+  /// Sequential free APIs for browser (CORS). Cache on success.
+  Future<MarketCandlesResult> _fetchWebCached(
+    String symbol,
+    String interval,
+    int limit,
+  ) async {
+    final attempts = <_Source>[
+      _Source('Coinbase', () => _fromCoinbase(symbol, interval, limit)),
+      _Source('OKX', () => _fromOkx(symbol, interval, limit)),
+      if (_botApiBaseUrl != null && _botApiBaseUrl.isNotEmpty)
+        _Source('Bot API', () => _fromBotApi(symbol, interval, limit)),
+    ];
+
+    Object? lastError;
+    for (final source in attempts) {
+      try {
+        final candles =
+            await source.fetch().timeout(const Duration(seconds: 10));
+        if (candles.length < 8) continue;
+        final trimmed = _takeLast(candles, limit);
+        await _cache?.save(
+          symbol: symbol,
+          interval: interval,
+          candles: trimmed,
+          source: source.name,
+        );
+        return MarketCandlesResult(candles: trimmed, source: source.name);
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    throw DataError(
+      errorCode: ErrorCode.network,
+      message:
+          'Нет доступа к рыночным данным (${lastError ?? 'сеть'}). Retry позже — покажем кэш, если был.',
+    );
+  }
+
+  Future<List<Candle>> _fromBotApi(
+    String symbol,
+    String interval,
+    int limit,
+  ) async {
+    final base = _botApiBaseUrl!.replaceAll(RegExp(r'/$'), '');
+    final response = await _dio.get<dynamic>(
+      '$base/market/klines',
+      queryParameters: {
+        'symbol': symbol.toUpperCase(),
+        'interval': interval,
+        'limit': limit,
+      },
+    );
+    final data = response.data;
+    final List<dynamic> rows;
+    if (data is List) {
+      rows = data;
+    } else if (data is Map && data['candles'] is List) {
+      rows = data['candles'] as List<dynamic>;
+    } else if (data is Map && data['data'] is List) {
+      rows = data['data'] as List<dynamic>;
+    } else {
+      throw StateError('Bot API: unexpected klines payload');
+    }
+    if (rows.isEmpty) throw StateError('Bot API: empty klines');
+
+    return rows.map((row) {
+      if (row is List) return Candle.fromBinance(row);
+      if (row is Map) {
+        return Candle(
+          openTime: DateTime.fromMillisecondsSinceEpoch(
+            (row['t'] as num? ?? row['open_time'] as num? ?? 0).toInt(),
+            isUtc: true,
+          ),
+          open: (row['o'] as num? ?? row['open'] as num).toDouble(),
+          high: (row['h'] as num? ?? row['high'] as num).toDouble(),
+          low: (row['l'] as num? ?? row['low'] as num).toDouble(),
+          close: (row['c'] as num? ?? row['close'] as num).toDouble(),
+          volume: (row['v'] as num? ?? row['volume'] as num? ?? 0).toDouble(),
+        );
+      }
+      throw StateError('Bot API: bad candle row');
+    }).toList(growable: false);
+  }
+
   Future<List<Candle>> _fromCoinbase(
     String symbol,
     String interval,
     int limit,
   ) async {
     final granularity = _coinbaseGranularity(interval);
-    final product = _coinbaseProduct(symbol);
-    // Without start/end Coinbase returns the most recent candles (CORS-friendly).
-    final response = await _dio.get<List<dynamic>>(
-      'https://api.exchange.coinbase.com/products/$product/candles',
-      queryParameters: {
-        'granularity': granularity,
-      },
-    );
-    final rows = response.data ?? const [];
-    if (rows.isEmpty) throw StateError('Coinbase: empty');
+    Object? lastError;
 
-    // Coinbase returns newest first: [time, low, high, open, close, volume]
-    final candles = rows.map((row) {
-      final r = row as List<dynamic>;
-      return Candle(
-        openTime: DateTime.fromMillisecondsSinceEpoch(
-          (r[0] as num).toInt() * 1000,
-          isUtc: true,
-        ),
-        low: (r[1] as num).toDouble(),
-        high: (r[2] as num).toDouble(),
-        open: (r[3] as num).toDouble(),
-        close: (r[4] as num).toDouble(),
-        volume: (r[5] as num).toDouble(),
-      );
-    }).toList()
-      ..sort((a, b) => a.openTime.compareTo(b.openTime));
+    for (final product in _coinbaseProducts(symbol)) {
+      try {
+        final response = await _dio.get<dynamic>(
+          'https://api.exchange.coinbase.com/products/$product/candles',
+          queryParameters: {'granularity': granularity},
+        );
+        final rows = response.data;
+        if (rows is! List || rows.isEmpty) {
+          throw StateError('Coinbase $product: empty');
+        }
 
-    return _takeLast(candles, limit);
+        final candles = rows.map((row) {
+          final r = row as List<dynamic>;
+          return Candle(
+            openTime: DateTime.fromMillisecondsSinceEpoch(
+              (r[0] as num).toInt() * 1000,
+              isUtc: true,
+            ),
+            low: (r[1] as num).toDouble(),
+            high: (r[2] as num).toDouble(),
+            open: (r[3] as num).toDouble(),
+            close: (r[4] as num).toDouble(),
+            volume: (r[5] as num).toDouble(),
+          );
+        }).toList()
+          ..sort((a, b) => a.openTime.compareTo(b.openTime));
+
+        return _takeLast(candles, limit);
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    throw StateError('Coinbase failed: $lastError');
   }
 
   Future<List<Candle>> _fromKraken(
@@ -291,11 +396,16 @@ class MarketDataProvider {
     return candles.sublist(candles.length - limit);
   }
 
-  static String _coinbaseProduct(String symbol) {
+  static List<String> _coinbaseProducts(String symbol) {
     final s = symbol.toUpperCase().replaceAll('/', '').replaceAll('-', '');
-    if (s.endsWith('USDT')) return '${s.substring(0, s.length - 4)}-USDT';
-    if (s.endsWith('USD')) return '${s.substring(0, s.length - 3)}-USD';
-    return s;
+    if (s.endsWith('USDT')) {
+      final base = s.substring(0, s.length - 4);
+      return ['$base-USDT', '$base-USD'];
+    }
+    if (s.endsWith('USD')) {
+      return ['${s.substring(0, s.length - 3)}-USD'];
+    }
+    return [s];
   }
 
   static int _coinbaseGranularity(String interval) {

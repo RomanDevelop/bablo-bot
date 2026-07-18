@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../../components/feedback.dart';
-import '../../../../components/status_chip.dart';
-import '../../../../components/trading_card.dart';
 import '../../../../core/mwwm/core_mwwm_widget.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/utils/money_format.dart';
-import '../../repositories/chart_repository.dart';
+import '../../models/candle_model.dart';
 import 'chart_wm.dart';
+import 'components/chart_header.dart';
+import 'components/chart_metrics.dart';
 import 'components/chart_painters.dart';
 import 'di/chart_wm_builder.dart';
 
@@ -28,35 +27,17 @@ class _ChartPageState extends MwwmWidgetState<ChartPage, ChartWidgetModel> {
       initialData: wm.stateStream.value,
       builder: (context, snapshot) {
         final state = snapshot.data ?? const ChartState();
-        final snap = state.snapshot;
 
         return Scaffold(
-          appBar: AppBar(
-            title: Text(
-              snap == null
-                  ? 'Chart'
-                  : '${snap.symbol} · ${snap.interval}',
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            bottom: false,
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              backgroundColor: AppColors.surface,
+              onRefresh: () => wm.refresh(),
+              child: _buildBody(state),
             ),
-            actions: [
-              if (snap != null)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: StatusChip(
-                    label: snap.testnet ? 'TESTNET' : 'MAINNET',
-                    color: snap.testnet ? AppColors.testnet : AppColors.mainnet,
-                  ),
-                ),
-              IconButton(
-                onPressed: () => wm.refresh(),
-                icon: const Icon(Icons.refresh, size: 20),
-              ),
-            ],
-          ),
-          body: RefreshIndicator(
-            color: AppColors.primary,
-            backgroundColor: AppColors.surface,
-            onRefresh: () => wm.refresh(),
-            child: _buildBody(state),
           ),
         );
       },
@@ -83,166 +64,200 @@ class _ChartPageState extends MwwmWidgetState<ChartPage, ChartWidgetModel> {
       );
     }
 
+    final overridePrice = double.tryParse(snap.lastPrice ?? '');
+    final metrics = ChartMetrics.fromVisible(
+      candles: snap.candles,
+      visibleFrom: state.visibleFrom,
+      visibleCount: state.visibleCount,
+      lastPriceOverride: overridePrice,
+    );
+
+    final lastMacd = _lastMacd(snap.macd, state.visibleFrom, state.visibleCount);
+
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 24),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 28),
       children: [
         if (state.error != null) ...[
           ErrorBanner(message: state.error!, onRetry: () => wm.refresh()),
           const SizedBox(height: 10),
         ],
-        _SignalBar(snapshot: snap),
-        const SizedBox(height: 10),
-        TradingCard(
-          padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 12),
-                child: SectionLabel('Price'),
+        ChartHeader(
+          symbol: snap.symbol,
+          interval: snap.interval,
+          metrics: metrics,
+          signal: snap.lastSignal ?? 'HOLD',
+          testnet: snap.testnet,
+        ),
+        const SizedBox(height: 14),
+        GestureDetector(
+          onHorizontalDragUpdate: (d) {
+            _panAcc += d.delta.dx;
+            if (_panAcc.abs() > 12) {
+              wm.panBy(_panAcc > 0 ? -1 : 1);
+              _panAcc = 0;
+            }
+          },
+          child: SizedBox(
+            height: 320,
+            width: double.infinity,
+            child: CustomPaint(
+              painter: CandleChartPainter(
+                candles: snap.candles,
+                markers: snap.markers,
+                visibleFrom: state.visibleFrom,
+                visibleCount: state.visibleCount,
+                lastPrice: metrics.lastPrice,
               ),
-              const SizedBox(height: 4),
-              GestureDetector(
-                onHorizontalDragUpdate: (d) {
-                  _panAcc += d.delta.dx;
-                  if (_panAcc.abs() > 12) {
-                    wm.panBy(_panAcc > 0 ? -1 : 1);
-                    _panAcc = 0;
-                  }
-                },
-                child: SizedBox(
-                  height: 280,
-                  width: double.infinity,
-                  child: CustomPaint(
-                    painter: CandleChartPainter(
-                      candles: snap.candles,
-                      markers: snap.markers,
-                      visibleFrom: state.visibleFrom,
-                      visibleCount: state.visibleCount,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-        const SizedBox(height: 10),
-        TradingCard(
-          padding: const EdgeInsets.fromLTRB(4, 8, 4, 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: SectionLabel(
-                  'MACD ${snap.config.macdFast}/${snap.config.macdSlow}/${snap.config.macdSignal}',
-                  trailing: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _LegendDot(color: AppColors.primary, label: 'MACD'),
-                      SizedBox(width: 10),
-                      _LegendDot(color: AppColors.hold, label: 'Signal'),
-                    ],
-                  ),
-                ),
+        const SizedBox(height: 8),
+        _MacdPanel(
+          fast: snap.config.macdFast,
+          slow: snap.config.macdSlow,
+          signalPeriod: snap.config.macdSignal,
+          last: lastMacd,
+          child: SizedBox(
+            height: 120,
+            width: double.infinity,
+            child: CustomPaint(
+              painter: MacdChartPainter(
+                macd: snap.macd,
+                visibleFrom: state.visibleFrom,
+                visibleCount: state.visibleCount,
               ),
-              SizedBox(
-                height: 140,
-                width: double.infinity,
-                child: CustomPaint(
-                  painter: MacdChartPainter(
-                    macd: snap.macd,
-                    visibleFrom: state.visibleFrom,
-                    visibleCount: state.visibleCount,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         const _MarkersLegend(),
         const SizedBox(height: 8),
         Text(
           snap.dataSourceNote ??
-              'Свечи: Binance · стрелки = кроссовер MACD · кольцо = entry/fill',
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 11, height: 1.35),
+              'Свечи · High/Low по видимым барам · стрелки = MACD / fills',
+          style: const TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 11,
+            height: 1.35,
+          ),
         ),
+      ],
+    );
+  }
+
+  MacdPoint? _lastMacd(List<MacdPoint> macd, int from, int count) {
+    if (macd.isEmpty) return null;
+    final end = (from + count).clamp(0, macd.length);
+    final start = from.clamp(0, end);
+    if (start >= end) return null;
+    for (var i = end - 1; i >= start; i--) {
+      final p = macd[i];
+      if (p.macd != null || p.signal != null || p.histogram != null) {
+        return p;
+      }
+    }
+    return null;
+  }
+}
+
+class _MacdPanel extends StatelessWidget {
+  const _MacdPanel({
+    required this.fast,
+    required this.slow,
+    required this.signalPeriod,
+    required this.last,
+    required this.child,
+  });
+
+  final int fast;
+  final int slow;
+  final int signalPeriod;
+  final MacdPoint? last;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'MACD($fast, $slow, $signalPeriod)',
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
+            ),
+            const Spacer(),
+            if (last != null) ...[
+              _MacdValue(
+                label: 'MACD',
+                value: last!.macd,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 10),
+              _MacdValue(
+                label: 'Signal',
+                value: last!.signal,
+                color: AppColors.hold,
+              ),
+              const SizedBox(width: 10),
+              _MacdValue(
+                label: 'Hist',
+                value: last!.histogram,
+                color: (last!.histogram ?? 0) >= 0
+                    ? AppColors.buy
+                    : AppColors.sell,
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        child,
       ],
     );
   }
 }
 
-class _SignalBar extends StatelessWidget {
-  const _SignalBar({required this.snapshot});
-  final ChartSnapshot snapshot;
+class _MacdValue extends StatelessWidget {
+  const _MacdValue({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final double? value;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final signal = (snapshot.lastSignal ?? 'HOLD').toUpperCase();
-    final color = switch (signal) {
-      'BUY' => AppColors.buy,
-      'SELL' => AppColors.sell,
-      _ => AppColors.hold,
-    };
-    return TradingCard(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      child: Row(
+    final text = value == null ? '—' : value!.toStringAsFixed(4);
+    return Text.rich(
+      TextSpan(
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              signal,
-              style: TextStyle(
-                color: color,
-                fontWeight: FontWeight.w800,
-                fontSize: 13,
-                letterSpacing: 0.6,
-              ),
+          TextSpan(
+            text: '$label ',
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 10,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Price ${MoneyFormat.trim(snapshot.lastPrice, maxDecimals: 2)}',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+          TextSpan(
+            text: text,
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
-          ),
-          Text(
-            '${snapshot.candles.length} bars',
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _LegendDot extends StatelessWidget {
-  const _LegendDot({required this.color, required this.label});
-  final Color color;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
-        ),
-      ],
     );
   }
 }
@@ -267,6 +282,7 @@ class _MarkersLegend extends StatelessWidget {
 
 class _LegendItem extends StatelessWidget {
   const _LegendItem({required this.color, required this.text});
+
   final Color color;
   final String text;
 

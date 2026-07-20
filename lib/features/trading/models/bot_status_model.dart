@@ -1,3 +1,4 @@
+import '../../../../core/utils/position_side.dart';
 import '../dto/bot_status_dto.dart';
 
 enum SignalType { buy, sell, hold }
@@ -8,6 +9,7 @@ class Health {
     required this.binanceConnected,
     required this.botRunning,
     required this.testnet,
+    this.mode,
     this.error,
   });
 
@@ -15,6 +17,7 @@ class Health {
   final bool binanceConnected;
   final bool botRunning;
   final bool testnet;
+  final String? mode;
   final String? error;
 
   factory Health.fromDto(HealthDto dto) => Health(
@@ -22,11 +25,13 @@ class Health {
         binanceConnected: dto.binanceConnected,
         botRunning: dto.botRunning,
         testnet: dto.testnet,
+        mode: dto.mode,
         error: dto.error,
       );
 
   bool get isOk => status == 'ok' && binanceConnected;
   String get networkLabel => testnet ? 'TESTNET' : 'MAINNET';
+  String get modeLabel => mode ?? '—';
 }
 
 class BotPosition {
@@ -52,10 +57,9 @@ class BotPosition {
         unrealizedPnl: dto.unrealizedPnl,
       );
 
-  bool get isOpen {
-    final qty = double.tryParse(quantity) ?? 0;
-    return side != null && qty > 0;
-  }
+  bool get isOpen => isPositionOpen(side, quantity);
+
+  String get sideLabel => formatPositionSide(side, isOpen: isOpen);
 }
 
 class BotStatus {
@@ -72,17 +76,19 @@ class BotStatus {
     required this.position,
     required this.syncStatus,
     required this.syncNote,
-    required this.idleBase,
-    required this.walletBase,
+    this.leverage,
+    this.marginType,
     required this.baseAsset,
     required this.quoteAsset,
     required this.baseBalance,
     required this.quoteBalance,
     required this.price,
     required this.equity,
+    this.market,
     required this.isHalted,
     required this.haltReason,
     required this.dailyPnlPct,
+    this.mode,
     this.updatedAt,
   });
 
@@ -98,17 +104,19 @@ class BotStatus {
   final BotPosition position;
   final String syncStatus;
   final String syncNote;
-  final String idleBase;
-  final String walletBase;
+  final int? leverage;
+  final String? marginType;
   final String baseAsset;
   final String quoteAsset;
   final String baseBalance;
   final String quoteBalance;
   final String price;
   final String equity;
+  final String? market;
   final bool isHalted;
   final String haltReason;
   final String dailyPnlPct;
+  final String? mode;
   final String? updatedAt;
 
   factory BotStatus.fromDto(BotStatusDto dto) => BotStatus(
@@ -124,17 +132,19 @@ class BotStatus {
         position: BotPosition.fromDto(dto.position),
         syncStatus: dto.portfolio.syncStatus,
         syncNote: dto.portfolio.syncNote,
-        idleBase: dto.portfolio.idleBase,
-        walletBase: dto.portfolio.walletBase,
+        leverage: dto.portfolio.leverage,
+        marginType: dto.portfolio.marginType,
         baseAsset: dto.balances.baseAsset,
         quoteAsset: dto.balances.quoteAsset,
         baseBalance: dto.balances.baseBalance,
         quoteBalance: dto.balances.quoteBalance,
         price: dto.balances.price,
         equity: dto.balances.equity,
+        market: dto.balances.market,
         isHalted: dto.risk.isHalted,
         haltReason: dto.risk.haltReason,
         dailyPnlPct: dto.risk.dailyPnlPct,
+        mode: dto.mode,
         updatedAt: dto.updatedAt,
       );
 
@@ -149,11 +159,9 @@ class BotStatus {
     }
   }
 
-  bool get hasIdleWarning =>
-      syncStatus == 'idle_base' || syncStatus == 'ok_with_idle';
-
-  bool get hasIdleBase {
-    final idle = double.tryParse(idleBase) ?? 0;
-    return idle > 0 && !position.isOpen;
+  String get leverageLabel {
+    if (leverage == null) return '—';
+    final margin = marginType ?? '—';
+    return '${leverage}x · $margin';
   }
 }

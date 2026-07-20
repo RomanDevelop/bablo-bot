@@ -44,7 +44,7 @@ class _PortfolioPageState
           body: RefreshIndicator(
             color: AppColors.primary,
             backgroundColor: AppColors.surface,
-            onRefresh: () => wm.refresh(),
+            onRefresh: () => wm.refresh(forceRefresh: true),
             child: _buildBody(context, state),
           ),
         );
@@ -80,91 +80,32 @@ class _PortfolioPageState
           ErrorBanner(message: state.error!, onRetry: () => wm.refresh()),
           const SizedBox(height: 12),
         ],
+        if (state.isRefreshing) ...[
+          const LinearProgressIndicator(
+            color: AppColors.primary,
+            backgroundColor: AppColors.border,
+          ),
+          const SizedBox(height: 12),
+        ],
         _SyncHeader(portfolio: p),
         const SizedBox(height: 12),
         _BotPositionSection(portfolio: p),
         const SizedBox(height: 12),
-        _WalletSection(portfolio: p),
-        if (p.hasIdle) ...[
-          const SizedBox(height: 12),
-          IdleBanner(
-            assetLabel: p.baseAsset,
-            message: p.idleBaseNote ?? p.syncNote,
+        _FuturesWalletSection(portfolio: p),
+        if (p.whatCountsAsPosition != null) ...[
+          const SizedBox(height: 18),
+          Text(
+            p.whatCountsAsPosition!,
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 12,
+              height: 1.4,
+            ),
           ),
         ],
-        // TODO: временно скрыто — админ Reconcile / Adopt idle
-        // const SizedBox(height: 20),
-        // const SectionLabel('Админ'),
-        // const SizedBox(height: 10),
-        // Row(
-        //   children: [
-        //     Expanded(
-        //       child: OutlinedButton(
-        //         onPressed: state.isBusy ? null : () => wm.reconcile(),
-        //         child: const Text('Reconcile'),
-        //       ),
-        //     ),
-        //     const SizedBox(width: 10),
-        //     Expanded(
-        //       child: ElevatedButton(
-        //         style: ElevatedButton.styleFrom(
-        //           backgroundColor: AppColors.warning,
-        //           foregroundColor: AppColors.onPrimary,
-        //         ),
-        //         onPressed: state.isBusy ? null : () => _confirmAdopt(context),
-        //         child: const Text('Adopt idle'),
-        //       ),
-        //     ),
-        //   ],
-        // ),
-        // if (state.isBusy) ...[
-        //   const SizedBox(height: 16),
-        //   const LinearProgressIndicator(
-        //     color: AppColors.primary,
-        //     backgroundColor: AppColors.border,
-        //   ),
-        // ],
-        // if (p.whatCountsAsPosition != null) ...[
-        //   const SizedBox(height: 18),
-        //   Text(
-        //     p.whatCountsAsPosition!,
-        //     style: const TextStyle(
-        //       color: AppColors.textMuted,
-        //       fontSize: 12,
-        //       height: 1.4,
-        //     ),
-        //   ),
-        // ],
       ],
     );
   }
-
-  // Future<void> _confirmAdopt(BuildContext context) async {
-  //   final ok = await showDialog<bool>(
-  //     context: context,
-  //     builder: (ctx) => AlertDialog(
-  //       title: const Text('Adopt idle?'),
-  //       content: const Text(
-  //         'Весь base на кошельке станет tracked LONG по рынку. '
-  //         'Это необратимо для позиции бота. Продолжить?',
-  //       ),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.pop(ctx, false),
-  //           child: const Text('Отмена'),
-  //         ),
-  //         TextButton(
-  //           onPressed: () => Navigator.pop(ctx, true),
-  //           child: const Text(
-  //             'Adopt',
-  //             style: TextStyle(color: AppColors.warning, fontWeight: FontWeight.w700),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  //   if (ok == true) await wm.adopt();
-  // }
 }
 
 class _SyncHeader extends StatelessWidget {
@@ -175,7 +116,6 @@ class _SyncHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = switch (portfolio.syncStatus) {
       'ok' => AppColors.buy,
-      'ok_with_idle' || 'idle_base' => AppColors.warning,
       'short_inventory' => AppColors.danger,
       _ => AppColors.textMuted,
     };
@@ -198,6 +138,13 @@ class _SyncHeader extends StatelessWidget {
               StatusChip(label: portfolio.syncStatus.toUpperCase(), color: color),
             ],
           ),
+          if (portfolio.leverage != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Leverage ${portfolio.leverageLabel}',
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+            ),
+          ],
           if (portfolio.syncNote.isNotEmpty) ...[
             const SizedBox(height: 10),
             Text(
@@ -217,6 +164,12 @@ class _BotPositionSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sideLabel = portfolio.botSideLabel;
+    final sideColor = switch (sideLabel) {
+      'LONG' => AppColors.buy,
+      'SHORT' => AppColors.sell,
+      _ => AppColors.textSecondary,
+    };
     final pnlColor = MoneyFormat.isPositive(portfolio.botUnrealizedPnl)
         ? AppColors.buy
         : MoneyFormat.isNegative(portfolio.botUnrealizedPnl)
@@ -227,16 +180,16 @@ class _BotPositionSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionLabel('Bot position'),
+          Row(
+            children: [
+              const SectionLabel('Bot position'),
+              const Spacer(),
+              StatusChip(label: sideLabel, color: sideColor),
+            ],
+          ),
           const SizedBox(height: 12),
-          if (!portfolio.botOpen)
-            const Text(
-              'Нет tracked позиции',
-              style: TextStyle(color: AppColors.textSecondary),
-            )
-          else ...[
+          if (portfolio.botOpen) ...[
             Text(
-              '${portfolio.botSide ?? 'LONG'}  '
               '${MoneyFormat.trim(portfolio.botQuantity)} @ '
               '${MoneyFormat.trim(portfolio.botEntryPrice, maxDecimals: 2)}',
               style: context.tradingText.monoMedium,
@@ -252,15 +205,19 @@ class _BotPositionSection extends StatelessWidget {
               value: MoneyFormat.dateTime(portfolio.botEntryTime),
               mono: false,
             ),
-          ],
+          ] else
+            Text(
+              portfolio.market ?? 'USDT-M Futures · flat',
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
         ],
       ),
     );
   }
 }
 
-class _WalletSection extends StatelessWidget {
-  const _WalletSection({required this.portfolio});
+class _FuturesWalletSection extends StatelessWidget {
+  const _FuturesWalletSection({required this.portfolio});
   final Portfolio portfolio;
 
   @override
@@ -269,27 +226,18 @@ class _WalletSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionLabel('Wallet'),
+          SectionLabel(portfolio.market ?? 'Futures wallet'),
           const SizedBox(height: 8),
           KeyValueRow(
             label: 'Equity',
             value: MoneyFormat.usd(portfolio.equity),
           ),
           KeyValueRow(
-            label: '${portfolio.baseAsset} balance',
-            value: MoneyFormat.trim(portfolio.baseBalance),
-          ),
-          KeyValueRow(
-            label: '${portfolio.quoteAsset} balance',
+            label: '${portfolio.quoteAsset} available',
             value: MoneyFormat.trim(portfolio.quoteBalance, maxDecimals: 2),
           ),
           KeyValueRow(
-            label: 'Idle ${portfolio.baseAsset}',
-            value: MoneyFormat.trim(portfolio.idleBase),
-            valueColor: portfolio.hasIdle ? AppColors.warning : null,
-          ),
-          KeyValueRow(
-            label: 'Price',
+            label: 'Mark price',
             value: MoneyFormat.trim(portfolio.price, maxDecimals: 2),
           ),
         ],

@@ -13,6 +13,7 @@ class DashboardState {
     this.status,
     this.isLoading = true,
     this.isRefreshing = false,
+    this.fetchedAt,
     this.error,
   });
 
@@ -20,13 +21,25 @@ class DashboardState {
   final BotStatus? status;
   final bool isLoading;
   final bool isRefreshing;
+  final DateTime? fetchedAt;
   final String? error;
+
+  static const _staleAfter = Duration(seconds: 15);
+
+  bool get isDataStale {
+    if (fetchedAt == null) return false;
+    return DateTime.now().difference(fetchedAt!) > _staleAfter;
+  }
+
+  bool get showUpdating =>
+      isRefreshing || (status?.isRunning == true && isDataStale);
 
   DashboardState copyWith({
     Health? health,
     BotStatus? status,
     bool? isLoading,
     bool? isRefreshing,
+    DateTime? fetchedAt,
     String? error,
     bool clearError = false,
   }) {
@@ -35,6 +48,7 @@ class DashboardState {
       status: status ?? this.status,
       isLoading: isLoading ?? this.isLoading,
       isRefreshing: isRefreshing ?? this.isRefreshing,
+      fetchedAt: fetchedAt ?? this.fetchedAt,
       error: clearError ? null : (error ?? this.error),
     );
   }
@@ -49,30 +63,35 @@ class DashboardWidgetModel extends WidgetModel {
       BehaviorSubject.seeded(const DashboardState());
 
   Timer? _pollTimer;
-  static const _pollInterval = Duration(seconds: 8);
+  static const _pollInterval = Duration(seconds: 15);
 
   @override
   void onLoad() {
     super.onLoad();
     refresh();
-    _pollTimer = Timer.periodic(_pollInterval, (_) => refresh(silent: true));
+    _pollTimer = Timer.periodic(_pollInterval, (_) {
+      final running = stateStream.value.status?.isRunning ?? false;
+      if (running) refresh(silent: true);
+    });
   }
 
-  Future<void> refresh({bool silent = false}) async {
+  Future<void> refresh({bool silent = false, bool forceRefresh = false}) async {
     final current = stateStream.value;
     if (!silent) {
       stateStream.add(
         current.copyWith(
-          isLoading: current.status == null,
-          isRefreshing: current.status != null,
+          isLoading: current.status == null && !forceRefresh,
+          isRefreshing: current.status != null || forceRefresh,
           clearError: true,
         ),
       );
+    } else {
+      stateStream.add(current.copyWith(isRefreshing: true, clearError: true));
     }
     try {
       final results = await Future.wait([
-        _repository.getHealth(),
-        _repository.getStatus(),
+        _repository.getHealth(forceRefresh: forceRefresh),
+        _repository.getStatus(forceRefresh: forceRefresh),
       ]);
       stateStream.add(
         DashboardState(
@@ -80,6 +99,7 @@ class DashboardWidgetModel extends WidgetModel {
           status: results[1] as BotStatus,
           isLoading: false,
           isRefreshing: false,
+          fetchedAt: DateTime.now(),
         ),
       );
     } catch (e, st) {

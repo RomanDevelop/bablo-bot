@@ -2,6 +2,7 @@ import '../dto/bot_config_dto.dart';
 
 class BotConfig {
   const BotConfig({
+    this.mode,
     required this.symbol,
     required this.interval,
     required this.macdFast,
@@ -14,8 +15,11 @@ class BotConfig {
     required this.tradeCooldownMinutes,
     required this.useCrossoverSignals,
     required this.requireMacdAboveZeroForBuy,
+    this.futuresLeverage,
+    this.futuresMarginType,
   });
 
+  final String? mode;
   final String symbol;
   final String interval;
   final int macdFast;
@@ -28,8 +32,11 @@ class BotConfig {
   final int tradeCooldownMinutes;
   final bool useCrossoverSignals;
   final bool requireMacdAboveZeroForBuy;
+  final int? futuresLeverage;
+  final String? futuresMarginType;
 
   factory BotConfig.fromDto(BotConfigDto dto) => BotConfig(
+        mode: dto.mode,
         symbol: dto.symbol,
         interval: dto.interval,
         macdFast: dto.macdFast,
@@ -42,9 +49,12 @@ class BotConfig {
         tradeCooldownMinutes: dto.tradeCooldownMinutes,
         useCrossoverSignals: dto.useCrossoverSignals,
         requireMacdAboveZeroForBuy: dto.requireMacdAboveZeroForBuy,
+        futuresLeverage: dto.futuresLeverage,
+        futuresMarginType: dto.futuresMarginType,
       );
 
   BotConfig copyWith({
+    String? mode,
     String? symbol,
     String? interval,
     int? macdFast,
@@ -57,8 +67,11 @@ class BotConfig {
     int? tradeCooldownMinutes,
     bool? useCrossoverSignals,
     bool? requireMacdAboveZeroForBuy,
+    int? futuresLeverage,
+    String? futuresMarginType,
   }) {
     return BotConfig(
+      mode: mode ?? this.mode,
       symbol: symbol ?? this.symbol,
       interval: interval ?? this.interval,
       macdFast: macdFast ?? this.macdFast,
@@ -68,10 +81,19 @@ class BotConfig {
       stopLossPct: stopLossPct ?? this.stopLossPct,
       takeProfitPct: takeProfitPct ?? this.takeProfitPct,
       maxDailyLossPct: maxDailyLossPct ?? this.maxDailyLossPct,
-      tradeCooldownMinutes: tradeCooldownMinutes ?? this.tradeCooldownMinutes,
+      tradeCooldownMinutes:
+          tradeCooldownMinutes ?? this.tradeCooldownMinutes,
       useCrossoverSignals: useCrossoverSignals ?? this.useCrossoverSignals,
       requireMacdAboveZeroForBuy:
           requireMacdAboveZeroForBuy ?? this.requireMacdAboveZeroForBuy,
+      futuresLeverage: futuresLeverage ?? this.futuresLeverage,
+      futuresMarginType: futuresMarginType ?? this.futuresMarginType,
     );
+  }
+
+  String get futuresLabel {
+    if (futuresLeverage == null) return '—';
+    final margin = futuresMarginType ?? '—';
+    return '${futuresLeverage}x · $margin';
   }
 }

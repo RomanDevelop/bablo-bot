@@ -6,6 +6,7 @@ class HealthDto {
     required this.binanceConnected,
     required this.botRunning,
     required this.testnet,
+    this.mode,
     this.error,
   });
 
@@ -13,6 +14,7 @@ class HealthDto {
   final bool binanceConnected;
   final bool botRunning;
   final bool testnet;
+  final String? mode;
   final String? error;
 
   factory HealthDto.fromJson(Map<String, dynamic> json) {
@@ -21,6 +23,7 @@ class HealthDto {
       binanceConnected: asBool(json['binance_connected']),
       botRunning: asBool(json['bot_running']),
       testnet: asBool(json['testnet'], true),
+      mode: asNullableString(json['mode']),
       error: asNullableString(json['error']),
     );
   }
@@ -50,32 +53,27 @@ class PositionDto {
       unrealizedPnl: asString(json['unrealized_pnl']),
     );
   }
-
-  bool get isOpen {
-    final qty = double.tryParse(quantity) ?? 0;
-    return side != null && qty > 0;
-  }
 }
 
 class PortfolioSnapshotDto {
   const PortfolioSnapshotDto({
     required this.syncStatus,
     required this.syncNote,
-    required this.idleBase,
-    required this.walletBase,
+    this.leverage,
+    this.marginType,
   });
 
   final String syncStatus;
   final String syncNote;
-  final String idleBase;
-  final String walletBase;
+  final int? leverage;
+  final String? marginType;
 
   factory PortfolioSnapshotDto.fromJson(Map<String, dynamic> json) {
     return PortfolioSnapshotDto(
       syncStatus: asString(json['sync_status'], 'ok'),
       syncNote: asString(json['sync_note'], ''),
-      idleBase: asString(json['idle_base']),
-      walletBase: asString(json['wallet_base']),
+      leverage: json['leverage'] != null ? asInt(json['leverage']) : null,
+      marginType: asNullableString(json['margin_type']),
     );
   }
 }
@@ -89,6 +87,7 @@ class BalancesDto {
     required this.price,
     required this.equity,
     this.symbol,
+    this.market,
   });
 
   final String? symbol;
@@ -98,6 +97,7 @@ class BalancesDto {
   final String quoteBalance;
   final String price;
   final String equity;
+  final String? market;
 
   factory BalancesDto.fromJson(Map<String, dynamic> json) {
     return BalancesDto(
@@ -108,6 +108,7 @@ class BalancesDto {
       quoteBalance: asString(json['quote_balance']),
       price: asString(json['price']),
       equity: asString(json['equity']),
+      market: asNullableString(json['market']),
     );
   }
 }
@@ -150,6 +151,7 @@ class BotStatusDto {
     required this.portfolio,
     required this.balances,
     required this.risk,
+    this.mode,
     this.updatedAt,
   });
 
@@ -166,6 +168,7 @@ class BotStatusDto {
   final PortfolioSnapshotDto portfolio;
   final BalancesDto balances;
   final RiskDto risk;
+  final String? mode;
   final String? updatedAt;
 
   factory BotStatusDto.fromJson(Map<String, dynamic> json) {
@@ -183,6 +186,7 @@ class BotStatusDto {
       portfolio: PortfolioSnapshotDto.fromJson(asMap(json['portfolio'])),
       balances: BalancesDto.fromJson(asMap(json['balances'])),
       risk: RiskDto.fromJson(asMap(json['risk'])),
+      mode: asNullableString(json['mode']),
       updatedAt: asNullableString(json['updated_at']),
     );
   }

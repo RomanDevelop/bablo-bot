@@ -30,7 +30,7 @@ class _StatsPageState extends MwwmWidgetState<StatsPage, StatsWidgetModel> {
           body: RefreshIndicator(
             color: AppColors.primary,
             backgroundColor: AppColors.surface,
-            onRefresh: () => wm.refresh(),
+            onRefresh: () => wm.refresh(forceRefresh: true),
             child: _buildBody(context, state),
           ),
         );
@@ -91,6 +91,17 @@ class _StatsPageState extends MwwmWidgetState<StatsPage, StatsWidgetModel> {
                 stats.symbol,
                 style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
               ),
+              if (stats.baselineNote != null && stats.baselineNote!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  stats.baselineNote!,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+              ],
             ],
           ),
         ),

@@ -76,6 +76,13 @@ class NetworkClient {
         data: _asMap(e.response?.data),
       );
     }
+    if (status == 410) {
+      return DataError(
+        errorCode: ErrorCode.gone,
+        message: detail ?? 'Функция больше недоступна',
+        data: _asMap(e.response?.data),
+      );
+    }
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout ||
         e.type == DioExceptionType.connectionError) {

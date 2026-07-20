@@ -48,7 +48,7 @@ class TradesWidgetModel extends WidgetModel {
     _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) => refresh(silent: true));
   }
 
-  Future<void> refresh({bool silent = false}) async {
+  Future<void> refresh({bool silent = false, bool forceRefresh = false}) async {
     final current = stateStream.value;
     if (!silent) {
       stateStream.add(
@@ -56,7 +56,7 @@ class TradesWidgetModel extends WidgetModel {
       );
     }
     try {
-      final trades = await _repository.getTrades(limit: 50);
+      final trades = await _repository.getTrades(limit: 50, forceRefresh: forceRefresh);
       stateStream.add(TradesState(trades: trades, isLoading: false));
     } catch (e, st) {
       handleError(e, st);

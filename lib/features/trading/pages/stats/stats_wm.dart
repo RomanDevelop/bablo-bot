@@ -51,10 +51,10 @@ class StatsWidgetModel extends WidgetModel {
     super.onLoad();
     refresh();
     _pollTimer =
-        Timer.periodic(const Duration(seconds: 20), (_) => refresh(silent: true));
+        Timer.periodic(const Duration(seconds: 45), (_) => refresh(silent: true));
   }
 
-  Future<void> refresh({bool silent = false}) async {
+  Future<void> refresh({bool silent = false, bool forceRefresh = false}) async {
     final current = stateStream.value;
     if (!silent) {
       stateStream.add(
@@ -63,8 +63,8 @@ class StatsWidgetModel extends WidgetModel {
     }
     try {
       final results = await Future.wait([
-        _repository.getStats(),
-        _repository.getTrades(limit: 500),
+        _repository.getStats(forceRefresh: forceRefresh),
+        _repository.getTrades(limit: 500, forceRefresh: forceRefresh),
       ]);
       final stats = results[0] as EpochStats;
       final trades = results[1] as List<Trade>;

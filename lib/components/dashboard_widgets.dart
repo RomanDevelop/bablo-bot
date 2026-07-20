@@ -187,26 +187,33 @@ class MiniPositionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final open = status.position.isOpen;
+    final sideLabel = status.position.sideLabel;
     final pnlColor = MoneyFormat.isPositive(status.position.unrealizedPnl)
         ? AppColors.buy
         : MoneyFormat.isNegative(status.position.unrealizedPnl)
             ? AppColors.sell
             : AppColors.textSecondary;
 
+    final sideColor = switch (sideLabel) {
+      'LONG' => AppColors.buy,
+      'SHORT' => AppColors.sell,
+      _ => AppColors.textSecondary,
+    };
+
     return TradingCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionLabel('Позиция бота'),
+          Row(
+            children: [
+              const SectionLabel('Позиция бота'),
+              const Spacer(),
+              StatusChip(label: sideLabel, color: sideColor),
+            ],
+          ),
           const SizedBox(height: 12),
-          if (!open)
-            const Text(
-              'Нет открытой позиции',
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
-            )
-          else ...[
+          if (open) ...[
             Text(
-              '${status.position.side ?? 'LONG'}  '
               '${MoneyFormat.trim(status.position.quantity)} @ '
               '${MoneyFormat.trim(status.position.entryPrice, maxDecimals: 2)}',
               style: context.tradingText.monoMedium.copyWith(fontSize: 15),
@@ -215,6 +222,17 @@ class MiniPositionCard extends StatelessWidget {
             Text(
               'uPnL ${MoneyFormat.signedUsd(status.position.unrealizedPnl)}',
               style: context.tradingText.monoSmall.copyWith(color: pnlColor),
+            ),
+          ] else
+            Text(
+              status.market ?? 'USDT-M Futures',
+              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+            ),
+          if (status.leverage != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              'Leverage ${status.leverageLabel}',
+              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
             ),
           ],
         ],

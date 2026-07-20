@@ -70,7 +70,7 @@ class _DashboardPageState
           body: RefreshIndicator(
             color: AppColors.primary,
             backgroundColor: AppColors.surface,
-            onRefresh: () => wm.refresh(),
+            onRefresh: () => wm.refresh(forceRefresh: true),
             child: _buildBody(state),
           ),
         );
@@ -121,31 +121,22 @@ class _DashboardPageState
         SignalCard(status: status),
         const SizedBox(height: 12),
         MiniPositionCard(status: status),
-        if (status.hasIdleWarning || status.hasIdleBase) ...[
-          const SizedBox(height: 12),
-          IdleBanner(
-            assetLabel: status.baseAsset,
-            message: status.syncNote.isNotEmpty
-                ? status.syncNote
-                : 'На кошельке есть ${status.baseAsset} вне позиции бота '
-                    '(${MoneyFormat.trim(status.idleBase)}).',
-          ),
-        ],
         if (status.isHalted && status.haltReason.isNotEmpty) ...[
           const SizedBox(height: 12),
           ErrorBanner(message: 'Risk halt: ${status.haltReason}'),
         ],
         const SizedBox(height: 16),
-        _MetaRow(status: status),
+        _MetaRow(status: status, showUpdating: state.showUpdating),
       ],
     );
   }
 }
 
 class _MetaRow extends StatelessWidget {
-  const _MetaRow({required this.status});
+  const _MetaRow({required this.status, required this.showUpdating});
 
   final BotStatus status;
+  final bool showUpdating;
 
   @override
   Widget build(BuildContext context) {
@@ -153,8 +144,13 @@ class _MetaRow extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            'Обновлено ${MoneyFormat.dateTime(status.updatedAt)}',
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+            showUpdating
+                ? 'обновляется… · ${MoneyFormat.dateTime(status.updatedAt)}'
+                : 'Обновлено ${MoneyFormat.dateTime(status.updatedAt)}',
+            style: TextStyle(
+              color: showUpdating ? AppColors.primary : AppColors.textMuted,
+              fontSize: 11,
+            ),
           ),
         ),
         Text(

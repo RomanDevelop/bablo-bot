@@ -10,12 +10,16 @@ import '../dto/stats_dto.dart';
 import '../dto/trade_dto.dart';
 
 abstract class TradingDataProviderInterface {
-  Future<HealthDto> getHealth();
-  Future<BotStatusDto> getStatus();
-  Future<PortfolioDto> getPortfolio();
-  Future<StatsDto> getStats();
-  Future<List<TradeDto>> getTrades({int limit = 50, String? symbol});
-  Future<BotConfigDto> getConfig();
+  Future<HealthDto> getHealth({bool forceRefresh = false});
+  Future<BotStatusDto> getStatus({bool forceRefresh = false});
+  Future<PortfolioDto> getPortfolio({bool forceRefresh = false});
+  Future<StatsDto> getStats({bool forceRefresh = false});
+  Future<List<TradeDto>> getTrades({
+    int limit = 50,
+    String? symbol,
+    bool forceRefresh = false,
+  });
+  Future<BotConfigDto> getConfig({bool forceRefresh = false});
   Future<BotConfigDto> patchConfig(Map<String, dynamic> body);
   Future<Map<String, dynamic>> start({
     required String symbol,
@@ -26,6 +30,7 @@ abstract class TradingDataProviderInterface {
   Future<Map<String, dynamic>> reconcile();
   Future<Map<String, dynamic>> adopt();
   Future<List<String>> getPairs({String quote = 'USDT'});
+  Future<void> invalidateCache();
 }
 
 class TradingDataProvider implements TradingDataProviderInterface {
@@ -38,44 +43,60 @@ class TradingDataProvider implements TradingDataProviderInterface {
   final NetworkClient _client;
   final ApiCache? _cache;
 
-  static const _ttlFast = Duration(seconds: 45);
-  static const _ttlSlow = Duration(minutes: 2);
+  static const _ttlHealth = Duration(seconds: 10);
+  static const _ttlLive = Duration(seconds: 15);
+  static const _ttlSlow = Duration(seconds: 45);
+  static const _pairsTtl = Duration(hours: 6);
 
   @override
-  Future<HealthDto> getHealth() => _mapCached(
+  Future<HealthDto> getHealth({bool forceRefresh = false}) => _mapCached(
         ApiCacheKeys.health,
-        _ttlFast,
+        _ttlHealth,
         () => _client.get<Map<String, dynamic>>('/bot/health'),
         HealthDto.fromJson,
+        allowStale: false,
+        forceRefresh: forceRefresh,
       );
 
   @override
-  Future<BotStatusDto> getStatus() => _mapCached(
+  Future<BotStatusDto> getStatus({bool forceRefresh = false}) => _mapCached(
         ApiCacheKeys.status,
-        _ttlFast,
+        _ttlLive,
         () => _client.get<Map<String, dynamic>>('/bot/status'),
         BotStatusDto.fromJson,
+        allowStale: false,
+        forceRefresh: forceRefresh,
       );
 
   @override
-  Future<PortfolioDto> getPortfolio() => _mapCached(
+  Future<PortfolioDto> getPortfolio({bool forceRefresh = false}) =>
+      _mapCached(
         ApiCacheKeys.portfolio,
-        _ttlFast,
+        _ttlLive,
         () => _client.get<Map<String, dynamic>>('/portfolio'),
         PortfolioDto.fromJson,
+        allowStale: false,
+        forceRefresh: forceRefresh,
       );
 
   @override
-  Future<StatsDto> getStats() => _mapCached(
+  Future<StatsDto> getStats({bool forceRefresh = false}) => _mapCached(
         ApiCacheKeys.stats,
         _ttlSlow,
         () => _client.get<Map<String, dynamic>>('/stats'),
         StatsDto.fromJson,
+        forceRefresh: forceRefresh,
       );
 
   @override
-  Future<List<TradeDto>> getTrades({int limit = 50, String? symbol}) async {
-    final key = '${ApiCacheKeys.trades}_${limit}_${symbol ?? 'all'}';
+  Future<List<TradeDto>> getTrades({
+    int limit = 50,
+    String? symbol,
+    bool forceRefresh = false,
+  }) {
+    final key = symbol == null || symbol.isEmpty
+        ? '${ApiCacheKeys.trades}_$limit'
+        : '${ApiCacheKeys.trades}_${symbol}_$limit';
     return _listCached(
       key,
       _ttlSlow,
@@ -84,34 +105,31 @@ class TradingDataProvider implements TradingDataProviderInterface {
           '/trades',
           queryParameters: {
             'limit': limit,
-            if (symbol != null) 'symbol': symbol,
+            if (symbol != null && symbol.isNotEmpty) 'symbol': symbol,
           },
         );
         return data;
       },
       (e) => TradeDto.fromJson(asMap(e)),
+      forceRefresh: forceRefresh,
     );
   }
 
   @override
-  Future<BotConfigDto> getConfig() => _mapCached(
+  Future<BotConfigDto> getConfig({bool forceRefresh = false}) => _mapCached(
         ApiCacheKeys.config,
         _ttlSlow,
         () => _client.get<Map<String, dynamic>>('/config'),
         BotConfigDto.fromJson,
+        allowStale: false,
+        forceRefresh: forceRefresh,
       );
 
   @override
   Future<BotConfigDto> patchConfig(Map<String, dynamic> body) async {
-    final data = await _client.patch<Map<String, dynamic>>(
-      '/config',
-      data: body,
-    );
+    final data = await _client.patch<Map<String, dynamic>>('/config', data: body);
     await _cache?.write(ApiCacheKeys.config, data);
-    await _cache?.invalidateAll(const [
-      ApiCacheKeys.status,
-      ApiCacheKeys.health,
-    ]);
+    await _cache?.invalidateAll(ApiCacheKeys.afterMutation);
     return BotConfigDto.fromJson(data);
   }
 
@@ -124,14 +142,14 @@ class TradingDataProvider implements TradingDataProviderInterface {
       '/bot/start',
       data: {'symbol': symbol, 'interval': interval},
     );
-    await _invalidateBotState();
+    await _cache?.invalidateAll(ApiCacheKeys.afterMutation);
     return data;
   }
 
   @override
   Future<Map<String, dynamic>> stop() async {
     final data = await _client.post<Map<String, dynamic>>('/bot/stop');
-    await _invalidateBotState();
+    await _cache?.invalidateAll(ApiCacheKeys.afterMutation);
     return data;
   }
 
@@ -139,7 +157,7 @@ class TradingDataProvider implements TradingDataProviderInterface {
   Future<Map<String, dynamic>> emergencyStop() async {
     final data =
         await _client.post<Map<String, dynamic>>('/bot/emergency-stop');
-    await _invalidateBotState();
+    await _cache?.invalidateAll(ApiCacheKeys.afterMutation);
     return data;
   }
 
@@ -147,11 +165,7 @@ class TradingDataProvider implements TradingDataProviderInterface {
   Future<Map<String, dynamic>> reconcile() async {
     final data =
         await _client.post<Map<String, dynamic>>('/portfolio/reconcile');
-    await _cache?.invalidateAll(const [
-      ApiCacheKeys.portfolio,
-      ApiCacheKeys.status,
-      ApiCacheKeys.stats,
-    ]);
+    await _cache?.invalidateAll(ApiCacheKeys.afterMutation);
     return data;
   }
 
@@ -166,12 +180,9 @@ class TradingDataProvider implements TradingDataProviderInterface {
   Future<List<String>> getPairs({String quote = 'USDT'}) async {
     final key = 'pairs_$quote';
     final cached = _cache?.read(key);
-    if (cached != null && cached.isFresh(const Duration(hours: 6))) {
-      final list = cached.data;
-      if (list is List) {
-        unawaited(_refreshPairs(key, quote));
-        return list.map((e) => e.toString()).toList();
-      }
+    if (cached != null && cached.isFresh(_pairsTtl) && cached.data is List) {
+      unawaited(_refreshPairs(key, quote));
+      return (cached.data as List).map((e) => e.toString()).toList();
     }
     try {
       final pairs = await _fetchPairs(quote);
@@ -185,22 +196,33 @@ class TradingDataProvider implements TradingDataProviderInterface {
     }
   }
 
-  Future<void> _invalidateBotState() {
-    return _cache?.invalidateAll(ApiCacheKeys.afterMutation) ??
-        Future<void>.value();
-  }
+  @override
+  Future<void> invalidateCache() =>
+      _cache?.invalidateAll(ApiCacheKeys.afterMutation) ?? Future.value();
 
   Future<T> _mapCached<T>(
     String key,
     Duration ttl,
     Future<Map<String, dynamic>> Function() fetch,
-    T Function(Map<String, dynamic>) parse,
-  ) async {
-    final cached = _cache?.read(key);
-    if (cached != null && cached.isFresh(ttl) && cached.data is Map) {
-      unawaited(_refreshMap(key, fetch));
-      return parse(asMap(cached.data));
+    T Function(Map<String, dynamic>) parse, {
+    bool allowStale = true,
+    bool forceRefresh = false,
+  }) async {
+    if (forceRefresh) {
+      await _cache?.invalidate(key);
     }
+
+    final cached = _cache?.read(key);
+    if (!forceRefresh && cached != null && cached.data is Map) {
+      if (cached.isFresh(ttl)) {
+        return parse(asMap(cached.data));
+      }
+      if (allowStale) {
+        unawaited(_refreshMap(key, fetch));
+        return parse(asMap(cached.data));
+      }
+    }
+
     try {
       final data = await fetch();
       await _cache?.write(key, data);
@@ -215,13 +237,23 @@ class TradingDataProvider implements TradingDataProviderInterface {
     String key,
     Duration ttl,
     Future<List<dynamic>> Function() fetch,
-    T Function(dynamic) parse,
-  ) async {
+    T Function(dynamic) parse, {
+    bool forceRefresh = false,
+  }) async {
+    if (forceRefresh) {
+      await _cache?.invalidate(key);
+    }
+
     final cached = _cache?.read(key);
-    if (cached != null && cached.isFresh(ttl) && cached.data is List) {
+    if (!forceRefresh && cached != null && cached.isFresh(ttl) && cached.data is List) {
       unawaited(_refreshList(key, fetch));
       return (cached.data as List).map(parse).toList(growable: false);
     }
+    if (!forceRefresh && cached != null && cached.data is List) {
+      unawaited(_refreshList(key, fetch));
+      return (cached.data as List).map(parse).toList(growable: false);
+    }
+
     try {
       final data = await fetch();
       await _cache?.write(key, data);
@@ -263,7 +295,7 @@ class TradingDataProvider implements TradingDataProviderInterface {
 
   Future<List<String>> _fetchPairs(String quote) async {
     final data = await _client.get<dynamic>(
-      '/pairs',
+      '/market/pairs',
       queryParameters: {'quote': quote},
     );
     if (data is List) {

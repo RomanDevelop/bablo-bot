@@ -161,6 +161,26 @@ class _SettingsPageState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SectionLabel('Futures'),
+              const SizedBox(height: 12),
+              KeyValueRow(
+                label: 'Mode',
+                value: draft.mode ?? '—',
+                mono: false,
+              ),
+              KeyValueRow(
+                label: 'Leverage',
+                value: draft.futuresLabel,
+                mono: false,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        TradingCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               const SectionLabel('Пара и интервал'),
               const SizedBox(height: 12),
               TextField(

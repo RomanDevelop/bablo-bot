@@ -30,7 +30,7 @@ class _TradesPageState extends MwwmWidgetState<TradesPage, TradesWidgetModel> {
           body: RefreshIndicator(
             color: AppColors.primary,
             backgroundColor: AppColors.surface,
-            onRefresh: () => wm.refresh(),
+            onRefresh: () => wm.refresh(forceRefresh: true),
             child: _buildBody(state),
           ),
         );

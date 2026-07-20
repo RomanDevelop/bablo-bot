@@ -12,33 +12,41 @@ class TradingRepository {
 
   final TradingDataProviderInterface _dataProvider;
 
-  Future<Health> getHealth() async {
-    final dto = await _dataProvider.getHealth();
+  Future<Health> getHealth({bool forceRefresh = false}) async {
+    final dto = await _dataProvider.getHealth(forceRefresh: forceRefresh);
     return Health.fromDto(dto);
   }
 
-  Future<BotStatus> getStatus() async {
-    final dto = await _dataProvider.getStatus();
+  Future<BotStatus> getStatus({bool forceRefresh = false}) async {
+    final dto = await _dataProvider.getStatus(forceRefresh: forceRefresh);
     return BotStatus.fromDto(dto);
   }
 
-  Future<Portfolio> getPortfolio() async {
-    final dto = await _dataProvider.getPortfolio();
+  Future<Portfolio> getPortfolio({bool forceRefresh = false}) async {
+    final dto = await _dataProvider.getPortfolio(forceRefresh: forceRefresh);
     return Portfolio.fromDto(dto);
   }
 
-  Future<EpochStats> getStats() async {
-    final dto = await _dataProvider.getStats();
+  Future<EpochStats> getStats({bool forceRefresh = false}) async {
+    final dto = await _dataProvider.getStats(forceRefresh: forceRefresh);
     return EpochStats.fromDto(dto);
   }
 
-  Future<List<Trade>> getTrades({int limit = 50, String? symbol}) async {
-    final dtos = await _dataProvider.getTrades(limit: limit, symbol: symbol);
+  Future<List<Trade>> getTrades({
+    int limit = 50,
+    String? symbol,
+    bool forceRefresh = false,
+  }) async {
+    final dtos = await _dataProvider.getTrades(
+      limit: limit,
+      symbol: symbol,
+      forceRefresh: forceRefresh,
+    );
     return dtos.map(Trade.fromDto).toList(growable: false);
   }
 
-  Future<BotConfig> getConfig() async {
-    final dto = await _dataProvider.getConfig();
+  Future<BotConfig> getConfig({bool forceRefresh = false}) async {
+    final dto = await _dataProvider.getConfig(forceRefresh: forceRefresh);
     return BotConfig.fromDto(dto);
   }
 
@@ -115,6 +123,8 @@ class TradingRepository {
   Future<void> adopt() async {
     await _dataProvider.adopt();
   }
+
+  Future<void> invalidateCache() => _dataProvider.invalidateCache();
 
   Future<List<String>> getPairs({String quote = 'USDT'}) {
     return _dataProvider.getPairs(quote: quote);

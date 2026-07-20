@@ -77,11 +77,11 @@ class SettingsWidgetModel extends WidgetModel {
     refresh();
   }
 
-  Future<void> refresh() async {
+  Future<void> refresh({bool forceRefresh = false}) async {
     final current = stateStream.value;
     stateStream.add(current.copyWith(isLoading: true, clearError: true));
     try {
-      final config = await _repository.getConfig();
+      final config = await _repository.getConfig(forceRefresh: forceRefresh);
       stateStream.add(
         SettingsState(config: config, draft: config, isLoading: false),
       );
@@ -158,6 +158,7 @@ class SettingsWidgetModel extends WidgetModel {
     stateStream.add(current.copyWith(isBusy: true, clearError: true, clearMessage: true));
     try {
       await action();
+      await _repository.invalidateCache();
       stateStream.add(
         stateStream.value.copyWith(isBusy: false, message: success),
       );

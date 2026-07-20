@@ -12,6 +12,7 @@ class PortfolioState {
     this.portfolio,
     this.isLoading = true,
     this.isBusy = false,
+    this.isRefreshing = false,
     this.error,
     this.message,
   });
@@ -19,6 +20,7 @@ class PortfolioState {
   final Portfolio? portfolio;
   final bool isLoading;
   final bool isBusy;
+  final bool isRefreshing;
   final String? error;
   final String? message;
 
@@ -26,6 +28,7 @@ class PortfolioState {
     Portfolio? portfolio,
     bool? isLoading,
     bool? isBusy,
+    bool? isRefreshing,
     String? error,
     String? message,
     bool clearError = false,
@@ -35,6 +38,7 @@ class PortfolioState {
       portfolio: portfolio ?? this.portfolio,
       isLoading: isLoading ?? this.isLoading,
       isBusy: isBusy ?? this.isBusy,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
       error: clearError ? null : (error ?? this.error),
       message: clearMessage ? null : (message ?? this.message),
     );
@@ -50,35 +54,42 @@ class PortfolioWidgetModel extends WidgetModel {
       BehaviorSubject.seeded(const PortfolioState());
 
   Timer? _pollTimer;
+  static const _pollInterval = Duration(seconds: 15);
 
   @override
   void onLoad() {
     super.onLoad();
     refresh();
-    _pollTimer = Timer.periodic(const Duration(seconds: 12), (_) => refresh(silent: true));
+    _pollTimer =
+        Timer.periodic(_pollInterval, (_) => refresh(silent: true));
   }
 
-  Future<void> refresh({bool silent = false}) async {
+  Future<void> refresh({bool silent = false, bool forceRefresh = false}) async {
     final current = stateStream.value;
     if (!silent) {
       stateStream.add(
         current.copyWith(
-          isLoading: current.portfolio == null,
+          isLoading: current.portfolio == null && !forceRefresh,
+          isRefreshing: current.portfolio != null || forceRefresh,
           clearError: true,
           clearMessage: true,
         ),
       );
+    } else {
+      stateStream.add(current.copyWith(isRefreshing: true, clearError: true));
     }
     try {
-      final portfolio = await _repository.getPortfolio();
+      final portfolio =
+          await _repository.getPortfolio(forceRefresh: forceRefresh);
       stateStream.add(
-        PortfolioState(portfolio: portfolio, isLoading: false),
+        PortfolioState(portfolio: portfolio, isLoading: false, isRefreshing: false),
       );
     } catch (e, st) {
       handleError(e, st);
       stateStream.add(
         current.copyWith(
           isLoading: false,
+          isRefreshing: false,
           error: e is DataError ? e.displayMessage : e.toString(),
         ),
       );
@@ -89,10 +100,6 @@ class PortfolioWidgetModel extends WidgetModel {
     await _runAction(() => _repository.reconcile(), success: 'Сверка выполнена');
   }
 
-  Future<void> adopt() async {
-    await _runAction(() => _repository.adopt(), success: 'Idle принят в позицию бота');
-  }
-
   Future<void> _runAction(
     Future<void> Function() action, {
     required String success,
@@ -101,7 +108,7 @@ class PortfolioWidgetModel extends WidgetModel {
     stateStream.add(current.copyWith(isBusy: true, clearError: true, clearMessage: true));
     try {
       await action();
-      await refresh(silent: true);
+      await refresh(silent: true, forceRefresh: true);
       stateStream.add(
         stateStream.value.copyWith(isBusy: false, message: success),
       );

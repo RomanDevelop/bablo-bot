@@ -140,6 +140,12 @@ class _StatsPageState extends MwwmWidgetState<StatsPage, StatsWidgetModel> {
                 label: 'Unrealized',
                 value: MoneyFormat.signedUsd(stats.unrealizedPnl),
               ),
+              if (stats.lastTradeAt != null)
+                KeyValueRow(
+                  label: 'Last trade',
+                  value: MoneyFormat.dateTime(stats.lastTradeAt),
+                  mono: false,
+                ),
             ],
           ),
         ),
@@ -200,8 +206,8 @@ class _StatsPageState extends MwwmWidgetState<StatsPage, StatsWidgetModel> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Text(
-              'История Binance до эпохи не входит в статистику. '
-              'График собран по закрытым сделкам бота с baseline эпохи.',
+              'Эпоха futures flip: в статистику входят только fills бота после '
+              'epoch_started_at. График строится по закрытым сделкам, не по drift счёта.',
               style: TextStyle(
                 color: AppColors.textMuted,
                 fontSize: 12,

@@ -45,12 +45,22 @@ class EquityCurveChart extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           if (curve.isEmpty)
-            const SizedBox(
+            SizedBox(
               height: 160,
               child: Center(
                 child: Text(
-                  'Пока нет точек для графика',
-                  style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                  curve.closedTrades == 0 && curve.totalPnl.abs() > 0.01
+                      ? 'Нет закрытых сделок — график появится после первого fill.\n'
+                          'Equity ${MoneyFormat.signedUsd(curve.totalPnl.toString())} '
+                          '(${MoneyFormat.pct(curve.totalPnlPct.toString())}) — '
+                          'drift счёта, не PnL бота.'
+                      : 'Пока нет точек для графика',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textMuted,
+                    fontSize: 13,
+                    height: 1.35,
+                  ),
                 ),
               ),
             )

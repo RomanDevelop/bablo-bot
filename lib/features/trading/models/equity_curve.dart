@@ -58,12 +58,7 @@ class EquityCurve {
         DateTime.now().toUtc();
 
     final closed = trades.where((t) {
-      if (!t.isSell || !t.hasPnl) return false;
-      if (stats.symbol.isNotEmpty &&
-          stats.symbol != '—' &&
-          t.symbol != stats.symbol) {
-        return false;
-      }
+      if (!t.hasPnl) return false;
       final at = DateTime.tryParse(t.createdAt)?.toUtc();
       if (at == null) return false;
       return !at.isBefore(epochStart);
@@ -106,6 +101,22 @@ class EquityCurve {
           pnl: cumRealized,
           pnlPct: pct,
         ),
+      );
+    }
+
+    // Without closed trades the curve is flat at baseline — don't fake a dip from
+    // account drift (funding/fees) that isn't tied to bot fills.
+    if (closed.isEmpty) {
+      return EquityCurve(
+        points: points,
+        baseline: baseline,
+        currentEquity: currentEquity,
+        totalPnl: totalPnl,
+        totalPnlPct: totalPnlPct,
+        realizedPnl: statsRealized,
+        closedTrades: 0,
+        wins: 0,
+        losses: 0,
       );
     }
 

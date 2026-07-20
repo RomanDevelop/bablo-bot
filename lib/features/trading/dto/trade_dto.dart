@@ -29,16 +29,19 @@ class TradeDto {
 
   factory TradeDto.fromJson(Map<String, dynamic> json) {
     return TradeDto(
-      id: asString(json['id'], ''),
+      id: asString(json['id'] ?? json['trade_id'] ?? json['fill_id'], ''),
       symbol: asString(json['symbol'], '—'),
-      side: asString(json['side'], '').toUpperCase(),
-      quantity: asString(json['quantity']),
-      price: asString(json['price']),
-      status: asString(json['status'], ''),
-      createdAt: asString(json['created_at'], ''),
+      side: asString(json['side'] ?? json['position_side'], '').toUpperCase(),
+      quantity: asString(json['quantity'] ?? json['qty']),
+      price: asString(json['price'] ?? json['avg_price']),
+      status: asString(json['status'], 'FILLED'),
+      createdAt: asString(
+        json['created_at'] ?? json['time'] ?? json['timestamp'],
+        '',
+      ),
       orderId: json['order_id'] == null ? null : asInt(json['order_id']),
-      reason: asNullableString(json['reason']),
-      realizedPnl: asNullableString(json['realized_pnl']),
+      reason: asNullableString(json['reason'] ?? json['signal_reason']),
+      realizedPnl: asNullableString(json['realized_pnl'] ?? json['pnl']),
       entryPrice: asNullableString(json['entry_price']),
     );
   }

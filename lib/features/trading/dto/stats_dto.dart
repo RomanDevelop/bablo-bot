@@ -22,6 +22,7 @@ class StatsDto {
     required this.includesPreEpochExchangeHistory,
     required this.symbol,
     required this.positionOpen,
+    this.lastTradeAt,
     this.updatedAt,
   });
 
@@ -45,6 +46,7 @@ class StatsDto {
   final bool includesPreEpochExchangeHistory;
   final String symbol;
   final bool positionOpen;
+  final String? lastTradeAt;
   final String? updatedAt;
 
   factory StatsDto.fromJson(Map<String, dynamic> json) {
@@ -70,6 +72,7 @@ class StatsDto {
           asBool(json['includes_pre_epoch_exchange_history']),
       symbol: asString(json['symbol'], '—'),
       positionOpen: asBool(json['position_open']),
+      lastTradeAt: asNullableString(json['last_trade_at']),
       updatedAt: asNullableString(json['updated_at']),
     );
   }

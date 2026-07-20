@@ -22,6 +22,7 @@ class EpochStats {
     required this.includesPreEpochExchangeHistory,
     required this.symbol,
     required this.positionOpen,
+    this.lastTradeAt,
     this.updatedAt,
   });
 
@@ -45,6 +46,7 @@ class EpochStats {
   final bool includesPreEpochExchangeHistory;
   final String symbol;
   final bool positionOpen;
+  final String? lastTradeAt;
   final String? updatedAt;
 
   factory EpochStats.fromDto(StatsDto dto) => EpochStats(
@@ -68,6 +70,7 @@ class EpochStats {
         includesPreEpochExchangeHistory: dto.includesPreEpochExchangeHistory,
         symbol: dto.symbol,
         positionOpen: dto.positionOpen,
+        lastTradeAt: dto.lastTradeAt,
         updatedAt: dto.updatedAt,
       );
 }

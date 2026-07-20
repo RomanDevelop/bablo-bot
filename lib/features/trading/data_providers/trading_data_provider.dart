@@ -100,19 +100,29 @@ class TradingDataProvider implements TradingDataProviderInterface {
     return _listCached(
       key,
       _ttlSlow,
-      () async {
-        final data = await _client.get<List<dynamic>>(
-          '/trades',
-          queryParameters: {
-            'limit': limit,
-            if (symbol != null && symbol.isNotEmpty) 'symbol': symbol,
-          },
-        );
-        return data;
-      },
+      () async => _fetchTradesRaw(limit: limit, symbol: symbol),
       (e) => TradeDto.fromJson(asMap(e)),
       forceRefresh: forceRefresh,
     );
+  }
+
+  Future<List<dynamic>> _fetchTradesRaw({
+    required int limit,
+    String? symbol,
+  }) async {
+    final data = await _client.get<dynamic>(
+      '/trades',
+      queryParameters: {
+        'limit': limit,
+        if (symbol != null && symbol.isNotEmpty) 'symbol': symbol,
+      },
+    );
+    if (data is List) return data;
+    if (data is Map) {
+      final list = data['trades'] ?? data['items'] ?? data['data'] ?? data['fills'];
+      if (list is List) return list;
+    }
+    return const [];
   }
 
   @override

@@ -6,6 +6,8 @@ import '../../../../core/mwwm/core_mwwm_widget.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/money_format.dart';
+import '../../models/bot_status_model.dart';
+import '../../models/stats_model.dart';
 import '../../models/trade_model.dart';
 import 'di/trades_wm_builder.dart';
 import 'trades_wm.dart';
@@ -59,11 +61,18 @@ class _TradesPageState extends MwwmWidgetState<TradesPage, TradesWidgetModel> {
     if (state.trades.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 80),
-          EmptyState(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+        children: [
+          if (state.error != null) ...[
+            ErrorBanner(message: state.error!, onRetry: () => wm.refresh()),
+            const SizedBox(height: 12),
+          ],
+          if (state.hasUnloggedActivity)
+            _UnloggedActivityCard(stats: state.stats, status: state.status),
+          const SizedBox(height: 24),
+          const EmptyState(
             title: 'Сделок пока нет',
-            subtitle: 'История эпохи появится после первых fills бота',
+            subtitle: 'Pull-to-refresh — fills подтягиваются с Binance при каждом запросе',
             icon: Icons.candlestick_chart_outlined,
           ),
         ],
@@ -116,7 +125,7 @@ class _TradeTile extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  trade.side,
+                  trade.sideLabel,
                   style: TextStyle(
                     color: sideColor,
                     fontWeight: FontWeight.w800,
@@ -181,6 +190,73 @@ class _TradeTile extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _UnloggedActivityCard extends StatelessWidget {
+  const _UnloggedActivityCard({this.stats, this.status});
+
+  final EpochStats? stats;
+  final BotStatus? status;
+
+  @override
+  Widget build(BuildContext context) {
+    final signal = status?.lastSignal.toUpperCase() ?? 'HOLD';
+    final reason = status?.lastSignalReason ?? '';
+    final pnl = stats?.equityPnl;
+    final fills = stats?.totalFills ?? 0;
+
+    return TradingCard(
+      borderColor: AppColors.warning.withValues(alpha: 0.35),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionLabel('Активность бота без fills в API'),
+          const SizedBox(height: 10),
+          if (signal != 'HOLD') ...[
+            Text(
+              'Последний сигнал: $signal',
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (reason.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                reason,
+                style: const TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ],
+          if (pnl != null && (double.tryParse(pnl) ?? 0).abs() > 0.01) ...[
+            const SizedBox(height: 10),
+            Text(
+              'Equity эпохи: ${MoneyFormat.signedUsd(pnl)} '
+              '(${MoneyFormat.pct(stats?.equityPnlPct ?? '0')})',
+              style: context.tradingText.monoMedium.copyWith(fontSize: 14),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Text(
+            fills == 0
+                ? 'Equity изменился, но fills ещё не синхронизированы. '
+                    'Pull-to-refresh или подождите авто-sync.'
+                : 'stats.total_fills = $fills, но GET /trades пуст — '
+                    'проверьте кэш (pull-to-refresh с force).',
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 12,
+              height: 1.35,
+            ),
+          ),
         ],
       ),
     );

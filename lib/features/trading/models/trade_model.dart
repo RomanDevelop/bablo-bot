@@ -41,7 +41,39 @@ class Trade {
         entryPrice: dto.entryPrice,
       );
 
-  bool get isBuy => side == 'BUY';
-  bool get isSell => side == 'SELL';
+  bool get isBuy {
+    switch (side) {
+      case 'BUY':
+      case 'LONG':
+      case 'OPEN_LONG':
+        return true;
+      default:
+        return side.startsWith('OPEN') && side.contains('LONG');
+    }
+  }
+
+  bool get isSell {
+    switch (side) {
+      case 'SELL':
+      case 'SHORT':
+      case 'CLOSE_LONG':
+      case 'CLOSE_SHORT':
+      case 'OPEN_SHORT':
+        return true;
+      default:
+        return side.startsWith('CLOSE') || side.startsWith('OPEN_SHORT');
+    }
+  }
+
+  bool get isClosing =>
+      side.startsWith('CLOSE') ||
+      side == 'SELL' ||
+      side.contains('CLOSE');
+
   bool get hasPnl => realizedPnl != null && realizedPnl!.isNotEmpty;
+
+  String get sideLabel {
+    if (side.isEmpty) return '—';
+    return side;
+  }
 }

@@ -6,6 +6,7 @@ import '../../../../core/mwwm/core_mwwm_widget.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/money_format.dart';
+import '../partner/components/partner_promo_card.dart';
 import 'components/equity_curve_chart.dart';
 import 'di/stats_wm_builder.dart';
 import 'stats_wm.dart';
@@ -153,6 +154,8 @@ class _StatsPageState extends MwwmWidgetState<StatsPage, StatsWidgetModel> {
           const SizedBox(height: 12),
           EquityCurveChart(curve: state.equityCurve!),
         ],
+        const SizedBox(height: 12),
+        const PartnerPromoCard(),
         const SizedBox(height: 12),
         TradingCard(
           child: Column(

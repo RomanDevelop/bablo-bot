@@ -3,6 +3,7 @@ import '../../../core/utils/json_parsers.dart';
 class BotConfigDto {
   const BotConfigDto({
     this.mode,
+    this.scanMode,
     required this.symbol,
     required this.interval,
     required this.macdFast,
@@ -20,6 +21,7 @@ class BotConfigDto {
   });
 
   final String? mode;
+  final String? scanMode;
   final String symbol;
   final String interval;
   final int macdFast;
@@ -37,7 +39,8 @@ class BotConfigDto {
 
   factory BotConfigDto.fromJson(Map<String, dynamic> json) {
     return BotConfigDto(
-      mode: asNullableString(json['mode']),
+      mode: asNullableString(json['mode'] ?? json['strategy']),
+      scanMode: asNullableString(json['scan_mode']),
       symbol: asString(json['symbol'], 'BTCUSDT'),
       interval: asString(json['interval'], '15m'),
       macdFast: asInt(json['macd_fast'], 5),

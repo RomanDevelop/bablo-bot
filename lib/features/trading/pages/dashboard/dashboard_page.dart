@@ -116,6 +116,8 @@ class _DashboardPageState
           interval: status.interval,
           isRunning: status.isRunning,
           isHalted: status.isHalted,
+          scanMode: status.scanMode,
+          strategyLabel: status.mode,
         ),
         const SizedBox(height: 12),
         SignalCard(status: status),

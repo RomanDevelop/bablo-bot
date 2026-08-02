@@ -26,9 +26,6 @@ class _SettingsPageState
   late final TextEditingController _tpCtrl;
   late final TextEditingController _maxLossCtrl;
   late final TextEditingController _cooldownCtrl;
-  late final TextEditingController _macdFastCtrl;
-  late final TextEditingController _macdSlowCtrl;
-  late final TextEditingController _macdSignalCtrl;
   bool _controllersReady = false;
 
   @override
@@ -40,9 +37,6 @@ class _SettingsPageState
     _tpCtrl = TextEditingController();
     _maxLossCtrl = TextEditingController();
     _cooldownCtrl = TextEditingController();
-    _macdFastCtrl = TextEditingController();
-    _macdSlowCtrl = TextEditingController();
-    _macdSignalCtrl = TextEditingController();
   }
 
   void _syncControllers(BotConfig draft) {
@@ -61,9 +55,6 @@ class _SettingsPageState
     setIfChanged(_tpCtrl, draft.takeProfitPct.toString());
     setIfChanged(_maxLossCtrl, draft.maxDailyLossPct.toString());
     setIfChanged(_cooldownCtrl, draft.tradeCooldownMinutes.toString());
-    setIfChanged(_macdFastCtrl, draft.macdFast.toString());
-    setIfChanged(_macdSlowCtrl, draft.macdSlow.toString());
-    setIfChanged(_macdSignalCtrl, draft.macdSignal.toString());
     _controllersReady = true;
   }
 
@@ -75,9 +66,6 @@ class _SettingsPageState
     _tpCtrl.dispose();
     _maxLossCtrl.dispose();
     _cooldownCtrl.dispose();
-    _macdFastCtrl.dispose();
-    _macdSlowCtrl.dispose();
-    _macdSignalCtrl.dispose();
     super.dispose();
   }
 
@@ -168,6 +156,12 @@ class _SettingsPageState
                 value: draft.mode ?? '—',
                 mono: false,
               ),
+              if (draft.scanMode != null && draft.scanMode!.isNotEmpty)
+                KeyValueRow(
+                  label: 'Scan',
+                  value: draft.scanMode!,
+                  mono: false,
+                ),
               KeyValueRow(
                 label: 'Leverage',
                 value: draft.futuresLabel,
@@ -196,7 +190,7 @@ class _SettingsPageState
                 key: ValueKey(draft.interval),
                 initialValue: ApiConstants.binanceIntervals.contains(draft.interval)
                     ? draft.interval
-                    : '15m',
+                    : '1h',
                 decoration: const InputDecoration(labelText: 'Interval'),
                 dropdownColor: AppColors.surfaceElevated,
                 items: ApiConstants.binanceIntervals
@@ -216,55 +210,33 @@ class _SettingsPageState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionLabel('MACD'),
+              const SectionLabel('Стратегия'),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: _NumField(
-                      controller: _macdFastCtrl,
-                      label: 'Fast',
-                      onChanged: (v) => wm.updateDraft(
-                        (d) => d.copyWith(macdFast: int.tryParse(v) ?? d.macdFast),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _NumField(
-                      controller: _macdSlowCtrl,
-                      label: 'Slow',
-                      onChanged: (v) => wm.updateDraft(
-                        (d) => d.copyWith(macdSlow: int.tryParse(v) ?? d.macdSlow),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _NumField(
-                      controller: _macdSignalCtrl,
-                      label: 'Signal',
-                      onChanged: (v) => wm.updateDraft(
-                        (d) => d.copyWith(
-                          macdSignal: int.tryParse(v) ?? d.macdSignal,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              const Text(
+                'Alligator H1 scanner',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
               ),
               const SizedBox(height: 8),
-              _SettingsSwitchRow(
-                title: 'Crossover signals',
-                value: draft.useCrossoverSignals,
-                onChanged: (v) =>
-                    wm.updateDraft((d) => d.copyWith(useCrossoverSignals: v)),
+              const Text(
+                'Jaw 13/8 · Teeth 8/5 · Lips 5/3\n'
+                'Корзина ETH / BNB / SOL / XRP · 1 позиция → manage → scan',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 13,
+                  height: 1.4,
+                ),
               ),
-              _SettingsSwitchRow(
-                title: 'MACD > 0 for BUY',
-                value: draft.requireMacdAboveZeroForBuy,
-                onChanged: (v) => wm.updateDraft(
-                  (d) => d.copyWith(requireMacdAboveZeroForBuy: v),
+              const SizedBox(height: 10),
+              Text(
+                'Активная пара: ${draft.symbol} · ${draft.interval}',
+                style: const TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],
@@ -451,43 +423,6 @@ class _AdminControls extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SettingsSwitchRow extends StatelessWidget {
-  const _SettingsSwitchRow({
-    required this.title,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final String title;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-              ),
-            ),
-          ),
-          Switch.adaptive(
-            value: value,
-            activeThumbColor: AppColors.primary,
-            onChanged: onChanged,
           ),
         ],
       ),

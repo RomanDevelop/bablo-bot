@@ -9,6 +9,7 @@ class CandleChartPainter extends CustomPainter {
     required this.markers,
     required this.visibleFrom,
     required this.visibleCount,
+    this.alligator = const [],
     this.lastPrice,
   });
 
@@ -16,6 +17,7 @@ class CandleChartPainter extends CustomPainter {
   final List<ChartMarker> markers;
   final int visibleFrom;
   final int visibleCount;
+  final List<AlligatorPoint> alligator;
   final double? lastPrice;
 
   @override
@@ -26,11 +28,22 @@ class CandleChartPainter extends CustomPainter {
     final visible = candles.sublist(start, end);
     if (visible.isEmpty) return;
 
+    final visibleAlligator = alligator.length == candles.length
+        ? alligator.sublist(start, end)
+        : const <AlligatorPoint>[];
+
     var rangeLow = visible.first.low;
     var rangeHigh = visible.first.high;
     for (final c in visible) {
       if (c.low < rangeLow) rangeLow = c.low;
       if (c.high > rangeHigh) rangeHigh = c.high;
+    }
+    for (final p in visibleAlligator) {
+      for (final v in [p.jaw, p.teeth, p.lips]) {
+        if (v == null) continue;
+        if (v < rangeLow) rangeLow = v;
+        if (v > rangeHigh) rangeHigh = v;
+      }
     }
     final mid = (rangeHigh + rangeLow) / 2;
 
@@ -47,10 +60,85 @@ class CandleChartPainter extends CustomPainter {
     final chart = Rect.fromLTWH(4, 10, size.width - 52, size.height - 30);
     _drawGrid(canvas, chart, minY, maxY);
     _drawCandles(canvas, chart, visible, minY, maxY);
+    _drawAlligator(canvas, chart, visibleAlligator, minY, maxY);
     _drawMarkers(canvas, chart, visible, minY, maxY);
     _drawHighLowLabels(canvas, chart, visible, rangeHigh, rangeLow, minY, maxY);
     _drawCurrentPriceLine(canvas, chart, minY, maxY);
     _drawPriceAxis(canvas, chart, minY, maxY, mid);
+  }
+
+  void _drawAlligator(
+    Canvas canvas,
+    Rect chart,
+    List<AlligatorPoint> points,
+    double minY,
+    double maxY,
+  ) {
+    if (points.isEmpty) return;
+    _drawAlligatorLine(
+      canvas,
+      chart,
+      points,
+      minY,
+      maxY,
+      (p) => p.jaw,
+      AppColors.alligatorJaw,
+    );
+    _drawAlligatorLine(
+      canvas,
+      chart,
+      points,
+      minY,
+      maxY,
+      (p) => p.teeth,
+      AppColors.alligatorTeeth,
+    );
+    _drawAlligatorLine(
+      canvas,
+      chart,
+      points,
+      minY,
+      maxY,
+      (p) => p.lips,
+      AppColors.alligatorLips,
+    );
+  }
+
+  void _drawAlligatorLine(
+    Canvas canvas,
+    Rect chart,
+    List<AlligatorPoint> points,
+    double minY,
+    double maxY,
+    double? Function(AlligatorPoint) pick,
+    Color color,
+  ) {
+    final path = Path();
+    var started = false;
+    final slot = chart.width / points.length;
+    for (var i = 0; i < points.length; i++) {
+      final v = pick(points[i]);
+      if (v == null) {
+        started = false;
+        continue;
+      }
+      final x = chart.left + slot * i + slot / 2;
+      final y = _y(v, minY, maxY, chart);
+      if (!started) {
+        path.moveTo(x, y);
+        started = true;
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = color
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..isAntiAlias = true,
+    );
   }
 
   void _drawGrid(Canvas canvas, Rect chart, double minY, double maxY) {
@@ -310,124 +398,9 @@ class CandleChartPainter extends CustomPainter {
   bool shouldRepaint(covariant CandleChartPainter oldDelegate) {
     return oldDelegate.candles != candles ||
         oldDelegate.markers != markers ||
+        oldDelegate.alligator != alligator ||
         oldDelegate.visibleFrom != visibleFrom ||
         oldDelegate.visibleCount != visibleCount ||
         oldDelegate.lastPrice != lastPrice;
-  }
-}
-
-class MacdChartPainter extends CustomPainter {
-  MacdChartPainter({
-    required this.macd,
-    required this.visibleFrom,
-    required this.visibleCount,
-  });
-
-  final List<MacdPoint> macd;
-  final int visibleFrom;
-  final int visibleCount;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (macd.isEmpty || visibleCount <= 0) return;
-    final end = (visibleFrom + visibleCount).clamp(0, macd.length);
-    final start = visibleFrom.clamp(0, end);
-    final visible = macd.sublist(start, end);
-    if (visible.isEmpty) return;
-
-    final values = <double>[];
-    for (final p in visible) {
-      if (p.macd != null) values.add(p.macd!);
-      if (p.signal != null) values.add(p.signal!);
-      if (p.histogram != null) values.add(p.histogram!);
-    }
-    if (values.isEmpty) return;
-    var minY = values.reduce((a, b) => a < b ? a : b);
-    var maxY = values.reduce((a, b) => a > b ? a : b);
-    final pad = (maxY - minY).abs() * 0.15 + 1e-6;
-    minY -= pad;
-    maxY += pad;
-
-    final chart = Rect.fromLTWH(4, 4, size.width - 8, size.height - 8);
-    final zeroY = _y(0, minY, maxY, chart);
-
-    canvas.drawLine(
-      Offset(chart.left, zeroY),
-      Offset(chart.right, zeroY),
-      Paint()
-        ..color = AppColors.border
-        ..strokeWidth = 1,
-    );
-
-    final slot = chart.width / visible.length;
-    final barW = (slot * 0.55).clamp(1.5, 8.0);
-
-    for (var i = 0; i < visible.length; i++) {
-      final h = visible[i].histogram;
-      if (h == null) continue;
-      final cx = chart.left + slot * i + slot / 2;
-      final y = _y(h, minY, maxY, chart);
-      final top = h >= 0 ? y : zeroY;
-      final bottom = h >= 0 ? zeroY : y;
-      canvas.drawRect(
-        Rect.fromLTRB(cx - barW / 2, top, cx + barW / 2, bottom),
-        Paint()
-          ..color = h >= 0
-              ? AppColors.buy.withValues(alpha: 0.55)
-              : AppColors.sell.withValues(alpha: 0.55),
-      );
-    }
-
-    _drawLine(canvas, chart, visible, minY, maxY, (p) => p.macd, AppColors.primary);
-    _drawLine(canvas, chart, visible, minY, maxY, (p) => p.signal, AppColors.hold);
-  }
-
-  void _drawLine(
-    Canvas canvas,
-    Rect chart,
-    List<MacdPoint> visible,
-    double minY,
-    double maxY,
-    double? Function(MacdPoint) pick,
-    Color color,
-  ) {
-    final path = Path();
-    var started = false;
-    final slot = chart.width / visible.length;
-    for (var i = 0; i < visible.length; i++) {
-      final v = pick(visible[i]);
-      if (v == null) {
-        started = false;
-        continue;
-      }
-      final x = chart.left + slot * i + slot / 2;
-      final y = _y(v, minY, maxY, chart);
-      if (!started) {
-        path.moveTo(x, y);
-        started = true;
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.6
-        ..isAntiAlias = true,
-    );
-  }
-
-  double _y(double v, double minY, double maxY, Rect chart) {
-    final t = (v - minY) / (maxY - minY);
-    return chart.bottom - t * chart.height;
-  }
-
-  @override
-  bool shouldRepaint(covariant MacdChartPainter oldDelegate) {
-    return oldDelegate.macd != macd ||
-        oldDelegate.visibleFrom != visibleFrom ||
-        oldDelegate.visibleCount != visibleCount;
   }
 }

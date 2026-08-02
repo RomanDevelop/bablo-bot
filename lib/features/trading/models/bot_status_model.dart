@@ -89,6 +89,7 @@ class BotStatus {
     required this.haltReason,
     required this.dailyPnlPct,
     this.mode,
+    this.scanMode,
     this.updatedAt,
   });
 
@@ -117,7 +118,14 @@ class BotStatus {
   final String haltReason;
   final String dailyPnlPct;
   final String? mode;
+  final String? scanMode;
   final String? updatedAt;
+
+  /// Alligator Lips (API still sends as `last_macd`).
+  String get lips => lastMacd;
+
+  /// Alligator Jaw (API still sends as `last_signal_line`).
+  String get jaw => lastSignalLine;
 
   factory BotStatus.fromDto(BotStatusDto dto) => BotStatus(
         isRunning: dto.isRunning,
@@ -145,6 +153,7 @@ class BotStatus {
         haltReason: dto.risk.haltReason,
         dailyPnlPct: dto.risk.dailyPnlPct,
         mode: dto.mode,
+        scanMode: dto.scanMode,
         updatedAt: dto.updatedAt,
       );
 

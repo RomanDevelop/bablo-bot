@@ -1,7 +1,7 @@
 import '../../../core/errors/data_error.dart';
 import '../../../core/utils/money_format.dart';
+import '../market/alligator_calculator.dart';
 import '../market/candle_cache.dart';
-import '../market/macd_calculator.dart';
 import '../market/market_data_provider.dart';
 import '../models/bot_config_model.dart';
 import '../models/bot_status_model.dart';
@@ -15,11 +15,15 @@ class ChartSnapshot {
     required this.interval,
     required this.testnet,
     required this.candles,
-    required this.macd,
+    required this.alligator,
     required this.markers,
     required this.config,
     this.lastSignal,
     this.lastPrice,
+    this.lips,
+    this.jaw,
+    this.scanMode,
+    this.mode,
     this.dataSourceNote,
     this.fromCache = false,
   });
@@ -28,11 +32,17 @@ class ChartSnapshot {
   final String interval;
   final bool testnet;
   final List<Candle> candles;
-  final List<MacdPoint> macd;
+  final List<AlligatorPoint> alligator;
   final List<ChartMarker> markers;
   final BotConfig config;
   final String? lastSignal;
   final String? lastPrice;
+  /// API `last_macd` — Lips value for Alligator preset.
+  final String? lips;
+  /// API `last_signal_line` — Jaw value for Alligator preset.
+  final String? jaw;
+  final String? scanMode;
+  final String? mode;
   final String? dataSourceNote;
   final bool fromCache;
 }
@@ -47,7 +57,8 @@ class ChartRepository {
   final TradingRepository _trading;
   final MarketDataProvider _market;
 
-  static const candleLimit = 26;
+  /// Enough bars for Jaw SMMA(13)+shift(8) and visible window.
+  static const candleLimit = 120;
 
   Future<ChartSnapshot> load({int limit = candleLimit}) async {
     final status = await _trading.getStatus();
@@ -74,16 +85,13 @@ class ChartRepository {
     }
 
     final candles = market?.candles ?? const <Candle>[];
-    final calc = MacdCalculator(
-      fast: config.macdFast,
-      slow: config.macdSlow,
-      signal: config.macdSignal,
-    );
-    final macd = candles.isEmpty ? const <MacdPoint>[] : calc.compute(candles);
+    const calc = AlligatorCalculator();
+    final alligator =
+        candles.isEmpty ? const <AlligatorPoint>[] : calc.compute(candles);
     final markers = candles.isEmpty
         ? const <ChartMarker>[]
         : <ChartMarker>[
-            ...calc.crossoverMarkers(candles, macd),
+            ...calc.crossoverMarkers(candles, alligator),
             ..._tradeMarkers(candles, trades),
             ..._openPositionMarker(candles, status),
           ];
@@ -94,18 +102,22 @@ class ChartRepository {
 
     final note = market == null
         ? 'Свечи недоступны: ${marketError ?? 'сеть'}'
-        : 'Свечи: ${market.source}$cacheNote · $limit × ${status.interval}';
+        : 'Свечи: ${market.source}$cacheNote · $limit × ${status.interval} · Alligator';
 
     return ChartSnapshot(
       symbol: status.symbol,
       interval: status.interval,
       testnet: health.testnet,
       candles: candles,
-      macd: macd,
+      alligator: alligator,
       markers: markers,
       config: config,
       lastSignal: status.lastSignal,
       lastPrice: status.lastPrice,
+      lips: status.lips,
+      jaw: status.jaw,
+      scanMode: status.scanMode ?? config.scanMode,
+      mode: status.mode ?? config.mode,
       fromCache: market?.fromCache ?? false,
       dataSourceNote: note,
     );

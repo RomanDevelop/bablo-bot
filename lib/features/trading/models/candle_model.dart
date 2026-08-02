@@ -43,6 +43,20 @@ class MacdPoint {
   final double? histogram;
 }
 
+class AlligatorPoint {
+  const AlligatorPoint({
+    required this.time,
+    this.jaw,
+    this.teeth,
+    this.lips,
+  });
+
+  final DateTime time;
+  final double? jaw;
+  final double? teeth;
+  final double? lips;
+}
+
 enum ChartMarkerKind { buyEntry, sellExit, buySignal, sellSignal }
 
 class ChartMarker {

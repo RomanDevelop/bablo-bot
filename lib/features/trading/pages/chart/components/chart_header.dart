@@ -13,6 +13,10 @@ class ChartHeader extends StatelessWidget {
     required this.metrics,
     required this.signal,
     required this.testnet,
+    this.lips,
+    this.jaw,
+    this.scanMode,
+    this.mode,
   });
 
   final String symbol;
@@ -20,6 +24,10 @@ class ChartHeader extends StatelessWidget {
   final ChartMetrics metrics;
   final String signal;
   final bool testnet;
+  final String? lips;
+  final String? jaw;
+  final String? scanMode;
+  final String? mode;
 
   static String baseAsset(String symbol) {
     final s = symbol.toUpperCase().replaceAll('/', '').replaceAll('-', '');
@@ -83,8 +91,29 @@ class ChartHeader extends StatelessWidget {
                             fontSize: 11,
                           ),
                         ),
+                        if (scanMode != null && scanMode!.isNotEmpty) ...[
+                          const SizedBox(width: 6),
+                          Text(
+                            '· $scanMode',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
+                    if (mode != null && mode!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        mode!,
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Text(
                       priceStr,
@@ -152,6 +181,22 @@ class ChartHeader extends StatelessWidget {
                       maxDecimals: 2,
                     ),
                   ),
+                  if (lips != null && lips!.isNotEmpty && lips != '0') ...[
+                    const SizedBox(height: 6),
+                    _StatLine(
+                      label: 'Lips',
+                      value: MoneyFormat.trim(lips, maxDecimals: 4),
+                      valueColor: AppColors.alligatorLips,
+                    ),
+                  ],
+                  if (jaw != null && jaw!.isNotEmpty && jaw != '0') ...[
+                    const SizedBox(height: 6),
+                    _StatLine(
+                      label: 'Jaw',
+                      value: MoneyFormat.trim(jaw, maxDecimals: 4),
+                      valueColor: AppColors.alligatorJaw,
+                    ),
+                  ],
                 ],
               ),
             ],
@@ -219,10 +264,15 @@ class _MiniChip extends StatelessWidget {
 }
 
 class _StatLine extends StatelessWidget {
-  const _StatLine({required this.label, required this.value});
+  const _StatLine({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
 
   final String label;
   final String value;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
@@ -241,11 +291,11 @@ class _StatLine extends StatelessWidget {
         ),
         Text(
           value,
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: valueColor ?? AppColors.textPrimary,
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            fontFeatures: [FontFeature.tabularFigures()],
+            fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
       ],

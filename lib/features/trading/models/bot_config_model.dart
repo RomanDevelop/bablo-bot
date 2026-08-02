@@ -3,6 +3,7 @@ import '../dto/bot_config_dto.dart';
 class BotConfig {
   const BotConfig({
     this.mode,
+    this.scanMode,
     required this.symbol,
     required this.interval,
     required this.macdFast,
@@ -20,6 +21,7 @@ class BotConfig {
   });
 
   final String? mode;
+  final String? scanMode;
   final String symbol;
   final String interval;
   final int macdFast;
@@ -37,6 +39,7 @@ class BotConfig {
 
   factory BotConfig.fromDto(BotConfigDto dto) => BotConfig(
         mode: dto.mode,
+        scanMode: dto.scanMode,
         symbol: dto.symbol,
         interval: dto.interval,
         macdFast: dto.macdFast,
@@ -55,6 +58,7 @@ class BotConfig {
 
   BotConfig copyWith({
     String? mode,
+    String? scanMode,
     String? symbol,
     String? interval,
     int? macdFast,
@@ -72,6 +76,7 @@ class BotConfig {
   }) {
     return BotConfig(
       mode: mode ?? this.mode,
+      scanMode: scanMode ?? this.scanMode,
       symbol: symbol ?? this.symbol,
       interval: interval ?? this.interval,
       macdFast: macdFast ?? this.macdFast,

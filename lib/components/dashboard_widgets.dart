@@ -16,6 +16,8 @@ class EquityHeader extends StatelessWidget {
     required this.interval,
     required this.isRunning,
     required this.isHalted,
+    this.scanMode,
+    this.strategyLabel,
   });
 
   final String equity;
@@ -24,6 +26,8 @@ class EquityHeader extends StatelessWidget {
   final String interval;
   final bool isRunning;
   final bool isHalted;
+  final String? scanMode;
+  final String? strategyLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +95,9 @@ class EquityHeader extends StatelessWidget {
               ),
               const Spacer(),
               Text(
-                '$symbol · $interval',
+                strategyLabel != null && strategyLabel!.isNotEmpty
+                    ? '$symbol · $interval · $strategyLabel'
+                    : '$symbol · $interval',
                 style: const TextStyle(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w600,
@@ -100,6 +106,17 @@ class EquityHeader extends StatelessWidget {
               ),
             ],
           ),
+          if (scanMode != null && scanMode!.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Scan: $scanMode',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -164,12 +181,12 @@ class SignalCard extends StatelessWidget {
           Row(
             children: [
               MetricTile(
-                label: 'MACD',
-                value: MoneyFormat.trim(status.lastMacd, maxDecimals: 4),
+                label: 'Lips',
+                value: MoneyFormat.trim(status.lips, maxDecimals: 4),
               ),
               MetricTile(
-                label: 'Signal',
-                value: MoneyFormat.trim(status.lastSignalLine, maxDecimals: 4),
+                label: 'Jaw',
+                value: MoneyFormat.trim(status.jaw, maxDecimals: 4),
               ),
             ],
           ),

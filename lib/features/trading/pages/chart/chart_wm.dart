@@ -12,7 +12,7 @@ class ChartState {
     this.isLoading = true,
     this.error,
     this.visibleFrom = 0,
-    this.visibleCount = 26,
+    this.visibleCount = 48,
   });
 
   final ChartSnapshot? snapshot;

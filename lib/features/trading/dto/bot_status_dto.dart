@@ -152,6 +152,7 @@ class BotStatusDto {
     required this.balances,
     required this.risk,
     this.mode,
+    this.scanMode,
     this.updatedAt,
   });
 
@@ -169,6 +170,7 @@ class BotStatusDto {
   final BalancesDto balances;
   final RiskDto risk;
   final String? mode;
+  final String? scanMode;
   final String? updatedAt;
 
   factory BotStatusDto.fromJson(Map<String, dynamic> json) {
@@ -186,7 +188,8 @@ class BotStatusDto {
       portfolio: PortfolioSnapshotDto.fromJson(asMap(json['portfolio'])),
       balances: BalancesDto.fromJson(asMap(json['balances'])),
       risk: RiskDto.fromJson(asMap(json['risk'])),
-      mode: asNullableString(json['mode']),
+      mode: asNullableString(json['mode'] ?? json['strategy']),
+      scanMode: asNullableString(json['scan_mode']),
       updatedAt: asNullableString(json['updated_at']),
     );
   }

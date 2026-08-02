@@ -34,4 +34,9 @@ class AppColors {
 
   static const Color testnet = Color(0xFFF0B429);
   static const Color mainnet = Color(0xFF00C9A7);
+
+  /// Bill Williams Alligator lines.
+  static const Color alligatorJaw = Color(0xFF4A90E2);
+  static const Color alligatorTeeth = Color(0xFFE74C3C);
+  static const Color alligatorLips = Color(0xFF2ECC71);
 }

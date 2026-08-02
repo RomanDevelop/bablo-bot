@@ -5,7 +5,6 @@ import '../chart/chart_page.dart';
 import '../dashboard/dashboard_page.dart';
 import '../portfolio/portfolio_page.dart';
 import '../settings/settings_page.dart';
-import '../stats/stats_page.dart';
 import '../trades/trades_page.dart';
 
 class TradingShellPage extends StatefulWidget {
@@ -89,9 +88,4 @@ class _TradingShellPageState extends State<TradingShellPage> {
       ),
     );
   }
-}
-
-/// Keep Stats reachable from dashboard via route helper if needed later.
-class StatsRoute {
-  static Route<void> route() => MaterialPageRoute(builder: (_) => StatsPage());
 }

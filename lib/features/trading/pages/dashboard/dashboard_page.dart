@@ -6,10 +6,10 @@ import '../../../../components/feedback.dart';
 import '../../../../components/stats_action_button.dart';
 import '../../../../components/status_chip.dart';
 import '../../../../core/mwwm/core_mwwm_widget.dart';
+import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/money_format.dart';
 import '../../models/bot_status_model.dart';
-import '../stats/stats_page.dart';
 import 'dashboard_wm.dart';
 import 'di/dashboard_wm_builder.dart';
 
@@ -42,9 +42,7 @@ class _DashboardPageState
                   const Spacer(),
                   StatsActionButton(
                     onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => StatsPage()),
-                      );
+                      Navigator.of(context).pushNamed(AppRoutes.stats);
                     },
                   ),
                   if (state.health != null) ...[

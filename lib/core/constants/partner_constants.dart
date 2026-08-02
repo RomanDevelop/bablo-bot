@@ -1,8 +1,4 @@
 /// Partner / support payment endpoints.
-///
-/// Override at build time:
-/// `--dart-define=MONOBANK_JAR_URL=https://send.monobank.ua/jar/...`
-/// `--dart-define=CRYPTO_USDT_TRC20=T...`
 class PartnerConstants {
   PartnerConstants._();
 
@@ -14,41 +10,26 @@ class PartnerConstants {
 
   static const jarQrAsset = 'assets/partner/monobank_jar_qr.png';
 
-  static const usdtTrc20Address = String.fromEnvironment(
-    'CRYPTO_USDT_TRC20',
-    defaultValue: '',
-  );
+  /// USDT on EVM chains (ERC-20 / BEP-20).
+  static const usdtEvmAddress =
+      '0x324EB0E51465d70c3D546BeE1cf18F74A01E9924';
 
-  static const usdtTonAddress = String.fromEnvironment(
-    'CRYPTO_USDT_TON',
-    defaultValue: '',
-  );
+  static const usdtEvmNetwork = 'USDT · ERC-20 / BEP-20';
 
   static const List<CryptoWallet> cryptoWallets = [
     CryptoWallet(
-      network: 'USDT · TRC20',
-      addressEnvKey: 'CRYPTO_USDT_TRC20',
-      address: usdtTrc20Address,
-    ),
-    CryptoWallet(
-      network: 'USDT · TON',
-      addressEnvKey: 'CRYPTO_USDT_TON',
-      address: usdtTonAddress,
+      network: usdtEvmNetwork,
+      address: usdtEvmAddress,
     ),
   ];
-
-  static List<CryptoWallet> get configuredWallets =>
-      cryptoWallets.where((w) => w.address.isNotEmpty).toList(growable: false);
 }
 
 class CryptoWallet {
   const CryptoWallet({
     required this.network,
     required this.address,
-    required this.addressEnvKey,
   });
 
   final String network;
   final String address;
-  final String addressEnvKey;
 }

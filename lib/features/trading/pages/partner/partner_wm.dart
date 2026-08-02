@@ -25,7 +25,7 @@ class PartnerWidgetModel extends WidgetModel {
 
   String get jarUrl => PartnerConstants.monobankJarUrl;
 
-  List<CryptoWallet> get wallets => PartnerConstants.configuredWallets;
+  List<CryptoWallet> get wallets => PartnerConstants.cryptoWallets;
 
   bool get hasJarUrl => jarUrl.isNotEmpty;
 

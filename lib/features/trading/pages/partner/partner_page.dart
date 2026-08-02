@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../components/trading_card.dart';
 import '../../../../core/constants/partner_constants.dart';
+import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/mwwm/core_mwwm_widget.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -12,8 +13,10 @@ class PartnerPage extends CoreMwwmWidget<PartnerWidgetModel> {
   PartnerPage({super.key})
       : super(widgetModelBuilder: createPartnerWidgetModel);
 
-  static Route<void> route() =>
-      MaterialPageRoute(builder: (_) => PartnerPage());
+  static Route<void> route() => MaterialPageRoute<void>(
+        settings: const RouteSettings(name: AppRoutes.partner),
+        builder: (_) => PartnerPage(),
+      );
 
   @override
   State<PartnerPage> createState() => _PartnerPageState();
@@ -153,9 +156,7 @@ class _CryptoWalletsCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: const Text(
-                'Адреса не заданы. Сборка:\n'
-                '--dart-define=CRYPTO_USDT_TRC20=T...\n'
-                '--dart-define=CRYPTO_USDT_TON=UQ...',
+                'Адреса кошельков не настроены.',
                 style: TextStyle(
                   color: AppColors.textMuted,
                   fontSize: 12,

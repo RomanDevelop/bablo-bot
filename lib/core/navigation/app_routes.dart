@@ -4,4 +4,5 @@ class AppRoutes {
   static const home = '/';
   static const partner = '/partner';
   static const stats = '/stats';
+  static const subscriptions = '/subscriptions';
 }

@@ -6,10 +6,11 @@ import 'package:provider/provider.dart';
 
 import 'core/theme/app_theme.dart';
 import 'data_management/data_manager.dart';
+import 'core/navigation/app_routes.dart';
 import 'features/trading/pages/partner/partner_page.dart';
 import 'features/trading/pages/shell/trading_shell_page.dart';
 import 'features/trading/pages/stats/stats_page.dart';
-import 'core/navigation/app_routes.dart';
+import 'features/trading/pages/subscriptions/subscriptions_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -50,6 +51,11 @@ class BabloApp extends StatelessWidget {
             return MaterialPageRoute<void>(
               settings: settings,
               builder: (_) => PartnerPage(),
+            );
+          case AppRoutes.subscriptions:
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => SubscriptionsPage(),
             );
           case AppRoutes.stats:
             return MaterialPageRoute<void>(

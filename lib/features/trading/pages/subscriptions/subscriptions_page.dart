@@ -105,7 +105,7 @@ class _SubscriptionsPageState
               const SizedBox(height: 8),
               const PaymentTrustRow(),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Оплату обрабатывает Stripe. Подписку можно отменить '
                 'в любой момент. Pro подключает API-ключи вашего аккаунта '
                 'только после оплаты.',
@@ -121,7 +121,7 @@ class _SubscriptionsPageState
           bottomNavigationBar: SafeArea(
             child: Container(
               padding: const EdgeInsets.fromLTRB(16, 10, 16, 12),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.background,
                 border: Border(
                   top: BorderSide(color: AppColors.borderSubtle),
@@ -177,18 +177,18 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF0A3D36),
-            Color(0xFF151C25),
-            Color(0xFF0E141B),
+            AppColors.primaryDim,
+            AppColors.surface,
+            AppColors.background,
           ],
         ),
         border: Border.all(color: AppColors.borderSubtle),
       ),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(

@@ -82,7 +82,7 @@ class _StatsPageState extends MwwmWidgetState<StatsPage, StatsWidgetModel> {
               const SizedBox(height: 10),
               Text(
                 MoneyFormat.dateTimeFull(stats.epochStartedAt),
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                   fontSize: 15,
@@ -91,13 +91,13 @@ class _StatsPageState extends MwwmWidgetState<StatsPage, StatsWidgetModel> {
               const SizedBox(height: 4),
               Text(
                 stats.symbol,
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
               ),
               if (stats.baselineNote != null && stats.baselineNote!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
                   stats.baselineNote!,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textSecondary,
                     fontSize: 12,
                     height: 1.35,
@@ -211,7 +211,7 @@ class _StatsPageState extends MwwmWidgetState<StatsPage, StatsWidgetModel> {
               color: AppColors.surfaceElevated,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Text(
+            child: Text(
               'Эпоха futures flip: в статистику входят только fills бота после '
               'epoch_started_at. График строится по закрытым сделкам, не по drift счёта.',
               style: TextStyle(
@@ -246,7 +246,7 @@ class _StatBox extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+              style: TextStyle(color: AppColors.textMuted, fontSize: 11),
             ),
             const SizedBox(height: 6),
             Text(

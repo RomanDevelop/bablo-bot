@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../core/theme/app_colors.dart';
 import '../core/theme/app_theme.dart';
+import '../core/theme/theme_controller.dart';
 
 class TradingCard extends StatelessWidget {
   const TradingCard({
@@ -19,23 +20,24 @@ class TradingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeController>().palette;
     final body = Padding(
       padding: padding,
       child: SizedBox(width: double.infinity, child: child),
     );
 
     return Material(
-      color: AppColors.surface,
+      color: p.card,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: borderColor ?? AppColors.borderSubtle),
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide(color: borderColor ?? p.borderSubtle),
       ),
       clipBehavior: Clip.antiAlias,
       child: onTap == null
           ? body
           : InkWell(
               onTap: onTap,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(20),
               child: body,
             ),
     );
@@ -50,12 +52,13 @@ class SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeController>().palette;
     return Row(
       children: [
         Text(
           text.toUpperCase(),
-          style: const TextStyle(
-            color: AppColors.textMuted,
+          style: TextStyle(
+            color: p.textMuted,
             fontSize: 11,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.1,
@@ -86,14 +89,15 @@ class MetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeController>().palette;
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textMuted,
+            style: TextStyle(
+              color: p.textMuted,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -102,7 +106,7 @@ class MetricTile extends StatelessWidget {
           Text(
             value,
             style: context.tradingText.monoMedium.copyWith(
-              color: valueColor ?? AppColors.textPrimary,
+              color: valueColor ?? p.textPrimary,
               fontSize: 16,
             ),
           ),
@@ -110,7 +114,7 @@ class MetricTile extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               subtitle!,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+              style: TextStyle(color: p.textMuted, fontSize: 11),
             ),
           ],
         ],
@@ -135,6 +139,7 @@ class KeyValueRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeController>().palette;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
@@ -142,18 +147,18 @@ class KeyValueRow extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: TextStyle(color: p.textSecondary, fontSize: 13),
             ),
           ),
           Text(
             value,
             style: (mono ? context.tradingText.monoSmall : null)?.copyWith(
-                  color: valueColor ?? AppColors.textPrimary,
+                  color: valueColor ?? p.textPrimary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ) ??
                 TextStyle(
-                  color: valueColor ?? AppColors.textPrimary,
+                  color: valueColor ?? p.textPrimary,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),

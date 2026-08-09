@@ -5,6 +5,7 @@ import '../../../../components/feedback.dart';
 import '../../../../components/trading_card.dart';
 import '../../../../core/constants/api_constants.dart';
 import '../../../../core/mwwm/core_mwwm_widget.dart';
+import '../../../../core/navigation/navigate_back.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../models/bot_config_model.dart';
 import 'di/settings_wm_builder.dart';
@@ -95,15 +96,29 @@ class _SettingsPageState
         }
 
         return Scaffold(
+          backgroundColor: AppColors.background,
           appBar: AppBar(
-            title: const Text('Settings'),
+            backgroundColor: AppColors.background,
+            foregroundColor: AppColors.textPrimary,
+            leading: IconButton(
+              tooltip: 'Назад',
+              onPressed: () => navigateBackOrHome(context),
+              icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            ),
+            title: Text(
+              'Settings',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             actions: [
               if (state.isDirty)
                 TextButton(
                   onPressed: state.isSaving ? null : () => wm.save(),
                   child: Text(
                     state.isSaving ? '...' : 'Save',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w700,
                     ),
@@ -212,7 +227,7 @@ class _SettingsPageState
             children: [
               const SectionLabel('Стратегия'),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Alligator H1 scanner',
                 style: TextStyle(
                   color: AppColors.textPrimary,
@@ -221,7 +236,7 @@ class _SettingsPageState
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Jaw 13/8 · Teeth 8/5 · Lips 5/3\n'
                 'Корзина ETH / BNB / SOL / XRP · 1 позиция → manage → scan',
                 style: TextStyle(
@@ -233,7 +248,7 @@ class _SettingsPageState
               const SizedBox(height: 10),
               Text(
                 'Активная пара: ${draft.symbol} · ${draft.interval}',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
@@ -316,7 +331,7 @@ class _SettingsPageState
         ),
         if (state.isBusy || state.isSaving) ...[
           const SizedBox(height: 16),
-          const LinearProgressIndicator(
+          LinearProgressIndicator(
             color: AppColors.primary,
             backgroundColor: AppColors.border,
           ),
@@ -340,7 +355,7 @@ class _SettingsPageState
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
+            child: Text(
               'Panic',
               style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w800),
             ),
@@ -362,7 +377,7 @@ class _SettingsPageState
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text(
+            child: Text(
               'STOP NOW',
               style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w800),
             ),

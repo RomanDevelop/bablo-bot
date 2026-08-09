@@ -137,7 +137,7 @@ class _TradeTile extends StatelessWidget {
               const SizedBox(width: 10),
               Text(
                 trade.symbol,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
@@ -145,7 +145,7 @@ class _TradeTile extends StatelessWidget {
               const Spacer(),
               Text(
                 MoneyFormat.dateTime(trade.createdAt),
-                style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
               ),
             ],
           ),
@@ -173,7 +173,7 @@ class _TradeTile extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               trade.reason!,
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12,
                 height: 1.35,
@@ -219,7 +219,7 @@ class _UnloggedActivityCard extends StatelessWidget {
           if (signal != 'HOLD') ...[
             Text(
               'Последний сигнал: $signal',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w600,
               ),
@@ -228,7 +228,7 @@ class _UnloggedActivityCard extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 reason,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textSecondary,
                   fontSize: 13,
                   height: 1.35,
@@ -251,7 +251,7 @@ class _UnloggedActivityCard extends StatelessWidget {
                     'Pull-to-refresh или подождите авто-sync.'
                 : 'stats.total_fills = $fills, но GET /trades пуст — '
                     'проверьте кэш (pull-to-refresh с force).',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textMuted,
               fontSize: 12,
               height: 1.35,

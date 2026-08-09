@@ -1,42 +1,63 @@
 import 'package:flutter/material.dart';
 
-/// Trading-terminal palette: deep charcoal, teal accent, clear buy/sell.
+import 'app_palette.dart';
+
+/// Facade over the active [AppPalette].
+/// Bound by [ThemeController] so existing `AppColors.x` call sites follow theme.
 class AppColors {
   AppColors._();
 
-  static const Color background = Color(0xFF070A0E);
-  static const Color surface = Color(0xFF0E141B);
-  static const Color surfaceElevated = Color(0xFF151C25);
-  static const Color border = Color(0xFF243041);
-  static const Color borderSubtle = Color(0xFF1A2330);
+  static AppPalette _palette = AppPalette.dark;
 
-  static const Color primary = Color(0xFF00C9A7);
-  static const Color primaryDim = Color(0xFF0A3D36);
-  static const Color onPrimary = Color(0xFF04110E);
+  static AppPalette get palette => _palette;
 
-  static const Color textPrimary = Color(0xFFE8EEF5);
-  static const Color textSecondary = Color(0xFF8B9BB0);
-  static const Color textMuted = Color(0xFF5C6B7E);
+  static void bind(AppPalette palette) {
+    _palette = palette;
+  }
 
-  static const Color buy = Color(0xFF2ECC71);
-  static const Color buyBg = Color(0x1A2ECC71);
-  static const Color sell = Color(0xFFFF5A5A);
-  static const Color sellBg = Color(0x1AFF5A5A);
-  static const Color hold = Color(0xFFF0B429);
-  static const Color holdBg = Color(0x1AF0B429);
+  static Color get background => _palette.background;
+  static Color get surface => _palette.surface;
+  static Color get surfaceElevated => _palette.surfaceElevated;
+  static Color get card => _palette.card;
+  static Color get elevatedCard => _palette.elevatedCard;
 
-  static const Color warning = Color(0xFFF0B429);
-  static const Color warningBg = Color(0x26F0B429);
-  static const Color danger = Color(0xFFFF5A5A);
-  static const Color success = Color(0xFF2ECC71);
-  static const Color online = Color(0xFF2ECC71);
-  static const Color offline = Color(0xFFFF5A5A);
+  static Color get border => _palette.border;
+  static Color get borderSubtle => _palette.borderSubtle;
+  static Color get divider => _palette.divider;
 
-  static const Color testnet = Color(0xFFF0B429);
-  static const Color mainnet = Color(0xFF00C9A7);
+  static Color get primary => _palette.primary;
+  static Color get primaryHover => _palette.primaryHover;
+  static Color get primaryDim => _palette.primaryDim;
+  static Color get onPrimary => _palette.onPrimary;
 
-  /// Bill Williams Alligator lines.
-  static const Color alligatorJaw = Color(0xFF4A90E2);
-  static const Color alligatorTeeth = Color(0xFFE74C3C);
-  static const Color alligatorLips = Color(0xFF2ECC71);
+  static Color get textPrimary => _palette.textPrimary;
+  static Color get textSecondary => _palette.textSecondary;
+  static Color get textMuted => _palette.textMuted;
+
+  static Color get buy => _palette.buy;
+  static Color get buyBg => _palette.buyBg;
+  static Color get sell => _palette.sell;
+  static Color get sellBg => _palette.sellBg;
+  static Color get hold => _palette.hold;
+  static Color get holdBg => _palette.holdBg;
+
+  static Color get warning => _palette.warning;
+  static Color get warningBg => _palette.warningBg;
+  static Color get danger => _palette.danger;
+  static Color get success => _palette.success;
+  static Color get online => _palette.online;
+  static Color get offline => _palette.offline;
+
+  static Color get testnet => _palette.testnet;
+  static Color get mainnet => _palette.mainnet;
+
+  static Color get positive => _palette.positive;
+  static Color get negative => _palette.negative;
+
+  static Color get navGlass => _palette.navGlass;
+  static Color get scrim => _palette.scrim;
+
+  static Color get alligatorJaw => _palette.alligatorJaw;
+  static Color get alligatorTeeth => _palette.alligatorTeeth;
+  static Color get alligatorLips => _palette.alligatorLips;
 }

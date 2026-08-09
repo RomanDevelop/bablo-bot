@@ -46,8 +46,8 @@ class EquityHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Text(
-                'EQUITY',
+              Text(
+                'TOTAL BALANCE',
                 style: TextStyle(
                   color: AppColors.textMuted,
                   fontSize: 11,
@@ -89,7 +89,7 @@ class EquityHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'день',
                 style: TextStyle(color: AppColors.textMuted, fontSize: 12),
               ),
@@ -98,7 +98,7 @@ class EquityHeader extends StatelessWidget {
                 strategyLabel != null && strategyLabel!.isNotEmpty
                     ? '$symbol · $interval · $strategyLabel'
                     : '$symbol · $interval',
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
@@ -110,7 +110,7 @@ class EquityHeader extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Scan: $scanMode',
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.primary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -171,7 +171,7 @@ class SignalCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             status.lastSignalReason.isEmpty ? '—' : status.lastSignalReason,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textPrimary,
               fontSize: 14,
               height: 1.35,
@@ -218,42 +218,105 @@ class MiniPositionCard extends StatelessWidget {
     };
 
     return TradingCard(
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const SectionLabel('Позиция бота'),
+              const SectionLabel('Current Position'),
               const Spacer(),
               StatusChip(label: sideLabel, color: sideColor),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 14),
           if (open) ...[
             Text(
-              '${MoneyFormat.trim(status.position.quantity)} @ '
-              '${MoneyFormat.trim(status.position.entryPrice, maxDecimals: 2)}',
-              style: context.tradingText.monoMedium.copyWith(fontSize: 15),
+              status.symbol,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _PosMetric(
+                    label: 'Entry',
+                    value: MoneyFormat.trim(
+                      status.position.entryPrice,
+                      maxDecimals: 2,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: _PosMetric(
+                    label: 'Current',
+                    value: MoneyFormat.trim(status.lastPrice, maxDecimals: 2),
+                  ),
+                ),
+                Expanded(
+                  child: _PosMetric(
+                    label: 'P&L',
+                    value: MoneyFormat.signedUsd(status.position.unrealizedPnl),
+                    valueColor: pnlColor,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             Text(
-              'uPnL ${MoneyFormat.signedUsd(status.position.unrealizedPnl)}',
-              style: context.tradingText.monoSmall.copyWith(color: pnlColor),
+              'Size ${MoneyFormat.trim(status.position.quantity)}'
+              '${status.leverage != null ? ' · ${status.leverageLabel}' : ''}',
+              style: TextStyle(color: AppColors.textMuted, fontSize: 12),
             ),
           ] else
             Text(
-              status.market ?? 'USDT-M Futures',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
+              status.market ?? 'Нет открытой позиции',
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
             ),
-          if (status.leverage != null) ...[
-            const SizedBox(height: 10),
-            Text(
-              'Leverage ${status.leverageLabel}',
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
-            ),
-          ],
         ],
       ),
+    );
+  }
+}
+
+class _PosMetric extends StatelessWidget {
+  const _PosMetric({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            color: AppColors.textMuted,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: context.tradingText.monoSmall.copyWith(
+            color: valueColor ?? AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -4,6 +4,7 @@ import '../../../../components/feedback.dart';
 import '../../../../components/status_chip.dart';
 import '../../../../components/trading_card.dart';
 import '../../../../core/mwwm/core_mwwm_widget.dart';
+import '../../../../core/navigation/navigate_back.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/money_format.dart';
@@ -40,7 +41,23 @@ class _PortfolioPageState
         }
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Portfolio')),
+          backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            foregroundColor: AppColors.textPrimary,
+            leading: IconButton(
+              tooltip: 'Назад',
+              onPressed: () => navigateBackOrHome(context),
+              icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            ),
+            title: Text(
+              'Portfolio',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
           body: RefreshIndicator(
             color: AppColors.primary,
             backgroundColor: AppColors.surface,
@@ -81,7 +98,7 @@ class _PortfolioPageState
           const SizedBox(height: 12),
         ],
         if (state.isRefreshing) ...[
-          const LinearProgressIndicator(
+          LinearProgressIndicator(
             color: AppColors.primary,
             backgroundColor: AppColors.border,
           ),
@@ -96,7 +113,7 @@ class _PortfolioPageState
           const SizedBox(height: 18),
           Text(
             p.whatCountsAsPosition!,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textMuted,
               fontSize: 12,
               height: 1.4,
@@ -128,7 +145,7 @@ class _SyncHeader extends StatelessWidget {
             children: [
               Text(
                 portfolio.symbol,
-                style: const TextStyle(
+                style: TextStyle(
                   color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
@@ -142,14 +159,14 @@ class _SyncHeader extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Leverage ${portfolio.leverageLabel}',
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
           ],
           if (portfolio.syncNote.isNotEmpty) ...[
             const SizedBox(height: 10),
             Text(
               portfolio.syncNote,
-              style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+              style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
             ),
           ],
         ],
@@ -208,7 +225,7 @@ class _BotPositionSection extends StatelessWidget {
           ] else
             Text(
               portfolio.market ?? 'USDT-M Futures · flat',
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: AppColors.textSecondary),
             ),
         ],
       ),

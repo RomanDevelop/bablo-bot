@@ -76,7 +76,7 @@ class ChartHeader extends StatelessWidget {
                       children: [
                         Text(
                           baseAsset(symbol),
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -86,7 +86,7 @@ class ChartHeader extends StatelessWidget {
                         const SizedBox(width: 8),
                         Text(
                           '$symbol · $interval',
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textMuted,
                             fontSize: 11,
                           ),
@@ -95,7 +95,7 @@ class ChartHeader extends StatelessWidget {
                           const SizedBox(width: 6),
                           Text(
                             '· $scanMode',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: AppColors.primary,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -108,7 +108,7 @@ class ChartHeader extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         mode!,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 11,
                         ),
@@ -140,7 +140,7 @@ class ChartHeader extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         'Visible from $openLabel',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textMuted,
                           fontSize: 11,
                         ),
@@ -158,7 +158,7 @@ class ChartHeader extends StatelessWidget {
                       _SignalChip(label: sig, color: signalColor),
                       if (testnet) ...[
                         const SizedBox(width: 6),
-                        const _MiniChip(
+                        _MiniChip(
                           label: 'TESTNET',
                           color: AppColors.testnet,
                         ),
@@ -283,7 +283,7 @@ class _StatLine extends StatelessWidget {
           width: 36,
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textMuted,
               fontSize: 11,
             ),

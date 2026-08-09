@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/theme/app_colors.dart';
 import 'status_chip.dart';
 
-/// AppBar brand mark — same height as status chips, teal accent.
+/// AppBar brand mark — same height as status chips, signal-blue accent.
 class BabloBrandMark extends StatelessWidget {
   const BabloBrandMark({super.key});
 

@@ -6,4 +6,10 @@ class AppRoutes {
   static const stats = '/stats';
   static const subscriptions = '/subscriptions';
   static const usStocks = '/us-stocks';
+  static const chart = '/chart';
+  static const portfolio = '/portfolio';
+  static const trades = '/trades';
+  static const settings = '/settings';
+  static const aiAssistant = '/ai';
+  static const search = '/search';
 }

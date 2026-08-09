@@ -14,8 +14,10 @@ import 'dashboard_wm.dart';
 import 'di/dashboard_wm_builder.dart';
 
 class DashboardPage extends CoreMwwmWidget<DashboardWidgetModel> {
-  DashboardPage({super.key})
+  DashboardPage({super.key, this.onOpenMenu})
       : super(widgetModelBuilder: createDashboardWidgetModel);
+
+  final VoidCallback? onOpenMenu;
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -31,8 +33,11 @@ class _DashboardPageState
       builder: (context, snapshot) {
         final state = snapshot.data ?? const DashboardState();
         return Scaffold(
+          backgroundColor: AppColors.background,
           appBar: AppBar(
             automaticallyImplyLeading: false,
+            backgroundColor: AppColors.background,
+            foregroundColor: AppColors.textPrimary,
             titleSpacing: 0,
             title: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -46,14 +51,14 @@ class _DashboardPageState
                     },
                   ),
                   if (state.health != null) ...[
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 10),
                     StatusChip(
                       label: state.health!.networkLabel,
                       color: state.health!.testnet
                           ? AppColors.testnet
                           : AppColors.mainnet,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     StatusChip(
                       label: state.health!.isOk ? 'Online' : 'Offline',
                       color: state.health!.isOk
@@ -61,6 +66,11 @@ class _DashboardPageState
                           : AppColors.offline,
                     ),
                   ],
+                  IconButton(
+                    tooltip: 'Меню',
+                    onPressed: widget.onOpenMenu,
+                    icon: const Icon(Icons.menu_rounded),
+                  ),
                 ],
               ),
             ),
@@ -91,7 +101,7 @@ class _DashboardPageState
     if (status == null) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
         children: [
           if (state.error != null)
             ErrorBanner(message: state.error!, onRetry: () => wm.refresh()),
@@ -101,7 +111,7 @@ class _DashboardPageState
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
       children: [
         if (state.error != null) ...[
           ErrorBanner(message: state.error!, onRetry: () => wm.refresh()),
@@ -118,9 +128,9 @@ class _DashboardPageState
           strategyLabel: status.mode,
         ),
         const SizedBox(height: 12),
-        SignalCard(status: status),
-        const SizedBox(height: 12),
         MiniPositionCard(status: status),
+        const SizedBox(height: 12),
+        SignalCard(status: status),
         if (status.isHalted && status.haltReason.isNotEmpty) ...[
           const SizedBox(height: 12),
           ErrorBanner(message: 'Risk halt: ${status.haltReason}'),
@@ -155,7 +165,7 @@ class _MetaRow extends StatelessWidget {
         ),
         Text(
           'Candles ${status.candlesLoaded}',
-          style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+          style: TextStyle(color: AppColors.textMuted, fontSize: 11),
         ),
       ],
     );

@@ -341,7 +341,7 @@ class CandleChartPainter extends CustomPainter {
     final tp = TextPainter(
       text: TextSpan(
         text: label,
-        style: const TextStyle(
+        style: TextStyle(
           color: AppColors.onPrimary,
           fontSize: 10,
           fontWeight: FontWeight.w700,

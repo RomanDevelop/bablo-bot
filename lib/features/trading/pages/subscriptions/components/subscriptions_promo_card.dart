@@ -17,7 +17,7 @@ class SubscriptionsPromoCard extends StatelessWidget {
       color: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(14),
-        side: const BorderSide(color: AppColors.primary, width: 1),
+        side: BorderSide(color: AppColors.primary, width: 1),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -33,14 +33,14 @@ class SubscriptionsPromoCard extends StatelessWidget {
                   color: AppColors.primaryDim,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.workspace_premium_rounded,
                   color: AppColors.primary,
                   size: 24,
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -65,7 +65,7 @@ class SubscriptionsPromoCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 color: AppColors.primary,
               ),

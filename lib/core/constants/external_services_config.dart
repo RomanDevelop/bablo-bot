@@ -1,0 +1,78 @@
+/// External / promo services shown in Right Side Menu (not trading logic).
+class ExternalServicesConfig {
+  ExternalServicesConfig._();
+
+  static const pokerStars = ExternalServiceLink(
+    id: 'pokerstars',
+    title: 'PokerStars',
+    subtitle: 'Покер · внешний сервис',
+    url: String.fromEnvironment('POKERSTARS_URL', defaultValue: ''),
+    enabled: true,
+    badge: 'Soon',
+  );
+
+  static const casino = ExternalServiceLink(
+    id: 'casino',
+    title: 'Casino',
+    subtitle: 'Казино · внешний сервис',
+    url: String.fromEnvironment('CASINO_URL', defaultValue: ''),
+    enabled: true,
+    badge: 'Soon',
+  );
+
+  static const sportsBetting = ExternalServiceLink(
+    id: 'sports_betting',
+    title: 'Ставки на спорт',
+    subtitle: 'Ставки · внешний сервис',
+    url: String.fromEnvironment('SPORTS_BETTING_URL', defaultValue: ''),
+    enabled: true,
+    badge: 'Soon',
+  );
+
+  static const temkiMutki = ExternalServiceLink(
+    id: 'temki_mutki',
+    title: 'Темки, мутки',
+    subtitle: 'Закрытые связки · внешний сервис',
+    url: String.fromEnvironment('TEMKI_MUTKI_URL', defaultValue: ''),
+    enabled: true,
+    badge: 'Soon',
+  );
+
+  static const telegramCommunity = ExternalServiceLink(
+    id: 'telegram_community',
+    title: 'Telegram Community',
+    subtitle: 'Новости и чат',
+    url: String.fromEnvironment(
+      'TELEGRAM_COMMUNITY_URL',
+      defaultValue: 'https://t.me/',
+    ),
+    enabled: true,
+  );
+
+  static const List<ExternalServiceLink> leisure = [
+    sportsBetting,
+    pokerStars,
+    casino,
+    temkiMutki,
+  ];
+}
+
+class ExternalServiceLink {
+  const ExternalServiceLink({
+    required this.id,
+    required this.title,
+    required this.subtitle,
+    required this.url,
+    this.enabled = true,
+    this.badge,
+  });
+
+  final String id;
+  final String title;
+  final String subtitle;
+  final String url;
+  final bool enabled;
+  final String? badge;
+
+  bool get hasUrl => url.trim().isNotEmpty && url != 'https://t.me/';
+}

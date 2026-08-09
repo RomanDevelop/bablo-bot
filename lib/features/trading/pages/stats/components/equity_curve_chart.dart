@@ -37,7 +37,7 @@ class EquityCurveChart extends StatelessWidget {
           Text(
             '${MoneyFormat.signedUsd(curve.totalPnl.toString())}  ·  '
             '${curve.closedTrades} закрытых · ${curve.wins}W / ${curve.losses}L',
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textMuted,
               fontSize: 12,
               height: 1.3,
@@ -56,7 +56,7 @@ class EquityCurveChart extends StatelessWidget {
                           'drift счёта, не PnL бота.'
                       : 'Пока нет точек для графика',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 13,
                     height: 1.35,
@@ -185,7 +185,7 @@ class EquityCurvePainter extends CustomPainter {
       final label = TextPainter(
         text: TextSpan(
           text: '${v >= 0 ? '+' : ''}${v.toStringAsFixed(1)}%',
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textMuted,
             fontSize: 9,
             fontFeatures: [FontFeature.tabularFigures()],
@@ -202,14 +202,14 @@ class EquityCurvePainter extends CustomPainter {
     final left = TextPainter(
       text: TextSpan(
         text: fmt.format(start),
-        style: const TextStyle(color: AppColors.textMuted, fontSize: 9),
+        style: TextStyle(color: AppColors.textMuted, fontSize: 9),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
     final right = TextPainter(
       text: TextSpan(
         text: fmt.format(end),
-        style: const TextStyle(color: AppColors.textMuted, fontSize: 9),
+        style: TextStyle(color: AppColors.textMuted, fontSize: 9),
       ),
       textDirection: TextDirection.ltr,
     )..layout();

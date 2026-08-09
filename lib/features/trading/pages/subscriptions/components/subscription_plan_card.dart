@@ -13,7 +13,7 @@ Color accentColor(SubscriptionAccent accent) {
     case SubscriptionAccent.teal:
       return AppColors.primary;
     case SubscriptionAccent.pro:
-      return const Color(0xFF7C9CFF);
+      return AppColors.primaryHover;
   }
 }
 
@@ -64,7 +64,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 plan.title,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   color: AppColors.textPrimary,
                                   fontSize: 16,
                                   fontWeight: FontWeight.w700,
@@ -73,21 +73,21 @@ class SubscriptionPlanCard extends StatelessWidget {
                               ),
                             ),
                             if (plan.isPopular)
-                              const _Badge(
+                              _Badge(
                                 label: 'Популярный',
                                 color: AppColors.primary,
                               ),
                             if (plan.id == SubscriptionPlanId.pro)
-                              const _Badge(
+                              _Badge(
                                 label: 'Максимум',
-                                color: Color(0xFF7C9CFF),
+                                color: AppColors.primaryHover,
                               ),
                           ],
                         ),
                         const SizedBox(height: 4),
                         Text(
                           plan.tagline,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 12.5,
                             height: 1.3,
@@ -116,7 +116,7 @@ class SubscriptionPlanCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           f,
-                          style: const TextStyle(
+                          style: TextStyle(
                             color: AppColors.textSecondary,
                             fontSize: 13,
                             height: 1.3,
@@ -168,7 +168,7 @@ class FundAmountPicker extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'СУММА ИНВЕСТИЦИИ, USD',
             style: TextStyle(
               color: AppColors.textMuted,
@@ -229,7 +229,7 @@ class FundAmountPicker extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Минимум \$${plan.minAmountUsd.toStringAsFixed(0)}',
-            style: const TextStyle(color: AppColors.textMuted, fontSize: 11),
+            style: TextStyle(color: AppColors.textMuted, fontSize: 11),
           ),
         ],
       ),
@@ -244,7 +244,7 @@ class PaymentTrustRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Text(
+        Text(
           'Оплата через Stripe · Apple Pay · Google Pay',
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -291,7 +291,7 @@ class _PayChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 11.5,
               fontWeight: FontWeight.w600,
@@ -361,7 +361,7 @@ class _PriceBlock extends StatelessWidget {
         ),
         Text(
           billing,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textMuted,
             fontSize: 11,
             fontWeight: FontWeight.w500,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../components/feedback.dart';
 import '../../../../core/mwwm/core_mwwm_widget.dart';
+import '../../../../core/navigation/navigate_back.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'chart_wm.dart';
 import 'components/chart_header.dart';
@@ -29,6 +30,26 @@ class _ChartPageState extends MwwmWidgetState<ChartPage, ChartWidgetModel> {
 
         return Scaffold(
           backgroundColor: AppColors.background,
+          appBar: AppBar(
+            backgroundColor: AppColors.background,
+            foregroundColor: AppColors.textPrimary,
+            elevation: 0,
+            leading: IconButton(
+              tooltip: 'Назад',
+              onPressed: () => navigateBackOrHome(context),
+              icon: Icon(
+                Icons.arrow_back_rounded,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            title: Text(
+              'Chart',
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
           body: SafeArea(
             bottom: false,
             child: RefreshIndicator(
@@ -122,7 +143,7 @@ class _ChartPageState extends MwwmWidgetState<ChartPage, ChartWidgetModel> {
         Text(
           snap.dataSourceNote ??
               'Свечи · Alligator (Jaw/Teeth/Lips) · стрелки = кросс Lips/Jaw / fills',
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textMuted,
             fontSize: 11,
             height: 1.35,
@@ -138,7 +159,7 @@ class _AlligatorLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Wrap(
+    return Wrap(
       spacing: 14,
       runSpacing: 8,
       children: [
@@ -172,7 +193,7 @@ class _LineLegend extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           text,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
         ),
       ],
     );
@@ -184,7 +205,7 @@ class _MarkersLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Wrap(
+    return Wrap(
       spacing: 14,
       runSpacing: 8,
       children: [
@@ -212,7 +233,7 @@ class _LegendItem extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           text,
-          style: const TextStyle(color: AppColors.textSecondary, fontSize: 11),
+          style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
         ),
       ],
     );

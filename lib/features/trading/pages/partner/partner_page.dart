@@ -90,7 +90,7 @@ class _MonobankJarCard extends StatelessWidget {
               height: 280,
               color: AppColors.surfaceElevated,
               alignment: Alignment.center,
-              child: const Text(
+              child: Text(
                 'QR не найден в assets',
                 style: TextStyle(color: AppColors.textMuted),
               ),
@@ -138,7 +138,7 @@ class _CryptoWalletsCard extends StatelessWidget {
         children: [
           const SectionLabel('Крипто-кошелёк'),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'USDT-перевод на кошелёк бота. Сеть проверяйте внимательно.',
             style: TextStyle(
               color: AppColors.textSecondary,
@@ -155,7 +155,7 @@ class _CryptoWalletsCard extends StatelessWidget {
                 color: AppColors.surfaceElevated,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Text(
+              child: Text(
                 'Адреса кошельков не настроены.',
                 style: TextStyle(
                   color: AppColors.textMuted,
@@ -201,7 +201,7 @@ class _WalletRow extends StatelessWidget {
               children: [
                 Text(
                   wallet.network,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: AppColors.primary,
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -222,7 +222,7 @@ class _WalletRow extends StatelessWidget {
           IconButton(
             onPressed: onCopy,
             tooltip: 'Копировать',
-            icon: const Icon(Icons.copy, color: AppColors.textSecondary),
+            icon: Icon(Icons.copy, color: AppColors.textSecondary),
           ),
         ],
       ),

@@ -6,6 +6,7 @@ import 'package:webview_flutter_web/webview_flutter_web.dart';
 import '../../../../core/constants/market_constants.dart';
 import '../../../../core/mwwm/core_mwwm_widget.dart';
 import '../../../../core/navigation/app_routes.dart';
+import '../../../../core/navigation/navigate_back.dart';
 import '../../../../core/theme/app_colors.dart';
 import 'di/us_stocks_wm_builder.dart';
 import 'us_stocks_wm.dart';
@@ -87,9 +88,15 @@ class _UsStocksPageState
         return Scaffold(
           backgroundColor: AppColors.background,
           appBar: AppBar(
-            automaticallyImplyLeading: Navigator.canPop(context),
-            titleSpacing: 12,
-            title: const Column(
+            backgroundColor: AppColors.background,
+            foregroundColor: AppColors.textPrimary,
+            leading: IconButton(
+              tooltip: 'Назад',
+              onPressed: () => navigateBackOrHome(context),
+              icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            ),
+            titleSpacing: 0,
+            title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -139,7 +146,7 @@ class _UsStocksPageState
                 ),
               ),
               if (state.isLoading)
-                const Positioned.fill(
+                Positioned.fill(
                   child: ColoredBox(
                     color: AppColors.background,
                     child: Center(
@@ -159,13 +166,13 @@ class _UsStocksPageState
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.wifi_off_rounded,
                               color: AppColors.textMuted,
                               size: 40,
                             ),
                             const SizedBox(height: 12),
-                            const Text(
+                            Text(
                               'Биржа не загрузилась в WebView',
                               textAlign: TextAlign.center,
                               style: TextStyle(
@@ -175,7 +182,7 @@ class _UsStocksPageState
                               ),
                             ),
                             const SizedBox(height: 8),
-                            const Text(
+                            Text(
                               'Открой UTEX во внешнем окне — иногда биржа '
                               'блокирует встраивание.',
                               textAlign: TextAlign.center,

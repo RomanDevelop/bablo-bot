@@ -224,28 +224,19 @@ class RightSideMenu extends StatelessWidget {
                           palette: p,
                           icon: Icons.help_outline_rounded,
                           title: 'Help',
-                          onTap: () {
-                            onClose();
-                            _toast(context, 'Help — скоро');
-                          },
+                          onTap: () => _push(context, AppRoutes.help),
                         ),
                         SideMenuItem(
                           palette: p,
                           icon: Icons.description_outlined,
                           title: 'Documents',
-                          onTap: () {
-                            onClose();
-                            _toast(context, 'Документы — скоро');
-                          },
+                          onTap: () => _push(context, AppRoutes.documents),
                         ),
                         SideMenuItem(
                           palette: p,
                           icon: Icons.info_outline_rounded,
                           title: 'About',
-                          onTap: () {
-                            onClose();
-                            _toast(context, 'Bablo Trading · AI Hub');
-                          },
+                          onTap: () => _push(context, AppRoutes.about),
                         ),
                       ],
                     ),

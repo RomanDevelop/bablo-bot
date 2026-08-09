@@ -7,9 +7,12 @@ import 'core/navigation/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'data_management/data_manager.dart';
+import 'features/trading/pages/about/about_page.dart';
 import 'features/trading/pages/ai/ai_assistant_page.dart';
 import 'features/trading/pages/ai/global_search_page.dart';
 import 'features/trading/pages/chart/chart_page.dart';
+import 'features/trading/pages/documents/documents_page.dart';
+import 'features/trading/pages/help/help_page.dart';
 import 'features/trading/pages/partner/partner_page.dart';
 import 'features/trading/pages/portfolio/portfolio_page.dart';
 import 'features/trading/pages/settings/settings_page.dart';
@@ -74,6 +77,12 @@ class BabloApp extends StatelessWidget {
             return _fade(settings, const AiAssistantPage());
           case AppRoutes.search:
             return _fade(settings, const GlobalSearchPage());
+          case AppRoutes.about:
+            return _fade(settings, const AboutPage());
+          case AppRoutes.documents:
+            return _fade(settings, const DocumentsPage());
+          case AppRoutes.help:
+            return _fade(settings, const HelpPage());
           case AppRoutes.home:
           default:
             return MaterialPageRoute<void>(

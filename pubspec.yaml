@@ -31,3 +31,4 @@ flutter:
   uses-material-design: true
   assets:
     - assets/partner/monobank_jar_qr.png
+    - assets/branding/bablo_community_hero.png

@@ -25,6 +25,9 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
     _SearchEntry('AI Assistant', 'Помощник', AppRoutes.aiAssistant, Icons.auto_awesome_outlined),
     _SearchEntry('Подписки', 'Тарифы', AppRoutes.subscriptions, Icons.workspace_premium_outlined),
     _SearchEntry('Партнёрство', 'Донат / банк', AppRoutes.partner, Icons.card_giftcard_outlined),
+    _SearchEntry('About', 'Bablo Community', AppRoutes.about, Icons.info_outline_rounded),
+    _SearchEntry('Documents', 'Official papers', AppRoutes.documents, Icons.description_outlined),
+    _SearchEntry('Help', 'Центр взаимопомощи', AppRoutes.help, Icons.help_outline_rounded),
     _SearchEntry('Settings', 'Admin бота', AppRoutes.settings, Icons.tune_outlined),
   ];
 

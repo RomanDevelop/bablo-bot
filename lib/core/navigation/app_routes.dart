@@ -12,4 +12,7 @@ class AppRoutes {
   static const settings = '/settings';
   static const aiAssistant = '/ai';
   static const search = '/search';
+  static const about = '/about';
+  static const documents = '/documents';
+  static const help = '/help';
 }

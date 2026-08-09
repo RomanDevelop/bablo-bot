@@ -5,4 +5,5 @@ class AppRoutes {
   static const partner = '/partner';
   static const stats = '/stats';
   static const subscriptions = '/subscriptions';
+  static const usStocks = '/us-stocks';
 }

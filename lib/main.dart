@@ -11,6 +11,7 @@ import 'features/trading/pages/partner/partner_page.dart';
 import 'features/trading/pages/shell/trading_shell_page.dart';
 import 'features/trading/pages/stats/stats_page.dart';
 import 'features/trading/pages/subscriptions/subscriptions_page.dart';
+import 'features/trading/pages/us_stocks/us_stocks_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -56,6 +57,11 @@ class BabloApp extends StatelessWidget {
             return MaterialPageRoute<void>(
               settings: settings,
               builder: (_) => SubscriptionsPage(),
+            );
+          case AppRoutes.usStocks:
+            return MaterialPageRoute<void>(
+              settings: settings,
+              builder: (_) => UsStocksPage(),
             );
           case AppRoutes.stats:
             return MaterialPageRoute<void>(

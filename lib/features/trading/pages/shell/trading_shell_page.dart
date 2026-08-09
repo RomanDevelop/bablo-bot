@@ -6,6 +6,7 @@ import '../dashboard/dashboard_page.dart';
 import '../portfolio/portfolio_page.dart';
 import '../settings/settings_page.dart';
 import '../trades/trades_page.dart';
+import '../us_stocks/us_stocks_page.dart';
 
 class TradingShellPage extends StatefulWidget {
   const TradingShellPage({super.key});
@@ -17,29 +18,21 @@ class TradingShellPage extends StatefulWidget {
 class _TradingShellPageState extends State<TradingShellPage> {
   int _index = 0;
 
-  Widget _pageFor(int index) {
-    switch (index) {
-      case 0:
-        return DashboardPage();
-      case 1:
-        return ChartPage();
-      case 2:
-        return PortfolioPage();
-      case 3:
-        return TradesPage();
-      case 4:
-        return SettingsPage();
-      default:
-        return const SizedBox.shrink();
-    }
-  }
+  late final List<Widget> _pages = [
+    DashboardPage(),
+    ChartPage(),
+    UsStocksPage(),
+    PortfolioPage(),
+    TradesPage(),
+    SettingsPage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: KeyedSubtree(
-        key: ValueKey(_index),
-        child: _pageFor(_index),
+      body: IndexedStack(
+        index: _index,
+        children: _pages,
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -52,7 +45,7 @@ class _TradingShellPageState extends State<TradingShellPage> {
             backgroundColor: AppColors.surface,
             indicatorColor: AppColors.primaryDim,
             selectedIndex: _index,
-            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
             onDestinationSelected: (i) => setState(() => _index = i),
             destinations: const [
               NavigationDestination(
@@ -65,6 +58,11 @@ class _TradingShellPageState extends State<TradingShellPage> {
                 selectedIcon:
                     Icon(Icons.candlestick_chart, color: AppColors.primary),
                 label: 'Chart',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.ssid_chart_outlined),
+                selectedIcon: Icon(Icons.ssid_chart, color: AppColors.primary),
+                label: 'US',
               ),
               NavigationDestination(
                 icon: Icon(Icons.account_balance_wallet_outlined),

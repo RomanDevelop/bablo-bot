@@ -15,4 +15,19 @@ class AppRoutes {
   static const about = '/about';
   static const documents = '/documents';
   static const help = '/help';
+  static const courses = '/courses';
+  static const courseAlexanderL = '/courses/alexander-l';
+  static const courseAntonTheFed = '/courses/anton-the-fed';
+  static const daily = '/daily';
+
+  static String dailyArticle(String id) => '$daily/$id';
+
+  static String? dailyArticleId(String? name) {
+    if (name == null || name.isEmpty) return null;
+    final path = Uri.tryParse(name)?.path ?? name;
+    const prefix = '$daily/';
+    if (!path.startsWith(prefix)) return null;
+    final id = path.substring(prefix.length).split('/').first;
+    return id.isEmpty ? null : id;
+  }
 }

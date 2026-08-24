@@ -5,6 +5,7 @@ import 'package:rxdart/rxdart.dart';
 import '../../../../core/errors/data_error.dart';
 import '../../../../core/mwwm/widget_model.dart';
 import '../../models/bot_status_model.dart';
+import '../../models/epoch_stats_calculator.dart';
 import '../../models/stats_model.dart';
 import '../../models/trade_model.dart';
 import '../../repositories/trading_repository.dart';
@@ -78,14 +79,30 @@ class TradesWidgetModel extends WidgetModel {
     }
     try {
       final results = await Future.wait([
-        _repository.getTrades(limit: 50, forceRefresh: forceRefresh),
+        _repository.getTrades(limit: 500, forceRefresh: forceRefresh),
         _repository.getStats(forceRefresh: forceRefresh),
         _repository.getStatus(forceRefresh: forceRefresh),
       ]);
+      final trades = results[0] as List<Trade>;
+      final rawStats = results[1] as EpochStats;
+      final recalc = EpochStatsCalculator.recalculate(
+        raw: rawStats,
+        trades: trades,
+      );
+      final epochStart =
+          DateTime.tryParse(recalc.stats.epochStartedAt)?.toUtc();
+      final epochTrades = epochStart == null
+          ? trades
+          : trades
+              .where((t) {
+                final at = DateTime.tryParse(t.createdAt)?.toUtc();
+                return at != null && !at.isBefore(epochStart);
+              })
+              .toList(growable: false);
       stateStream.add(
         TradesState(
-          trades: results[0] as List<Trade>,
-          stats: results[1] as EpochStats,
+          trades: epochTrades,
+          stats: recalc.stats,
           status: results[2] as BotStatus,
           isLoading: false,
         ),

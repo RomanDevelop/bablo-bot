@@ -12,7 +12,6 @@ class ChartHeader extends StatelessWidget {
     required this.interval,
     required this.metrics,
     required this.signal,
-    required this.testnet,
     this.lips,
     this.jaw,
     this.scanMode,
@@ -23,7 +22,6 @@ class ChartHeader extends StatelessWidget {
   final String interval;
   final ChartMetrics metrics;
   final String signal;
-  final bool testnet;
   final String? lips;
   final String? jaw;
   final String? scanMode;
@@ -156,13 +154,6 @@ class ChartHeader extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       _SignalChip(label: sig, color: signalColor),
-                      if (testnet) ...[
-                        const SizedBox(width: 6),
-                        _MiniChip(
-                          label: 'TESTNET',
-                          color: AppColors.testnet,
-                        ),
-                      ],
                     ],
                   ),
                   const SizedBox(height: 12),
@@ -229,34 +220,6 @@ class _SignalChip extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w800,
           letterSpacing: 0.5,
-        ),
-      ),
-    );
-  }
-}
-
-class _MiniChip extends StatelessWidget {
-  const _MiniChip({required this.label, required this.color});
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withValues(alpha: 0.35)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.4,
         ),
       ),
     );

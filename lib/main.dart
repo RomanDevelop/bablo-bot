@@ -4,13 +4,18 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
 import 'core/navigation/app_routes.dart';
+import 'core/constants/courses_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'data_management/data_manager.dart';
 import 'features/trading/pages/about/about_page.dart';
 import 'features/trading/pages/ai/ai_assistant_page.dart';
 import 'features/trading/pages/ai/global_search_page.dart';
+import 'features/trading/models/daily_article.dart';
 import 'features/trading/pages/chart/chart_page.dart';
+import 'features/trading/pages/courses/courses_page.dart';
+import 'features/trading/pages/courses/mentor_course_page.dart';
+import 'features/trading/pages/daily/daily_article_page.dart';
 import 'features/trading/pages/documents/documents_page.dart';
 import 'features/trading/pages/help/help_page.dart';
 import 'features/trading/pages/partner/partner_page.dart';
@@ -54,44 +59,90 @@ class BabloApp extends StatelessWidget {
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: theme.resolvedMode,
-      initialRoute: AppRoutes.home,
-      onGenerateRoute: (settings) {
-        switch (settings.name) {
-          case AppRoutes.partner:
-            return _fade(settings, PartnerPage());
-          case AppRoutes.subscriptions:
-            return _fade(settings, SubscriptionsPage());
-          case AppRoutes.usStocks:
-            return _fade(settings, UsStocksPage());
-          case AppRoutes.stats:
-            return _fade(settings, StatsPage());
-          case AppRoutes.chart:
-            return _fade(settings, ChartPage());
-          case AppRoutes.portfolio:
-            return _fade(settings, PortfolioPage());
-          case AppRoutes.trades:
-            return _fade(settings, TradesPage());
-          case AppRoutes.settings:
-            return _fade(settings, SettingsPage());
-          case AppRoutes.aiAssistant:
-            return _fade(settings, const AiAssistantPage());
-          case AppRoutes.search:
-            return _fade(settings, const GlobalSearchPage());
-          case AppRoutes.about:
-            return _fade(settings, const AboutPage());
-          case AppRoutes.documents:
-            return _fade(settings, const DocumentsPage());
-          case AppRoutes.help:
-            return _fade(settings, const HelpPage());
-          case AppRoutes.home:
-          default:
-            return MaterialPageRoute<void>(
-              settings: const RouteSettings(name: AppRoutes.home),
-              builder: (_) => const TradingShellPage(),
-            );
-        }
-      },
+      onGenerateInitialRoutes: _initialRoutes,
+      onGenerateRoute: (settings) => _routeFor(settings),
     );
+  }
+
+  static List<Route<void>> _initialRoutes(String name) {
+    final home = MaterialPageRoute<void>(
+      settings: const RouteSettings(name: AppRoutes.home),
+      builder: (_) => const TradingShellPage(),
+    );
+    final dailyId = AppRoutes.dailyArticleId(name);
+    if (dailyId != null) {
+      return [
+        home,
+        _fade(
+          RouteSettings(name: name),
+          DailyArticlePage(articleId: dailyId),
+        ),
+      ];
+    }
+    if (name.isEmpty || name == AppRoutes.home) {
+      return [home];
+    }
+    return [home, _routeFor(RouteSettings(name: name))];
+  }
+
+  static Route<void> _routeFor(RouteSettings settings) {
+    final dailyId = AppRoutes.dailyArticleId(settings.name);
+    if (dailyId != null) {
+      final preview = settings.arguments is DailyArticle
+          ? settings.arguments as DailyArticle
+          : null;
+      return _fade(
+        settings,
+        DailyArticlePage(articleId: dailyId, preview: preview),
+      );
+    }
+
+    switch (settings.name) {
+      case AppRoutes.partner:
+        return _fade(settings, PartnerPage());
+      case AppRoutes.subscriptions:
+        return _fade(settings, SubscriptionsPage());
+      case AppRoutes.usStocks:
+        return _fade(settings, UsStocksPage());
+      case AppRoutes.stats:
+        return _fade(settings, StatsPage());
+      case AppRoutes.chart:
+        return _fade(settings, ChartPage());
+      case AppRoutes.portfolio:
+        return _fade(settings, PortfolioPage());
+      case AppRoutes.trades:
+        return _fade(settings, TradesPage());
+      case AppRoutes.settings:
+        return _fade(settings, SettingsPage());
+      case AppRoutes.aiAssistant:
+        return _fade(settings, const AiAssistantPage());
+      case AppRoutes.search:
+        return _fade(settings, const GlobalSearchPage());
+      case AppRoutes.about:
+        return _fade(settings, const AboutPage());
+      case AppRoutes.documents:
+        return _fade(settings, const DocumentsPage());
+      case AppRoutes.help:
+        return _fade(settings, const HelpPage());
+      case AppRoutes.courses:
+        return _fade(settings, const CoursesPage());
+      case AppRoutes.courseAlexanderL:
+        return _fade(
+          settings,
+          const MentorCoursePage(content: MentorCourses.alexanderL),
+        );
+      case AppRoutes.courseAntonTheFed:
+        return _fade(
+          settings,
+          const MentorCoursePage(content: MentorCourses.antonTheFed),
+        );
+      case AppRoutes.home:
+      default:
+        return MaterialPageRoute<void>(
+          settings: const RouteSettings(name: AppRoutes.home),
+          builder: (_) => const TradingShellPage(),
+        );
+    }
   }
 
   static PageRoute<void> _fade(RouteSettings settings, Widget page) {

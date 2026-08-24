@@ -7,6 +7,7 @@ import '../features/trading/data_providers/trading_data_provider.dart';
 import '../features/trading/market/candle_cache.dart';
 import '../features/trading/market/market_data_provider.dart';
 import '../features/trading/repositories/chart_repository.dart';
+import '../features/trading/repositories/daily_repository.dart';
 import '../features/trading/repositories/trading_repository.dart';
 
 /// Central access to data layer (per ARCHITECTURE_GUIDE DataManager).
@@ -17,6 +18,7 @@ class DataManager {
     required this.tradingRepository,
     required this.marketDataProvider,
     required this.chartRepository,
+    required this.dailyRepository,
   })  : _networkClient = networkClient,
         _tradingDataProvider = tradingDataProvider;
 
@@ -25,6 +27,7 @@ class DataManager {
   final TradingRepository tradingRepository;
   final MarketDataProvider marketDataProvider;
   final ChartRepository chartRepository;
+  final DailyRepository dailyRepository;
 
   NetworkClient get networkClient => _networkClient;
   TradingDataProvider get tradingDataProvider => _tradingDataProvider;
@@ -48,12 +51,17 @@ class DataManager {
       tradingRepository: tradingRepository,
       marketDataProvider: marketDataProvider,
     );
+    final dailyRepository = DailyRepository(
+      networkClient: networkClient,
+      prefs: prefs,
+    );
     return DataManager._(
       networkClient: networkClient,
       tradingDataProvider: tradingDataProvider,
       tradingRepository: tradingRepository,
       marketDataProvider: marketDataProvider,
       chartRepository: chartRepository,
+      dailyRepository: dailyRepository,
     );
   }
 }

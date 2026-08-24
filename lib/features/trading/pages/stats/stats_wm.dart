@@ -5,6 +5,7 @@ import 'package:rxdart/rxdart.dart';
 import '../../../../core/errors/data_error.dart';
 import '../../../../core/mwwm/widget_model.dart';
 import '../../models/equity_curve.dart';
+import '../../models/epoch_stats_calculator.dart';
 import '../../models/stats_model.dart';
 import '../../models/trade_model.dart';
 import '../../repositories/trading_repository.dart';
@@ -68,9 +69,16 @@ class StatsWidgetModel extends WidgetModel {
       ]);
       final stats = results[0] as EpochStats;
       final trades = results[1] as List<Trade>;
-      final curve = EquityCurve.fromStatsAndTrades(stats, trades);
+      final recalc = EpochStatsCalculator.recalculate(
+        raw: stats,
+        trades: trades,
+      );
       stateStream.add(
-        StatsState(stats: stats, equityCurve: curve, isLoading: false),
+        StatsState(
+          stats: recalc.stats,
+          equityCurve: recalc.curve,
+          isLoading: false,
+        ),
       );
     } catch (e, st) {
       handleError(e, st);

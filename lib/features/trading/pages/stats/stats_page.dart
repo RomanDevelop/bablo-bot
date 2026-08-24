@@ -212,8 +212,8 @@ class _StatsPageState extends MwwmWidgetState<StatsPage, StatsWidgetModel> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
-              'Эпоха futures flip: в статистику входят только fills бота после '
-              'epoch_started_at. График строится по закрытым сделкам, не по drift счёта.',
+              'Эпоха с 8 авг. 2026: в статистику входят только fills после '
+              'этой даты. График — по закрытым сделкам, не по drift счёта.',
               style: TextStyle(
                 color: AppColors.textMuted,
                 fontSize: 12,

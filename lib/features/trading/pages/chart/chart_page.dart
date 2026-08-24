@@ -105,7 +105,6 @@ class _ChartPageState extends MwwmWidgetState<ChartPage, ChartWidgetModel> {
           interval: snap.interval,
           metrics: metrics,
           signal: snap.lastSignal ?? 'HOLD',
-          testnet: snap.testnet,
           lips: snap.lips,
           jaw: snap.jaw,
           scanMode: snap.scanMode,

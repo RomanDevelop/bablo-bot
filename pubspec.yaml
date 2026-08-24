@@ -21,6 +21,9 @@ dependencies:
   url_launcher: ^6.3.2
   webview_flutter: ^4.13.0
   webview_flutter_web: ^0.2.3+4
+  cached_network_image: ^3.4.1
+  flutter_markdown: ^0.7.7+1
+  share_plus: ^11.0.0
 
 dev_dependencies:
   flutter_test:
@@ -32,3 +35,5 @@ flutter:
   assets:
     - assets/partner/monobank_jar_qr.png
     - assets/branding/bablo_community_hero.png
+    - assets/branding/alexander_l_hero.png
+    - assets/branding/anton_the_fed_hero.png

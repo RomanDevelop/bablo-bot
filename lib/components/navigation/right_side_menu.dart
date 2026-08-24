@@ -234,6 +234,12 @@ class RightSideMenu extends StatelessWidget {
                         ),
                         SideMenuItem(
                           palette: p,
+                          icon: Icons.school_outlined,
+                          title: 'Courses',
+                          onTap: () => _push(context, AppRoutes.courses),
+                        ),
+                        SideMenuItem(
+                          palette: p,
                           icon: Icons.info_outline_rounded,
                           title: 'About',
                           onTap: () => _push(context, AppRoutes.about),

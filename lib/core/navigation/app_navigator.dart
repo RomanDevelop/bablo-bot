@@ -23,4 +23,22 @@ class AppNavigator {
 
   static Future<void> openSearch(BuildContext context) =>
       pushNamed(context, AppRoutes.search);
+
+  static Future<T?> openDaily<T extends Object?>(
+    BuildContext context,
+    String id, {
+    Object? arguments,
+  }) {
+    return pushNamed<T>(
+      context,
+      AppRoutes.dailyArticle(id),
+      arguments: arguments,
+    );
+  }
+}
+
+extension AppNavContext on BuildContext {
+  Future<T?> push<T extends Object?>(String location, {Object? extra}) {
+    return Navigator.of(this).pushNamed<T>(location, arguments: extra);
+  }
 }

@@ -10,6 +10,7 @@ import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/money_format.dart';
 import '../../models/bot_status_model.dart';
+import '../daily/widgets/daily_carousel.dart';
 import 'dashboard_wm.dart';
 import 'di/dashboard_wm_builder.dart';
 
@@ -53,13 +54,6 @@ class _DashboardPageState
                   if (state.health != null) ...[
                     const SizedBox(width: 10),
                     StatusChip(
-                      label: state.health!.networkLabel,
-                      color: state.health!.testnet
-                          ? AppColors.testnet
-                          : AppColors.mainnet,
-                    ),
-                    const SizedBox(width: 6),
-                    StatusChip(
                       label: state.health!.isOk ? 'Online' : 'Offline',
                       color: state.health!.isOk
                           ? AppColors.online
@@ -93,6 +87,11 @@ class _DashboardPageState
         children: const [
           SizedBox(height: 180),
           PageLoading(),
+          SizedBox(height: 32),
+          Padding(
+            padding: EdgeInsets.fromLTRB(16, 0, 16, 120),
+            child: DailyCarousel(),
+          ),
         ],
       );
     }
@@ -105,6 +104,8 @@ class _DashboardPageState
         children: [
           if (state.error != null)
             ErrorBanner(message: state.error!, onRetry: () => wm.refresh()),
+          const SizedBox(height: 16),
+          const DailyCarousel(),
         ],
       );
     }
@@ -137,6 +138,8 @@ class _DashboardPageState
         ],
         const SizedBox(height: 16),
         _MetaRow(status: status, showUpdating: state.showUpdating),
+        const SizedBox(height: 20),
+        const DailyCarousel(),
       ],
     );
   }

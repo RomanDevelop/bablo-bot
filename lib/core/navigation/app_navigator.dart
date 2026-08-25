@@ -35,6 +35,30 @@ class AppNavigator {
       arguments: arguments,
     );
   }
+
+  static Future<T?> openCourse<T extends Object?>(
+    BuildContext context,
+    String id, {
+    Object? arguments,
+  }) {
+    return pushNamed<T>(
+      context,
+      AppRoutes.courseMentor(id),
+      arguments: arguments,
+    );
+  }
+
+  static Future<T?> openTemki<T extends Object?>(
+    BuildContext context, {
+    String? id,
+    Object? arguments,
+  }) {
+    return pushNamed<T>(
+      context,
+      id == null ? AppRoutes.temki : AppRoutes.temkiItem(id),
+      arguments: arguments,
+    );
+  }
 }
 
 extension AppNavContext on BuildContext {

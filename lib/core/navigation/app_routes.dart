@@ -18,11 +18,16 @@ class AppRoutes {
   static const courses = '/courses';
   static const courseAlexanderL = '/courses/alexander-l';
   static const courseAntonTheFed = '/courses/anton-the-fed';
+  static const courseIrenTheOracle = '/courses/iren-the-oracle';
   static const daily = '/daily';
+  static const temki = '/temki';
+  static const exchange = '/exchange';
 
   static String dailyArticle(String id) => '$daily/$id';
 
   static String courseMentor(String id) => '$courses/$id';
+
+  static String temkiItem(String id) => '$temki/$id';
 
   /// Path only: strips scheme/host/query/`/` tail so web deep links match.
   static String pathOf(String? name) {
@@ -54,6 +59,14 @@ class AppRoutes {
   static String? mentorCourseId(String? name) {
     final path = pathOf(name);
     const prefix = '$courses/';
+    if (!path.startsWith(prefix)) return null;
+    final id = path.substring(prefix.length).split('/').first;
+    return id.isEmpty ? null : id;
+  }
+
+  static String? temkiItemId(String? name) {
+    final path = pathOf(name);
+    const prefix = '$temki/';
     if (!path.startsWith(prefix)) return null;
     final id = path.substring(prefix.length).split('/').first;
     return id.isEmpty ? null : id;

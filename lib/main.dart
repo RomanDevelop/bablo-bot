@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'core/navigation/app_routes.dart';
 import 'core/constants/courses_constants.dart';
+import 'core/constants/temki_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 import 'data_management/data_manager.dart';
@@ -17,6 +18,7 @@ import 'features/trading/pages/courses/courses_page.dart';
 import 'features/trading/pages/courses/mentor_course_page.dart';
 import 'features/trading/pages/daily/daily_article_page.dart';
 import 'features/trading/pages/documents/documents_page.dart';
+import 'features/trading/pages/exchange/exchange_page.dart';
 import 'features/trading/pages/help/help_page.dart';
 import 'features/trading/pages/partner/partner_page.dart';
 import 'features/trading/pages/portfolio/portfolio_page.dart';
@@ -24,6 +26,8 @@ import 'features/trading/pages/settings/settings_page.dart';
 import 'features/trading/pages/shell/trading_shell_page.dart';
 import 'features/trading/pages/stats/stats_page.dart';
 import 'features/trading/pages/subscriptions/subscriptions_page.dart';
+import 'features/trading/pages/temki/temki_detail_page.dart';
+import 'features/trading/pages/temki/temki_page.dart';
 import 'features/trading/pages/trades/trades_page.dart';
 import 'features/trading/pages/us_stocks/us_stocks_page.dart';
 
@@ -101,9 +105,21 @@ class BabloApp extends StatelessWidget {
 
     final mentorId = AppRoutes.mentorCourseId(path);
     if (mentorId != null) {
-      final content = MentorCourses.byId(mentorId);
+      final content = settings.arguments is MentorCourseContent
+          ? settings.arguments as MentorCourseContent
+          : MentorCourses.byId(mentorId);
       if (content != null) {
         return _fade(settings, MentorCoursePage(content: content));
+      }
+    }
+
+    final temkiId = AppRoutes.temkiItemId(path);
+    if (temkiId != null) {
+      final item = settings.arguments is TemkiListing
+          ? settings.arguments as TemkiListing
+          : TemkiCatalog.byId(temkiId);
+      if (item != null) {
+        return _fade(settings, TemkiDetailPage(item: item));
       }
     }
 
@@ -136,6 +152,10 @@ class BabloApp extends StatelessWidget {
         return _fade(settings, const HelpPage());
       case AppRoutes.courses:
         return _fade(settings, const CoursesPage());
+      case AppRoutes.temki:
+        return _fade(settings, const TemkiPage());
+      case AppRoutes.exchange:
+        return _fade(settings, const ExchangePage());
       case AppRoutes.home:
       default:
         return MaterialPageRoute<void>(

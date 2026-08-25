@@ -79,6 +79,10 @@ class MarketPage extends StatelessWidget {
                 palette: p,
                 link: link,
                 onTap: () {
+                  if (link.isInternal) {
+                    AppNavigator.pushNamed(context, link.internalRoute!);
+                    return;
+                  }
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(

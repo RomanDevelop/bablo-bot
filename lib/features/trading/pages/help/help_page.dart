@@ -20,10 +20,7 @@ class HelpPage extends StatelessWidget {
       case 'ai':
         AppNavigator.pushNamed(context, AppRoutes.aiAssistant);
       case 'temka':
-        _toast(
-          context,
-          'Темки принимаются. Идеи оцениваем по ROI и уровню абсурда.',
-        );
+        AppNavigator.pushNamed(context, AppRoutes.temki);
       case 'lost':
         _toast(
           context,

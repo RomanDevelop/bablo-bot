@@ -19,6 +19,8 @@ class CoursesConstants {
     });
   }
 
+  static String heroTag(String id) => 'course-hero-$id';
+
   static const mentors = <CourseMentor>[
     CourseMentor(
       id: 'alexander-l',
@@ -36,6 +38,14 @@ class CoursesConstants {
       photoAsset: 'assets/branding/anton_the_fed_hero.png',
       priceUsd: 1500,
     ),
+    CourseMentor(
+      id: 'iren-the-oracle',
+      name: 'Iren "THE ORACLE"',
+      shortRole: 'Financial Tarot Guru',
+      route: AppRoutes.courseIrenTheOracle,
+      photoAsset: 'assets/branding/iren_the_oracle_hero.png',
+      priceUsd: 1300,
+    ),
   ];
 }
 
@@ -52,6 +62,8 @@ class MentorCourseContent {
     required this.quote,
     required this.signature,
     this.priceSubtitle = 'полный курс · менторинг · разборы',
+    this.enrollButtonLabel,
+    this.disclaimer,
   });
 
   final String id;
@@ -65,6 +77,11 @@ class MentorCourseContent {
   final String quote;
   final String signature;
   final String priceSubtitle;
+  final String? enrollButtonLabel;
+  final String? disclaimer;
+
+  String get ctaLabel =>
+      enrollButtonLabel ?? CoursesConstants.enrollButtonLabel;
 }
 
 class MentorCourses {
@@ -74,6 +91,7 @@ class MentorCourses {
     return switch (id) {
       'alexander-l' => alexanderL,
       'anton-the-fed' => antonTheFed,
+      'iren-the-oracle' => irenTheOracle,
       _ => null,
     };
   }
@@ -160,6 +178,64 @@ class MentorCourses {
         'Сначала архитектура, потом печать.» 😈',
     signature: 'ANTON "THE FED" — LAUNCH. TOKEN. ENGINEERING.',
     priceSubtitle: 'launch · tokenomics · капитализация',
+  );
+
+  static const irenTheOracle = MentorCourseContent(
+    id: 'iren-the-oracle',
+    name: 'Iren "THE ORACLE"',
+    role: 'Chief Financial Tarot Guru 🔮',
+    photoAsset: 'assets/branding/iren_the_oracle_hero.png',
+    priceUsd: 1300,
+    bio:
+        'FINANCIAL TAROT & MONEY PSYCHOLOGY.\n'
+        'Не курс о том, как карты сделают тебя миллионером. '
+        'Это было бы слишком просто даже для Bablo Community.',
+    program: [
+      (
+        '🔮',
+        'Tarot for Money — карты в контексте денег, бизнеса и карьеры',
+      ),
+      (
+        '🧠',
+        'Money Psychology — страх, жадность, FOMO и финансовые установки',
+      ),
+      (
+        '🪙',
+        'Crypto Tarot — рынок и крипта через символический анализ',
+      ),
+      (
+        '💼',
+        'Business & Career — работа, проекты и принятие решений',
+      ),
+      (
+        '🧱',
+        'Money Blocks — отношения с деньгами и риском',
+      ),
+      (
+        '🃏',
+        'Практические расклады и реальные кейсы',
+      ),
+      (
+        '✨',
+        'Авторские методики The Oracle',
+      ),
+      (
+        '💬',
+        'Практика и консультационные сессии',
+      ),
+    ],
+    format:
+        'Формат: расклад → разбор психологии → решение → практика. '
+        'Карты не торгуют за тебя. Они делают разговор с собой честнее.',
+    quote:
+        '«Cards don\'t make financial decisions. You do.\n'
+        'Iren just makes the conversation with yourself much more interesting.»',
+    signature: 'IREN "THE ORACLE" — CARDS. MONEY. PSYCHOLOGY.',
+    priceSubtitle: 'full course · tarot · money psychology',
+    enrollButtonLabel: 'ENTER THE ORACLE — \$1,300',
+    disclaimer:
+        'For educational and entertainment purposes. '
+        'Tarot readings are not financial or investment advice.',
   );
 }
 

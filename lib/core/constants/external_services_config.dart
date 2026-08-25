@@ -1,3 +1,5 @@
+import '../navigation/app_routes.dart';
+
 /// External / promo services shown in Right Side Menu (not trading logic).
 class ExternalServicesConfig {
   ExternalServicesConfig._();
@@ -32,10 +34,10 @@ class ExternalServicesConfig {
   static const temkiMutki = ExternalServiceLink(
     id: 'temki_mutki',
     title: 'Темки, мутки',
-    subtitle: 'Закрытые связки · внешний сервис',
-    url: String.fromEnvironment('TEMKI_MUTKI_URL', defaultValue: ''),
+    subtitle: 'Марс · Луна · космолёты · RSV',
+    url: '',
     enabled: true,
-    badge: 'Soon',
+    internalRoute: AppRoutes.temki,
   );
 
   static const telegramCommunity = ExternalServiceLink(
@@ -65,6 +67,7 @@ class ExternalServiceLink {
     required this.url,
     this.enabled = true,
     this.badge,
+    this.internalRoute,
   });
 
   final String id;
@@ -73,6 +76,8 @@ class ExternalServiceLink {
   final String url;
   final bool enabled;
   final String? badge;
+  final String? internalRoute;
 
   bool get hasUrl => url.trim().isNotEmpty && url != 'https://t.me/';
+  bool get isInternal => internalRoute != null && internalRoute!.isNotEmpty;
 }

@@ -7,6 +7,7 @@ import '../../../../core/constants/courses_constants.dart';
 import '../../../../core/navigation/navigate_back.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_controller.dart';
+import 'widgets/course_mentor_photo.dart';
 
 /// Mentor detail — Daily article layout, enroll via Telegram DM.
 class MentorCoursePage extends StatelessWidget {
@@ -32,8 +33,9 @@ class MentorCoursePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: p.background,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: p.background,
+        backgroundColor: Colors.transparent,
         foregroundColor: p.textPrimary,
         leading: IconButton(
           tooltip: 'Назад',
@@ -43,78 +45,100 @@ class MentorCoursePage extends StatelessWidget {
         title: const Text('Courses'),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+        padding: EdgeInsets.zero,
         children: [
           _HeroImage(content: content),
-          const SizedBox(height: 16),
-          _RoleBadge(label: content.role),
-          const SizedBox(height: 10),
-          Text(
-            content.name,
-            style: TextStyle(
-              color: p.textPrimary,
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              height: 1.25,
-              letterSpacing: -0.4,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            content.bio,
-            style: TextStyle(
-              color: p.textPrimary,
-              fontSize: 16,
-              height: 1.45,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 22),
-          const SectionLabel('Программа'),
-          const SizedBox(height: 12),
-          for (final item in content.program)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _ProgramTile(emoji: item.$1, text: item.$2),
-            ),
-          const SizedBox(height: 8),
-          TradingCard(
-            borderColor: p.primary.withValues(alpha: 0.35),
-            child: Text(
-              content.format,
-              style: TextStyle(
-                color: p.textSecondary,
-                fontSize: 13.5,
-                height: 1.4,
-                fontStyle: FontStyle.italic,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          _QuoteCard(text: content.quote),
-          const SizedBox(height: 22),
-          _PriceBlock(content: content),
-          const SizedBox(height: 16),
-          _EnrollButton(onTap: () => _enroll(context)),
-          const SizedBox(height: 20),
-          Text(
-            content.signature,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: p.textMuted,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.8,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Запись: @${CoursesConstants.telegramHandle}',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: p.primary,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _RoleBadge(label: content.role),
+                const SizedBox(height: 10),
+                Text(
+                  content.name,
+                  style: TextStyle(
+                    color: p.textPrimary,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    height: 1.25,
+                    letterSpacing: -0.4,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  content.bio,
+                  style: TextStyle(
+                    color: p.textPrimary,
+                    fontSize: 16,
+                    height: 1.45,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 22),
+                const SectionLabel('Программа'),
+                const SizedBox(height: 12),
+                for (final item in content.program)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: _ProgramTile(emoji: item.$1, text: item.$2),
+                  ),
+                const SizedBox(height: 8),
+                TradingCard(
+                  borderColor: p.primary.withValues(alpha: 0.35),
+                  child: Text(
+                    content.format,
+                    style: TextStyle(
+                      color: p.textSecondary,
+                      fontSize: 13.5,
+                      height: 1.4,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _QuoteCard(text: content.quote),
+                const SizedBox(height: 22),
+                _PriceBlock(content: content),
+                const SizedBox(height: 16),
+                _EnrollButton(
+                  label: content.ctaLabel,
+                  onTap: () => _enroll(context),
+                ),
+                if (content.disclaimer != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    content.disclaimer!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: p.textMuted,
+                      fontSize: 11,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                Text(
+                  content.signature,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: p.textMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Запись: @${CoursesConstants.telegramHandle}',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: p.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -130,23 +154,36 @@ class _HeroImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.watch<ThemeController>().palette;
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppTheme.cardRadius),
-      child: AspectRatio(
-        aspectRatio: 16 / 10,
-        child: Hero(
-          tag: 'course-hero-${content.id}',
-          child: Image.asset(
-            content.photoAsset,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => ColoredBox(
-              color: p.surfaceElevated,
-              child: Icon(Icons.person_rounded, color: p.primary, size: 72),
+    return Stack(
+      children: [
+        CourseMentorPhoto(
+          asset: content.photoAsset,
+          heroTag: CoursesConstants.heroTag(content.id),
+          fit: BoxFit.fitWidth,
+          alignment: Alignment.topCenter,
+          expand: false,
+        ),
+        const Positioned(
+          left: 0,
+          right: 0,
+          top: 0,
+          height: 120,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0x99000814),
+                    Color(0x00000814),
+                  ],
+                ),
+              ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -298,8 +335,9 @@ class _PriceBlock extends StatelessWidget {
 }
 
 class _EnrollButton extends StatelessWidget {
-  const _EnrollButton({required this.onTap});
+  const _EnrollButton({required this.label, required this.onTap});
 
+  final String label;
   final VoidCallback onTap;
 
   @override
@@ -312,19 +350,22 @@ class _EnrollButton extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppTheme.controlRadius),
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(Icons.send_rounded, color: p.onPrimary, size: 18),
               const SizedBox(width: 8),
-              Text(
-                CoursesConstants.enrollButtonLabel,
-                style: TextStyle(
-                  color: p.onPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.4,
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: p.onPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.4,
+                  ),
                 ),
               ),
             ],

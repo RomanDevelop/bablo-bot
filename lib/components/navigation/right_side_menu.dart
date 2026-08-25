@@ -136,6 +136,26 @@ class RightSideMenu extends StatelessWidget {
                       children: [
                         SideMenuItem(
                           palette: p,
+                          icon: Icons.school_rounded,
+                          title: 'Courses',
+                          iconColor: p.primary,
+                          onTap: () => _push(context, AppRoutes.courses),
+                        ),
+                        SideMenuItem(
+                          palette: p,
+                          icon: Icons.currency_exchange_rounded,
+                          title: 'Currency Exchange',
+                          iconColor: p.primary,
+                          onTap: () => _push(context, AppRoutes.exchange),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    SideMenuSection(
+                      palette: p,
+                      children: [
+                        SideMenuItem(
+                          palette: p,
                           icon: Icons.auto_awesome_rounded,
                           title: 'AI Assistant',
                           iconColor: p.primary,
@@ -178,7 +198,13 @@ class RightSideMenu extends StatelessWidget {
                         child: ExternalServiceMenuItem(
                           palette: p,
                           link: link,
-                          onTap: () => _openExternal(context, link),
+                          onTap: () {
+                            if (link.isInternal) {
+                              _push(context, link.internalRoute!);
+                            } else {
+                              _openExternal(context, link);
+                            }
+                          },
                         ),
                       ),
                     ),
@@ -231,12 +257,6 @@ class RightSideMenu extends StatelessWidget {
                           icon: Icons.description_outlined,
                           title: 'Documents',
                           onTap: () => _push(context, AppRoutes.documents),
-                        ),
-                        SideMenuItem(
-                          palette: p,
-                          icon: Icons.school_outlined,
-                          title: 'Courses',
-                          onTap: () => _push(context, AppRoutes.courses),
                         ),
                         SideMenuItem(
                           palette: p,

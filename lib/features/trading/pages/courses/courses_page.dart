@@ -1,70 +1,79 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/constants/courses_constants.dart';
 import '../../../../core/navigation/app_navigator.dart';
 import '../../../../core/navigation/navigate_back.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/theme_controller.dart';
 
-/// Courses hub — mentor list, expandable later.
+/// Courses hub — same Midnight Signal language as BABLO DAILY.
 class CoursesPage extends StatelessWidget {
   const CoursesPage({super.key});
 
-  static const _bg = Color(0xFF070707);
-  static const _card = Color(0xFF121212);
-  static const _gold = Color(0xFFD4AF37);
-  static const _goldDim = Color(0x33D4AF37);
-  static const _text = Color(0xFFF5F0E6);
-  static const _muted = Color(0xFFA89F8E);
-
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeController>().palette;
+
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: p.background,
       appBar: AppBar(
-        backgroundColor: _bg,
-        foregroundColor: _text,
-        elevation: 0,
+        backgroundColor: p.background,
+        foregroundColor: p.textPrimary,
         leading: IconButton(
           tooltip: 'Назад',
           onPressed: () => navigateBackOrHome(context),
-          icon: const Icon(Icons.arrow_back_rounded, color: _text),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: Text(
-          'Courses',
-          style: GoogleFonts.dmSans(
-            color: _text,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
+        title: const Text('Courses'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
         children: [
-          const _Header(),
-          const SizedBox(height: 18),
+          Text(
+            CoursesConstants.title,
+            style: TextStyle(
+              color: p.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.1,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            CoursesConstants.subtitle,
+            style: TextStyle(
+              color: p.textPrimary,
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              height: 1.25,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 10),
           Text(
             CoursesConstants.intro,
-            style: GoogleFonts.dmSans(
-              color: _muted,
+            style: TextStyle(
+              color: p.textSecondary,
               fontSize: 14,
               height: 1.45,
             ),
           ),
           const SizedBox(height: 22),
           Text(
-            'Менторы',
-            style: GoogleFonts.playfairDisplay(
-              color: _gold,
-              fontSize: 20,
+            'МЕНТОРЫ',
+            style: TextStyle(
+              color: p.textMuted,
+              fontSize: 11,
               fontWeight: FontWeight.w700,
+              letterSpacing: 1.1,
             ),
           ),
           const SizedBox(height: 12),
           for (final mentor in CoursesConstants.mentors)
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
-              child: _MentorTile(
+              child: _MentorCard(
                 mentor: mentor,
                 onTap: () => AppNavigator.pushNamed(context, mentor.route),
               ),
@@ -75,171 +84,120 @@ class CoursesPage extends StatelessWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 22, 18, 20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1A1508),
-            Color(0xFF0A0A0A),
-            Color(0xFF14100A),
-          ],
-        ),
-        border: Border.all(color: CoursesPage._gold.withValues(alpha: 0.45)),
-        boxShadow: const [
-          BoxShadow(
-            color: CoursesPage._goldDim,
-            blurRadius: 28,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: CoursesPage._goldDim,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: CoursesPage._gold.withValues(alpha: 0.4),
-              ),
-            ),
-            child: const Icon(
-              Icons.school_rounded,
-              color: CoursesPage._gold,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  CoursesConstants.title,
-                  style: GoogleFonts.playfairDisplay(
-                    color: CoursesPage._gold,
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-                Text(
-                  CoursesConstants.subtitle,
-                  style: GoogleFonts.dmSans(
-                    color: CoursesPage._text,
-                    fontSize: 13,
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MentorTile extends StatelessWidget {
-  const _MentorTile({required this.mentor, required this.onTap});
+class _MentorCard extends StatelessWidget {
+  const _MentorCard({required this.mentor, required this.onTap});
 
   final CourseMentor mentor;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeController>().palette;
+
     return Material(
-      color: Colors.transparent,
+      color: p.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.cardRadius),
+        side: BorderSide(color: p.borderSubtle),
+      ),
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
         onTap: onTap,
-        child: Ink(
-          decoration: BoxDecoration(
-            color: CoursesPage._card,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: CoursesPage._gold.withValues(alpha: 0.28),
-            ),
-          ),
-          child: Row(
+        child: SizedBox(
+          height: 200,
+          child: Stack(
+            fit: StackFit.expand,
             children: [
-              ClipRRect(
-                borderRadius: const BorderRadius.horizontal(
-                  left: Radius.circular(17),
-                ),
+              Hero(
+                tag: 'course-hero-${mentor.id}',
                 child: Image.asset(
                   mentor.photoAsset,
-                  width: 96,
-                  height: 112,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    width: 96,
-                    height: 112,
-                    color: CoursesPage._card,
-                    child: const Icon(
+                  errorBuilder: (_, __, ___) => ColoredBox(
+                    color: p.surfaceElevated,
+                    child: Icon(
                       Icons.person_rounded,
-                      color: CoursesPage._gold,
-                      size: 40,
+                      color: p.primary,
+                      size: 64,
                     ),
                   ),
                 ),
               ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        mentor.name,
-                        style: GoogleFonts.playfairDisplay(
-                          color: CoursesPage._text,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        mentor.shortRole,
-                        style: GoogleFonts.dmSans(
-                          color: CoursesPage._muted,
-                          fontSize: 12.5,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        '\$${mentor.priceUsd}',
-                        style: GoogleFonts.dmSans(
-                          color: CoursesPage._gold,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
+              const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Color(0x66000814),
+                      Color(0x00000814),
+                      Color(0xE6000814),
                     ],
+                    stops: [0, 0.38, 1],
                   ),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.only(right: 10),
-                child: Icon(
-                  Icons.chevron_right_rounded,
-                  color: CoursesPage._muted,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _RoleBadge(label: mentor.shortRole),
+                    const Spacer(),
+                    Text(
+                      mentor.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        height: 1.2,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '\$${mentor.priceUsd}',
+                      style: TextStyle(
+                        color: p.primaryHover,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _RoleBadge extends StatelessWidget {
+  const _RoleBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.watch<ThemeController>().palette;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: const Color(0xCC0B1220),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: p.primary.withValues(alpha: 0.55)),
+      ),
+      child: Text(
+        label.toUpperCase(),
+        style: TextStyle(
+          color: p.primaryHover,
+          fontSize: 10,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.6,
         ),
       ),
     );

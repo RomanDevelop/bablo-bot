@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/external_services_config.dart';
-import '../../core/navigation/app_navigator.dart';
 import '../../core/navigation/app_routes.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/theme/theme_controller.dart';
@@ -46,9 +45,10 @@ class RightSideMenu extends StatelessWidget {
   }
 
   void _push(BuildContext context, String route) {
+    final nav = Navigator.of(context);
     onClose();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (context.mounted) AppNavigator.pushNamed(context, route);
+      nav.pushNamed(route);
     });
   }
 

@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
+import '../../../../components/trading_card.dart';
 import '../../../../core/constants/help_constants.dart';
 import '../../../../core/navigation/app_navigator.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/navigation/navigate_back.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/theme_controller.dart';
 
-/// Black & gold Help desk — serious shell, sarcastic copy.
+/// Help desk — Midnight Signal cabinet surface.
 class HelpPage extends StatelessWidget {
   const HelpPage({super.key});
-
-  static const _bg = Color(0xFF070707);
-  static const _card = Color(0xFF121212);
-  static const _gold = Color(0xFFD4AF37);
-  static const _goldSoft = Color(0xFFC9A227);
-  static const _goldDim = Color(0x33D4AF37);
-  static const _text = Color(0xFFF5F0E6);
-  static const _muted = Color(0xFFA89F8E);
 
   void _onCard(BuildContext context, HelpCardData card) {
     switch (card.id) {
@@ -51,34 +46,25 @@ class HelpPage extends StatelessWidget {
 
   void _toast(BuildContext context, String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeController>().palette;
+
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: p.background,
       appBar: AppBar(
-        backgroundColor: _bg,
-        foregroundColor: _text,
-        elevation: 0,
+        backgroundColor: p.background,
+        foregroundColor: p.textPrimary,
         leading: IconButton(
           tooltip: 'Назад',
           onPressed: () => navigateBackOrHome(context),
-          icon: const Icon(Icons.arrow_back_rounded, color: _text),
+          icon: const Icon(Icons.arrow_back_rounded),
         ),
-        title: Text(
-          'Help',
-          style: GoogleFonts.dmSans(
-            color: _text,
-            fontWeight: FontWeight.w600,
-            fontSize: 18,
-          ),
-        ),
+        title: const Text('Help'),
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
@@ -86,15 +72,8 @@ class HelpPage extends StatelessWidget {
           const _Header(),
           const SizedBox(height: 16),
           const _IntroCard(),
-          const SizedBox(height: 20),
-          Text(
-            'Чем можем «помочь»',
-            style: GoogleFonts.playfairDisplay(
-              color: _gold,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
+          const SizedBox(height: 22),
+          const SectionLabel('Чем можем «помочь»'),
           const SizedBox(height: 12),
           for (final card in HelpConstants.cards)
             Padding(
@@ -121,29 +100,10 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(18, 22, 18, 20),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1A1508),
-            Color(0xFF0A0A0A),
-            Color(0xFF14100A),
-          ],
-        ),
-        border: Border.all(color: HelpPage._gold.withValues(alpha: 0.45)),
-        boxShadow: const [
-          BoxShadow(
-            color: HelpPage._goldDim,
-            blurRadius: 28,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
+    final p = context.watch<ThemeController>().palette;
+    return TradingCard(
+      borderColor: p.primary.withValues(alpha: 0.35),
+      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -153,15 +113,13 @@ class _Header extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: HelpPage._goldDim,
+                  color: p.primaryDim,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: HelpPage._gold.withValues(alpha: 0.4),
-                  ),
+                  border: Border.all(color: p.primary.withValues(alpha: 0.45)),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.support_agent_rounded,
-                  color: HelpPage._gold,
+                  color: p.primaryHover,
                   size: 24,
                 ),
               ),
@@ -172,17 +130,18 @@ class _Header extends StatelessWidget {
                   children: [
                     Text(
                       HelpConstants.title,
-                      style: GoogleFonts.playfairDisplay(
-                        color: HelpPage._gold,
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.4,
+                      style: TextStyle(
+                        color: p.textPrimary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.1,
                       ),
                     ),
+                    const SizedBox(height: 4),
                     Text(
                       HelpConstants.subtitle,
-                      style: GoogleFonts.dmSans(
-                        color: HelpPage._text,
+                      style: TextStyle(
+                        color: p.textSecondary,
                         fontSize: 13.5,
                         fontWeight: FontWeight.w500,
                       ),
@@ -195,8 +154,8 @@ class _Header extends StatelessWidget {
           const SizedBox(height: 14),
           Text(
             HelpConstants.hook,
-            style: GoogleFonts.dmSans(
-              color: HelpPage._muted,
+            style: TextStyle(
+              color: p.textMuted,
               fontSize: 13.5,
               height: 1.4,
               fontStyle: FontStyle.italic,
@@ -213,21 +172,11 @@ class _IntroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: HelpPage._card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: HelpPage._gold.withValues(alpha: 0.28)),
-      ),
+    final p = context.watch<ThemeController>().palette;
+    return TradingCard(
       child: Text(
         HelpConstants.welcome,
-        style: GoogleFonts.dmSans(
-          color: HelpPage._text,
-          fontSize: 14.5,
-          height: 1.45,
-        ),
+        style: TextStyle(color: p.textPrimary, fontSize: 14.5, height: 1.45),
       ),
     );
   }
@@ -241,73 +190,58 @@ class _HelpCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: onTap,
-        child: Ink(
-          padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
-          decoration: BoxDecoration(
-            color: HelpPage._card,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: HelpPage._gold.withValues(alpha: 0.22),
+    final p = context.watch<ThemeController>().palette;
+    return TradingCard(
+      onTap: onTap,
+      padding: const EdgeInsets.fromLTRB(14, 14, 8, 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: p.primaryDim,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: p.primary.withValues(alpha: 0.45)),
             ),
+            child: Text(data.emoji, style: const TextStyle(fontSize: 20)),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: HelpPage._goldDim,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: HelpPage._gold.withValues(alpha: 0.35),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  data.title,
+                  style: TextStyle(
+                    color: p.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
                   ),
                 ),
-                child: Text(data.emoji, style: const TextStyle(fontSize: 20)),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      data.title,
-                      style: GoogleFonts.dmSans(
-                        color: HelpPage._text,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      data.body,
-                      style: GoogleFonts.dmSans(
-                        color: HelpPage._muted,
-                        fontSize: 12.5,
-                        height: 1.35,
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 4),
+                Text(
+                  data.body,
+                  style: TextStyle(
+                    color: p.textSecondary,
+                    fontSize: 12.5,
+                    height: 1.35,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              const Padding(
-                padding: EdgeInsets.only(top: 10),
-                child: Icon(
-                  Icons.chevron_right_rounded,
-                  color: HelpPage._muted,
-                  size: 20,
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Icon(
+              Icons.chevron_right_rounded,
+              color: p.textMuted,
+              size: 20,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -320,48 +254,27 @@ class _SupportCta extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeController>().palette;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Material(
-          color: Colors.transparent,
+          color: p.primary,
+          borderRadius: BorderRadius.circular(AppTheme.controlRadius),
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(18),
-            child: Ink(
-              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(18),
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFE0C35A),
-                    Color(0xFFD4AF37),
-                    Color(0xFFA67C00),
-                  ],
+            borderRadius: BorderRadius.circular(AppTheme.controlRadius),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              child: Text(
+                '${HelpConstants.ctaEmoji}  ${HelpConstants.ctaTitle}',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: p.onPrimary,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.4,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: HelpPage._gold.withValues(alpha: 0.35),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    '${HelpConstants.ctaEmoji}  ${HelpConstants.ctaTitle}',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.dmSans(
-                      color: const Color(0xFF1A1200),
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.4,
-                    ),
-                  ),
-                ],
               ),
             ),
           ),
@@ -370,11 +283,7 @@ class _SupportCta extends StatelessWidget {
         Text(
           HelpConstants.ctaHint,
           textAlign: TextAlign.center,
-          style: GoogleFonts.dmSans(
-            color: HelpPage._muted,
-            fontSize: 12.5,
-            height: 1.4,
-          ),
+          style: TextStyle(color: p.textMuted, fontSize: 12.5, height: 1.4),
         ),
       ],
     );
@@ -386,27 +295,20 @@ class _Footer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.watch<ThemeController>().palette;
     return Column(
       children: [
         Container(
           height: 1,
           margin: const EdgeInsets.symmetric(horizontal: 24),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.transparent,
-                HelpPage._gold.withValues(alpha: 0.55),
-                Colors.transparent,
-              ],
-            ),
-          ),
+          color: p.divider,
         ),
         const SizedBox(height: 16),
         Text(
           HelpConstants.dept,
           textAlign: TextAlign.center,
-          style: GoogleFonts.dmSans(
-            color: HelpPage._goldSoft,
+          style: TextStyle(
+            color: p.primary,
             fontSize: 12,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.3,
@@ -416,8 +318,8 @@ class _Footer extends StatelessWidget {
         Text(
           HelpConstants.motto,
           textAlign: TextAlign.center,
-          style: GoogleFonts.playfairDisplay(
-            color: HelpPage._muted,
+          style: TextStyle(
+            color: p.textMuted,
             fontSize: 14,
             fontStyle: FontStyle.italic,
             height: 1.35,

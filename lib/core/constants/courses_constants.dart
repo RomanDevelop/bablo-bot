@@ -10,6 +10,15 @@ class CoursesConstants {
       'Менторинг Bablo Community — не про «гарантированный доход». '
       'Про навыки, практику и меньше глупых ошибок на старте.';
 
+  static const telegramHandle = 'romanklia';
+  static const enrollButtonLabel = 'ЗАПИСАТЬСЯ НА КУРС';
+
+  static Uri enrollUri(String courseName) {
+    return Uri.https('t.me', telegramHandle, {
+      'text': 'Привет! Хочу записаться на курс $courseName',
+    });
+  }
+
   static const mentors = <CourseMentor>[
     CourseMentor(
       id: 'alexander-l',
@@ -32,6 +41,7 @@ class CoursesConstants {
 
 class MentorCourseContent {
   const MentorCourseContent({
+    required this.id,
     required this.name,
     required this.role,
     required this.photoAsset,
@@ -44,6 +54,7 @@ class MentorCourseContent {
     this.priceSubtitle = 'полный курс · менторинг · разборы',
   });
 
+  final String id;
   final String name;
   final String role;
   final String photoAsset;
@@ -59,7 +70,16 @@ class MentorCourseContent {
 class MentorCourses {
   MentorCourses._();
 
+  static MentorCourseContent? byId(String id) {
+    return switch (id) {
+      'alexander-l' => alexanderL,
+      'anton-the-fed' => antonTheFed,
+      _ => null,
+    };
+  }
+
   static const alexanderL = MentorCourseContent(
+    id: 'alexander-l',
     name: 'Alexander L.',
     role: 'Chief Crypto Guru & Head of Mentoring 😈',
     photoAsset: 'assets/branding/alexander_l_hero.png',
@@ -86,6 +106,7 @@ class MentorCourses {
   );
 
   static const antonTheFed = MentorCourseContent(
+    id: 'anton-the-fed',
     name: 'Anton "THE FED"',
     role: 'Crypto Launch Architect & Token Engineer 😈',
     photoAsset: 'assets/branding/anton_the_fed_hero.png',

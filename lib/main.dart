@@ -69,24 +69,26 @@ class BabloApp extends StatelessWidget {
       settings: const RouteSettings(name: AppRoutes.home),
       builder: (_) => const TradingShellPage(),
     );
-    final dailyId = AppRoutes.dailyArticleId(name);
+    final path = AppRoutes.pathOf(name);
+    final dailyId = AppRoutes.dailyArticleId(path);
     if (dailyId != null) {
       return [
         home,
         _fade(
-          RouteSettings(name: name),
+          RouteSettings(name: path),
           DailyArticlePage(articleId: dailyId),
         ),
       ];
     }
-    if (name.isEmpty || name == AppRoutes.home) {
+    if (path == AppRoutes.home) {
       return [home];
     }
-    return [home, _routeFor(RouteSettings(name: name))];
+    return [home, _routeFor(RouteSettings(name: path))];
   }
 
   static Route<void> _routeFor(RouteSettings settings) {
-    final dailyId = AppRoutes.dailyArticleId(settings.name);
+    final path = AppRoutes.pathOf(settings.name);
+    final dailyId = AppRoutes.dailyArticleId(path);
     if (dailyId != null) {
       final preview = settings.arguments is DailyArticle
           ? settings.arguments as DailyArticle
@@ -97,7 +99,15 @@ class BabloApp extends StatelessWidget {
       );
     }
 
-    switch (settings.name) {
+    final mentorId = AppRoutes.mentorCourseId(path);
+    if (mentorId != null) {
+      final content = MentorCourses.byId(mentorId);
+      if (content != null) {
+        return _fade(settings, MentorCoursePage(content: content));
+      }
+    }
+
+    switch (path) {
       case AppRoutes.partner:
         return _fade(settings, PartnerPage());
       case AppRoutes.subscriptions:
@@ -126,16 +136,6 @@ class BabloApp extends StatelessWidget {
         return _fade(settings, const HelpPage());
       case AppRoutes.courses:
         return _fade(settings, const CoursesPage());
-      case AppRoutes.courseAlexanderL:
-        return _fade(
-          settings,
-          const MentorCoursePage(content: MentorCourses.alexanderL),
-        );
-      case AppRoutes.courseAntonTheFed:
-        return _fade(
-          settings,
-          const MentorCoursePage(content: MentorCourses.antonTheFed),
-        );
       case AppRoutes.home:
       default:
         return MaterialPageRoute<void>(

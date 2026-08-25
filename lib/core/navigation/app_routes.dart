@@ -22,10 +22,38 @@ class AppRoutes {
 
   static String dailyArticle(String id) => '$daily/$id';
 
+  static String courseMentor(String id) => '$courses/$id';
+
+  /// Path only: strips scheme/host/query/`/` tail so web deep links match.
+  static String pathOf(String? name) {
+    if (name == null || name.isEmpty) return home;
+    final raw = name.split('#').first.split('?').first.trim();
+    if (raw.isEmpty) return home;
+    final uri = Uri.tryParse(raw);
+    var path = raw.startsWith('/')
+        ? raw
+        : (uri != null && uri.path.isNotEmpty ? uri.path : '/$raw');
+    if (uri != null && uri.hasScheme && uri.path.isNotEmpty) {
+      path = uri.path;
+    }
+    if (!path.startsWith('/')) path = '/$path';
+    if (path.length > 1 && path.endsWith('/')) {
+      path = path.substring(0, path.length - 1);
+    }
+    return path;
+  }
+
   static String? dailyArticleId(String? name) {
-    if (name == null || name.isEmpty) return null;
-    final path = Uri.tryParse(name)?.path ?? name;
+    final path = pathOf(name);
     const prefix = '$daily/';
+    if (!path.startsWith(prefix)) return null;
+    final id = path.substring(prefix.length).split('/').first;
+    return id.isEmpty ? null : id;
+  }
+
+  static String? mentorCourseId(String? name) {
+    final path = pathOf(name);
+    const prefix = '$courses/';
     if (!path.startsWith(prefix)) return null;
     final id = path.substring(prefix.length).split('/').first;
     return id.isEmpty ? null : id;

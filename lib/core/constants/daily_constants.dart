@@ -4,6 +4,8 @@ class DailyConstants {
   static const displayAuthor = 'Anton THE FED';
   static const webOrigin = 'https://bablo-bot.web.app';
   static const listLimit = 10;
+  /// Newest N items stay in the hero carousel; the rest are list rows.
+  static const carouselLimit = 3;
   static const reactorIdKey = 'daily_reactor_id';
 
   static String shareUrl(String id) => '$webOrigin/daily/$id';

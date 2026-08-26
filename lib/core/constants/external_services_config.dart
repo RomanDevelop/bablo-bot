@@ -4,13 +4,22 @@ import '../navigation/app_routes.dart';
 class ExternalServicesConfig {
   ExternalServicesConfig._();
 
+  static const premiumBadge = 'Premium';
+
+  static const premiumGateTitle = 'Только для Premium';
+  static const premiumGateBody =
+      '«{title}» доступен только на тарифе Premium.\n\n'
+      'С Premium открываются ставки, PokerStars, Casino и другие '
+      'закрытые сервисы Bablo Community. Оформи подписку — и двери откроются.';
+
   static const pokerStars = ExternalServiceLink(
     id: 'pokerstars',
     title: 'PokerStars',
     subtitle: 'Покер · внешний сервис',
     url: String.fromEnvironment('POKERSTARS_URL', defaultValue: ''),
     enabled: true,
-    badge: 'Soon',
+    badge: premiumBadge,
+    requiresPremium: true,
   );
 
   static const casino = ExternalServiceLink(
@@ -19,7 +28,8 @@ class ExternalServicesConfig {
     subtitle: 'Казино · внешний сервис',
     url: String.fromEnvironment('CASINO_URL', defaultValue: ''),
     enabled: true,
-    badge: 'Soon',
+    badge: premiumBadge,
+    requiresPremium: true,
   );
 
   static const sportsBetting = ExternalServiceLink(
@@ -28,7 +38,8 @@ class ExternalServicesConfig {
     subtitle: 'Ставки · внешний сервис',
     url: String.fromEnvironment('SPORTS_BETTING_URL', defaultValue: ''),
     enabled: true,
-    badge: 'Soon',
+    badge: premiumBadge,
+    requiresPremium: true,
   );
 
   static const temkiMutki = ExternalServiceLink(
@@ -57,6 +68,9 @@ class ExternalServicesConfig {
     casino,
     temkiMutki,
   ];
+
+  static String premiumGateMessage(String title) =>
+      premiumGateBody.replaceAll('{title}', title);
 }
 
 class ExternalServiceLink {
@@ -68,6 +82,7 @@ class ExternalServiceLink {
     this.enabled = true,
     this.badge,
     this.internalRoute,
+    this.requiresPremium = false,
   });
 
   final String id;
@@ -77,6 +92,7 @@ class ExternalServiceLink {
   final bool enabled;
   final String? badge;
   final String? internalRoute;
+  final bool requiresPremium;
 
   bool get hasUrl => url.trim().isNotEmpty && url != 'https://t.me/';
   bool get isInternal => internalRoute != null && internalRoute!.isNotEmpty;

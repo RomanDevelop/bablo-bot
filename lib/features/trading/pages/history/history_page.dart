@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../components/feedback.dart';
+import '../../../../components/navigation/side_menu_button.dart';
 import '../../../../components/trading_card.dart';
 import '../../../../core/mwwm/core_mwwm_widget.dart';
 import '../../../../core/navigation/app_navigator.dart';
@@ -57,10 +58,9 @@ class _HistoryPageState
                   ),
                 ),
               ),
-              IconButton(
-                tooltip: 'Меню',
-                onPressed: widget.onOpenMenu,
-                icon: Icon(Icons.menu_rounded, color: AppColors.textPrimary),
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: SideMenuButton(onPressed: widget.onOpenMenu ?? () {}),
               ),
             ],
           ),

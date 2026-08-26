@@ -7,6 +7,7 @@ class AppRoutes {
   static const subscriptions = '/subscriptions';
   static const usStocks = '/us-stocks';
   static const chart = '/chart';
+  static const signals = '/signals';
   static const portfolio = '/portfolio';
   static const trades = '/trades';
   static const settings = '/settings';

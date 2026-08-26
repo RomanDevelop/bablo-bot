@@ -18,6 +18,7 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
   static const _entries = <_SearchEntry>[
     _SearchEntry('Dashboard', 'Баланс и позиция', AppRoutes.home, Icons.home_outlined),
     _SearchEntry('Chart', 'Свечи и Alligator', AppRoutes.chart, Icons.candlestick_chart_outlined),
+    _SearchEntry('Signals', 'Крипто · Спот · US Stocks', AppRoutes.signals, Icons.bolt_outlined),
     _SearchEntry('US Stocks', 'UTEX market', AppRoutes.usStocks, Icons.ssid_chart_outlined),
     _SearchEntry('Portfolio', 'Кошелёк и позиция', AppRoutes.portfolio, Icons.account_balance_wallet_outlined),
     _SearchEntry('История / Trades', 'Сделки бота', AppRoutes.trades, Icons.history_outlined),

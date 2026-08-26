@@ -11,7 +11,7 @@ import '../../../models/daily_article.dart';
 import '../../../repositories/daily_repository.dart';
 import 'daily_network_image.dart';
 
-/// BABLO DAILY — horizontal carousel of last 7–10 articles (no body).
+/// BABLO DAILY — top 3 in carousel, older items as horizontal rows.
 class DailyCarousel extends StatefulWidget {
   const DailyCarousel({super.key});
 
@@ -83,6 +83,11 @@ class _DailyCarouselState extends State<DailyCarousel> {
 
   @override
   Widget build(BuildContext context) {
+    final carouselItems =
+        _items.take(DailyConstants.carouselLimit).toList(growable: false);
+    final listItems =
+        _items.skip(DailyConstants.carouselLimit).toList(growable: false);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -133,40 +138,149 @@ class _DailyCarouselState extends State<DailyCarousel> {
         if (_loading)
           const SizedBox(height: 200, child: _CarouselSkeleton())
         else if (_error != null)
-          _CarouselError(message: _error!, onRetry: () => _load(forceRefresh: true))
+          _CarouselError(
+            message: _error!,
+            onRetry: () => _load(forceRefresh: true),
+          )
         else if (_items.isEmpty)
           const _CarouselEmpty()
-        else
-          Column(
+        else ...[
+          if (carouselItems.isNotEmpty)
+            Column(
+              children: [
+                SizedBox(
+                  height: 200,
+                  child: PageView.builder(
+                    controller: _pageController,
+                    padEnds: false,
+                    itemCount: carouselItems.length,
+                    onPageChanged: (i) => setState(() => _page = i),
+                    itemBuilder: (context, index) {
+                      final item = carouselItems[index];
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          right: index == carouselItems.length - 1 ? 0 : 10,
+                        ),
+                        child: _DailyCard(
+                          article: item,
+                          onTap: () => _open(item),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (carouselItems.length > 1) ...[
+                  const SizedBox(height: 10),
+                  _Dots(count: carouselItems.length, index: _page),
+                ],
+              ],
+            ),
+          if (listItems.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            ...List.generate(listItems.length, (index) {
+              final item = listItems[index];
+              return Padding(
+                padding: EdgeInsets.only(
+                  bottom: index == listItems.length - 1 ? 0 : 10,
+                ),
+                child: _DailyHorizontalCard(
+                  article: item,
+                  onTap: () => _open(item),
+                ),
+              );
+            }),
+          ],
+        ],
+      ],
+    );
+  }
+}
+
+class _DailyHorizontalCard extends StatelessWidget {
+  const _DailyHorizontalCard({
+    required this.article,
+    required this.onTap,
+  });
+
+  final DailyArticle article;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final category = article.categoryLabel.isNotEmpty
+        ? article.categoryLabel
+        : article.category;
+
+    return Material(
+      color: AppColors.card,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppColors.borderSubtle),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          height: 88,
+          child: Row(
             children: [
               SizedBox(
-                height: 200,
-                child: PageView.builder(
-                  controller: _pageController,
-                  padEnds: false,
-                  itemCount: _items.length,
-                  onPageChanged: (i) => setState(() => _page = i),
-                  itemBuilder: (context, index) {
-                    final item = _items[index];
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        right: index == _items.length - 1 ? 0 : 10,
-                      ),
-                      child: _DailyCard(
-                        article: item,
-                        onTap: () => _open(item),
-                      ),
-                    );
-                  },
+                width: 96,
+                height: 88,
+                child: Hero(
+                  tag: 'daily-hero-${article.id}',
+                  child: DailyNetworkImage(url: article.imageUrl),
                 ),
               ),
-              if (_items.length > 1) ...[
-                const SizedBox(height: 10),
-                _Dots(count: _items.length, index: _page),
-              ],
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (category.isNotEmpty)
+                        Text(
+                          category.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColors.primaryHover,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.55,
+                          ),
+                        ),
+                      const SizedBox(height: 4),
+                      Expanded(
+                        child: Text(
+                          article.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            height: 1.25,
+                            letterSpacing: -0.15,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Icon(
+                  Icons.chevron_right_rounded,
+                  color: AppColors.textMuted,
+                  size: 22,
+                ),
+              ),
             ],
           ),
-      ],
+        ),
+      ),
     );
   }
 }

@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../../../components/trading_card.dart';
 import '../../../../components/navigation/right_side_menu.dart';
+import '../../../../components/navigation/side_menu_button.dart';
+import '../../../../components/premium_service_dialog.dart';
 import '../../../../core/constants/external_services_config.dart';
 import '../../../../core/constants/market_constants.dart';
 import '../../../../core/navigation/app_navigator.dart';
@@ -33,10 +35,9 @@ class MarketPage extends StatelessWidget {
           ),
         ),
         actions: [
-          IconButton(
-            tooltip: 'Меню',
-            onPressed: onOpenMenu,
-            icon: Icon(Icons.menu_rounded, color: p.textPrimary),
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: SideMenuButton(onPressed: onOpenMenu ?? () {}),
           ),
         ],
       ),
@@ -81,6 +82,10 @@ class MarketPage extends StatelessWidget {
                 onTap: () {
                   if (link.isInternal) {
                     AppNavigator.pushNamed(context, link.internalRoute!);
+                    return;
+                  }
+                  if (link.requiresPremium) {
+                    showPremiumServiceDialog(context, link);
                     return;
                   }
                   ScaffoldMessenger.of(context).showSnackBar(

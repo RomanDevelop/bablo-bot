@@ -6,6 +6,7 @@ import '../../core/constants/external_services_config.dart';
 import '../../core/navigation/app_routes.dart';
 import '../../core/theme/app_palette.dart';
 import '../../core/theme/theme_controller.dart';
+import '../premium_service_dialog.dart';
 
 class RightSideMenu extends StatelessWidget {
   const RightSideMenu({
@@ -109,10 +110,7 @@ class RightSideMenu extends StatelessWidget {
                           icon: Icons.bolt_outlined,
                           title: 'Signals',
                           iconColor: p.buy,
-                          onTap: () {
-                            onClose();
-                            onOpenTab?.call(0);
-                          },
+                          onTap: () => _push(context, AppRoutes.signals),
                         ),
                         SideMenuItem(
                           palette: p,
@@ -201,9 +199,17 @@ class RightSideMenu extends StatelessWidget {
                           onTap: () {
                             if (link.isInternal) {
                               _push(context, link.internalRoute!);
-                            } else {
-                              _openExternal(context, link);
+                              return;
                             }
+                            if (link.requiresPremium) {
+                              showPremiumServiceDialog(
+                                context,
+                                link,
+                                onBeforeNavigate: onClose,
+                              );
+                              return;
+                            }
+                            _openExternal(context, link);
                           },
                         ),
                       ),

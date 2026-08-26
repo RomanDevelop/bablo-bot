@@ -18,6 +18,7 @@ class EquityHeader extends StatelessWidget {
     required this.isHalted,
     this.scanMode,
     this.strategyLabel,
+    this.onCollapse,
   });
 
   final String equity;
@@ -28,6 +29,7 @@ class EquityHeader extends StatelessWidget {
   final bool isHalted;
   final String? scanMode;
   final String? strategyLabel;
+  final VoidCallback? onCollapse;
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +70,24 @@ class EquityHeader extends StatelessWidget {
                         ? AppColors.buy
                         : AppColors.textMuted,
               ),
+              if (onCollapse != null) ...[
+                const SizedBox(width: 4),
+                IconButton(
+                  onPressed: onCollapse,
+                  tooltip: 'Свернуть',
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  icon: Icon(
+                    Icons.keyboard_arrow_up_rounded,
+                    color: AppColors.primary,
+                    size: 26,
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 10),

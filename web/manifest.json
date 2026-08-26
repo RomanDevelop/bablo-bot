@@ -1,11 +1,11 @@
 {
-    "name": "crypto_trading_bot",
-    "short_name": "crypto_trading_bot",
+    "name": "Bablo Trading",
+    "short_name": "Bablo",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#000814",
+    "theme_color": "#000814",
+    "description": "Bablo Trading — client cabinet for the trading bot.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

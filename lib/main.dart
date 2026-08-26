@@ -24,6 +24,7 @@ import 'features/trading/pages/partner/partner_page.dart';
 import 'features/trading/pages/portfolio/portfolio_page.dart';
 import 'features/trading/pages/settings/settings_page.dart';
 import 'features/trading/pages/shell/trading_shell_page.dart';
+import 'features/trading/pages/signals/signals_page.dart';
 import 'features/trading/pages/stats/stats_page.dart';
 import 'features/trading/pages/subscriptions/subscriptions_page.dart';
 import 'features/trading/pages/temki/temki_detail_page.dart';
@@ -134,6 +135,8 @@ class BabloApp extends StatelessWidget {
         return _fade(settings, StatsPage());
       case AppRoutes.chart:
         return _fade(settings, ChartPage());
+      case AppRoutes.signals:
+        return _fade(settings, SignalsPage());
       case AppRoutes.portfolio:
         return _fade(settings, PortfolioPage());
       case AppRoutes.trades:

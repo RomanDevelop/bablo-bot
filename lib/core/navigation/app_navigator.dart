@@ -24,6 +24,9 @@ class AppNavigator {
   static Future<void> openSearch(BuildContext context) =>
       pushNamed(context, AppRoutes.search);
 
+  static Future<void> openSignals(BuildContext context) =>
+      pushNamed(context, AppRoutes.signals);
+
   static Future<T?> openDaily<T extends Object?>(
     BuildContext context,
     String id, {

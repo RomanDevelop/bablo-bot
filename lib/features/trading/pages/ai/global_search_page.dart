@@ -33,6 +33,8 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
     _SearchEntry('Iren "THE ORACLE"', 'Financial tarot', AppRoutes.courseIrenTheOracle, Icons.auto_awesome_outlined),
     _SearchEntry('Темки, мутки', 'Марс, Луна, космолёты', AppRoutes.temki, Icons.handshake_outlined),
     _SearchEntry('Currency Exchange', 'Swap to RSV', AppRoutes.exchange, Icons.currency_exchange_outlined),
+    _SearchEntry('Microloans', 'RSV advance · growth quota', AppRoutes.microloans, Icons.handshake_outlined),
+    _SearchEntry('Profile', 'Account & RSV balance', AppRoutes.profile, Icons.person_outline_rounded),
     _SearchEntry('Documents', 'Official papers', AppRoutes.documents, Icons.description_outlined),
     _SearchEntry('Help', 'Центр взаимопомощи', AppRoutes.help, Icons.help_outline_rounded),
     _SearchEntry('Settings', 'Admin бота', AppRoutes.settings, Icons.tune_outlined),

@@ -3,6 +3,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
+import 'core/auth/auth_session.dart';
 import 'core/navigation/app_routes.dart';
 import 'core/constants/courses_constants.dart';
 import 'core/constants/temki_constants.dart';
@@ -20,8 +21,10 @@ import 'features/trading/pages/daily/daily_article_page.dart';
 import 'features/trading/pages/documents/documents_page.dart';
 import 'features/trading/pages/exchange/exchange_page.dart';
 import 'features/trading/pages/help/help_page.dart';
+import 'features/trading/pages/microloans/microloans_page.dart';
 import 'features/trading/pages/partner/partner_page.dart';
 import 'features/trading/pages/portfolio/portfolio_page.dart';
+import 'features/trading/pages/profile/profile_page.dart';
 import 'features/trading/pages/settings/settings_page.dart';
 import 'features/trading/pages/shell/trading_shell_page.dart';
 import 'features/trading/pages/signals/signals_page.dart';
@@ -39,12 +42,14 @@ Future<void> main() async {
 
   final dataManager = await DataManager.create();
   final themeController = await ThemeController.create();
+  final authSession = await AuthSession.create();
 
   runApp(
     MultiProvider(
       providers: [
         Provider<DataManager>.value(value: dataManager),
         ChangeNotifierProvider<ThemeController>.value(value: themeController),
+        ChangeNotifierProvider<AuthSession>.value(value: authSession),
       ],
       child: const BabloApp(),
     ),
@@ -159,6 +164,10 @@ class BabloApp extends StatelessWidget {
         return _fade(settings, const TemkiPage());
       case AppRoutes.exchange:
         return _fade(settings, const ExchangePage());
+      case AppRoutes.microloans:
+        return _fade(settings, MicroloansPage());
+      case AppRoutes.profile:
+        return _fade(settings, ProfilePage());
       case AppRoutes.home:
       default:
         return MaterialPageRoute<void>(

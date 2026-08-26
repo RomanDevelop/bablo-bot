@@ -23,6 +23,8 @@ class AppRoutes {
   static const daily = '/daily';
   static const temki = '/temki';
   static const exchange = '/exchange';
+  static const microloans = '/microloans';
+  static const profile = '/profile';
 
   static String dailyArticle(String id) => '$daily/$id';
 

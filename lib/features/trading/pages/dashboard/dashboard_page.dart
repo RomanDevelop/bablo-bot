@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../components/bablo_brand_mark.dart';
 import '../../../../components/dashboard_widgets.dart';
@@ -6,9 +7,14 @@ import '../../../../components/feedback.dart';
 import '../../../../components/navigation/side_menu_button.dart';
 import '../../../../components/stats_action_button.dart';
 import '../../../../components/status_chip.dart';
+import '../../../../components/trading_card.dart';
+import '../../../../core/auth/auth_session.dart';
+import '../../../../core/constants/exchange_constants.dart';
 import '../../../../core/mwwm/core_mwwm_widget.dart';
+import '../../../../core/navigation/app_navigator.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/utils/money_format.dart';
 import '../../models/bot_status_model.dart';
 import '../daily/widgets/daily_carousel.dart';
@@ -116,6 +122,8 @@ class _DashboardPageState
           ErrorBanner(message: state.error!, onRetry: () => wm.refresh()),
           const SizedBox(height: 12),
         ],
+        const _UserBootstrapStrip(),
+        const SizedBox(height: 12),
         _CollapsibleTradingBlock(
           status: status,
           showUpdating: state.showUpdating,
@@ -305,6 +313,113 @@ class _CollapsedBalanceRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _UserBootstrapStrip extends StatelessWidget {
+  const _UserBootstrapStrip();
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = context.watch<AuthSession>();
+    final p = context.watch<ThemeController>().palette;
+
+    if (auth.isLoading) {
+      return TradingCard(
+        child: Row(
+          children: [
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: p.primary),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Connecting Bablo account…',
+              style: TextStyle(color: p.textSecondary, fontSize: 13),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (!auth.isAuthenticated || auth.bootstrap == null) {
+      return TradingCard(
+        onTap: () => context.push(AppRoutes.profile),
+        child: Row(
+          children: [
+            Icon(Icons.person_outline_rounded, color: p.primary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                'Sign in via Telegram to see your RSV rewards',
+                style: TextStyle(color: p.textSecondary, fontSize: 13),
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: p.textMuted),
+          ],
+        ),
+      );
+    }
+
+    final b = auth.bootstrap!;
+    final rsv = b.rewards.paidRsv;
+    return TradingCard(
+      borderColor: p.primary.withValues(alpha: 0.35),
+      onTap: () => context.push(AppRoutes.profile),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  b.user.displayName.toUpperCase(),
+                  style: TextStyle(
+                    color: p.textMuted,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${rsv.toStringAsFixed(2)} RSV · ${b.subscription.plan}',
+                  style: TextStyle(
+                    color: p.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Level ${b.stats.level} · ${b.referral.invitedCount} referrals',
+                  style: TextStyle(color: p.textSecondary, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '≈ \$${(rsv * ExchangeConstants.rsvUsd).toStringAsFixed(2)}',
+                style: TextStyle(
+                  color: p.textSecondary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Profile',
+                style: TextStyle(color: p.primary, fontSize: 12),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

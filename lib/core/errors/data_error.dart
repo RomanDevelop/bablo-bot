@@ -2,6 +2,7 @@ enum ErrorCode {
   network,
   exchangeUnavailable,
   badRequest,
+  unauthorized,
   gone,
   unhandled,
 }
@@ -26,6 +27,8 @@ class DataError implements Exception {
         return 'Биржа недоступна';
       case ErrorCode.badRequest:
         return 'Некорректный запрос';
+      case ErrorCode.unauthorized:
+        return 'Требуется вход';
       case ErrorCode.gone:
         return 'Функция больше недоступна';
       case ErrorCode.unhandled:

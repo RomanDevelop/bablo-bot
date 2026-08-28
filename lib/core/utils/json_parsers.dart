@@ -35,6 +35,12 @@ double asDouble(dynamic value, [double fallback = 0]) {
   return fallback;
 }
 
+num asNum(dynamic value, [num fallback = 0]) {
+  if (value is num) return value;
+  if (value is String) return num.tryParse(value) ?? fallback;
+  return fallback;
+}
+
 Map<String, dynamic> asMap(dynamic value) {
   if (value is Map<String, dynamic>) return value;
   if (value is Map) return Map<String, dynamic>.from(value);

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../constants/api_constants.dart';
 import '../errors/data_error.dart';
+import 'auth_interceptor.dart';
 
 class NetworkClient {
   NetworkClient({String? apiEndpoint}) {
@@ -10,7 +11,10 @@ class NetworkClient {
         baseUrl: apiEndpoint ?? ApiConstants.baseUrl,
         connectTimeout: const Duration(seconds: 20),
         receiveTimeout: const Duration(seconds: 30),
-        headers: const {'Accept': 'application/json'},
+        headers: const {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
       ),
     );
   }
@@ -19,14 +23,20 @@ class NetworkClient {
 
   Dio get dio => _dio;
 
+  void attachAuthInterceptor(AuthInterceptor interceptor) {
+    _dio.interceptors.add(interceptor);
+  }
+
   Future<T> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
+    bool skipAuth = false,
   }) async {
     try {
       final response = await _dio.get<T>(
         path,
         queryParameters: queryParameters,
+        options: Options(extra: {AuthInterceptor.skipAuthKey: skipAuth}),
       );
       return response.data as T;
     } on DioException catch (e) {
@@ -37,10 +47,34 @@ class NetworkClient {
   Future<T> post<T>(
     String path, {
     Object? data,
+    bool skipAuth = false,
   }) async {
     try {
-      final response = await _dio.post<T>(path, data: data);
+      final response = await _dio.post<T>(
+        path,
+        data: data,
+        options: Options(extra: {AuthInterceptor.skipAuthKey: skipAuth}),
+      );
       return response.data as T;
+    } on DioException catch (e) {
+      throw _mapDioError(e);
+    }
+  }
+
+  Future<void> postVoid(
+    String path, {
+    Object? data,
+    bool skipAuth = false,
+  }) async {
+    try {
+      await _dio.post<void>(
+        path,
+        data: data,
+        options: Options(
+          extra: {AuthInterceptor.skipAuthKey: skipAuth},
+          validateStatus: (code) => code != null && code < 500,
+        ),
+      );
     } on DioException catch (e) {
       throw _mapDioError(e);
     }
@@ -49,9 +83,14 @@ class NetworkClient {
   Future<T> patch<T>(
     String path, {
     Object? data,
+    bool skipAuth = false,
   }) async {
     try {
-      final response = await _dio.patch<T>(path, data: data);
+      final response = await _dio.patch<T>(
+        path,
+        data: data,
+        options: Options(extra: {AuthInterceptor.skipAuthKey: skipAuth}),
+      );
       return response.data as T;
     } on DioException catch (e) {
       throw _mapDioError(e);
@@ -62,6 +101,13 @@ class NetworkClient {
     final status = e.response?.statusCode;
     final detail = _extractDetail(e.response?.data);
 
+    if (status == 401) {
+      return DataError(
+        errorCode: ErrorCode.unauthorized,
+        message: detail ?? 'Unauthorized',
+        data: _asMap(e.response?.data),
+      );
+    }
     if (status == 503) {
       return DataError(
         errorCode: ErrorCode.exchangeUnavailable,
@@ -102,6 +148,10 @@ class NetworkClient {
     if (data is Map) {
       final detail = data['detail'];
       if (detail is String) return detail;
+      if (detail is Map) {
+        final msg = detail['message'];
+        if (msg is String) return msg;
+      }
       if (detail != null) return detail.toString();
     }
     return null;

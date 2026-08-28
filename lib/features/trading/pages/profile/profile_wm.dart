@@ -2,16 +2,26 @@ import 'package:rxdart/rxdart.dart';
 
 import '../../../../core/auth/auth_session.dart';
 import '../../../../core/constants/microloans_constants.dart';
+import '../../../../core/errors/data_error.dart';
 import '../../../../core/mwwm/widget_model.dart';
 
 class ProfileState {
-  const ProfileState({this.message});
+  const ProfileState({
+    this.message,
+    this.isBusy = false,
+  });
 
   final String? message;
+  final bool isBusy;
 
-  ProfileState copyWith({String? message, bool clearMessage = false}) {
+  ProfileState copyWith({
+    String? message,
+    bool? isBusy,
+    bool clearMessage = false,
+  }) {
     return ProfileState(
       message: clearMessage ? null : (message ?? this.message),
+      isBusy: isBusy ?? this.isBusy,
     );
   }
 }
@@ -31,26 +41,55 @@ class ProfileWidgetModel extends WidgetModel {
 
   String get handle => auth.handle;
 
-  int get rsvBalance => auth.demoRsvBalance;
+  num get rsvBalance => auth.rsvBalance;
+
+  num get earnedRsv => auth.earnedRsv;
 
   MicroloanTier? get activeLoan => auth.activeLoanTier;
 
-  /// Local stub until Bablo backend auth.
   Future<void> signIn() async {
-    await auth.signInStub();
+    stateStream.add(stateStream.value.copyWith(isBusy: true, clearMessage: true));
+    await auth.login();
     stateStream.add(
       stateStream.value.copyWith(
-        message:
-            'Signed in (local stub). Backend auth & wallet — coming soon.',
+        isBusy: false,
+        message: auth.isAuthenticated
+            ? 'Signed in as ${auth.displayName}'
+            : auth.errorMessage ?? 'Open Bablo in Telegram to sign in',
       ),
     );
   }
 
   Future<void> signOut() async {
-    await auth.signOut();
+    stateStream.add(stateStream.value.copyWith(isBusy: true, clearMessage: true));
+    await auth.logout();
     stateStream.add(
-      stateStream.value.copyWith(message: 'Signed out.'),
+      stateStream.value.copyWith(
+        isBusy: false,
+        message: 'Signed out.',
+      ),
     );
+  }
+
+  Future<void> refreshProfile() async {
+    stateStream.add(stateStream.value.copyWith(isBusy: true, clearMessage: true));
+    try {
+      await auth.refreshBootstrap();
+      stateStream.add(
+        stateStream.value.copyWith(
+          isBusy: false,
+          message: 'Profile updated',
+        ),
+      );
+    } on DataError catch (e) {
+      stateStream.add(
+        stateStream.value.copyWith(isBusy: false, message: e.displayMessage),
+      );
+    } catch (e) {
+      stateStream.add(
+        stateStream.value.copyWith(isBusy: false, message: e.toString()),
+      );
+    }
   }
 
   void clearMessage() {

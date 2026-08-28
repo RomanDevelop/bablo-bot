@@ -3,13 +3,14 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 
+import 'app/auth_initializer.dart';
 import 'core/auth/auth_session.dart';
 import 'core/navigation/app_routes.dart';
 import 'core/constants/courses_constants.dart';
 import 'core/constants/temki_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
-import 'data_management/data_manager.dart';
+import 'data_management/app_services.dart';
 import 'features/trading/pages/about/about_page.dart';
 import 'features/trading/pages/ai/ai_assistant_page.dart';
 import 'features/trading/pages/ai/global_search_page.dart';
@@ -40,18 +41,17 @@ Future<void> main() async {
   usePathUrlStrategy();
   await initializeDateFormatting('ru');
 
-  final dataManager = await DataManager.create();
+  final services = await AppServices.create();
   final themeController = await ThemeController.create();
-  final authSession = await AuthSession.create();
 
   runApp(
     MultiProvider(
       providers: [
-        Provider<DataManager>.value(value: dataManager),
+        Provider<DataManager>.value(value: services.dataManager),
         ChangeNotifierProvider<ThemeController>.value(value: themeController),
-        ChangeNotifierProvider<AuthSession>.value(value: authSession),
+        ChangeNotifierProvider<AuthSession>.value(value: services.authSession),
       ],
-      child: const BabloApp(),
+      child: const AuthInitializer(child: BabloApp()),
     ),
   );
 }

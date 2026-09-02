@@ -5,6 +5,13 @@ class SubscriptionConstants {
   /// Stripe Checkout / PaymentIntent is created on API; client opens returned URL.
   static const checkoutReady = false;
 
+  static const _rsvRewardsFeature =
+      'RSV Rewards — при отрицательном месяце начисляются RSV как награда '
+      'за участие, а не как денежная компенсация';
+  static const _dexFeature =
+      'DEX — после листинга пользователь сможет вывести RSV на Polygon '
+      'и обменять их через QuickSwap';
+
   static const List<SubscriptionPlan> plans = [
     SubscriptionPlan(
       id: SubscriptionPlanId.tips,
@@ -32,6 +39,8 @@ class SubscriptionConstants {
         'Доля в общем торговом фонде',
         'Прозрачная отчётность по PnL',
         'Вывод по правилам фонда',
+        _rsvRewardsFeature,
+        _dexFeature,
       ],
       ctaLabel: 'Инвестировать',
       allowsCustomAmount: true,
@@ -52,6 +61,8 @@ class SubscriptionConstants {
         'Участие в фонде (инвестиция)',
         'Сделки и сигналы в реальном времени',
         'Расширенная статистика',
+        _rsvRewardsFeature,
+        _dexFeature,
       ],
       ctaLabel: 'Оформить Premium',
       stripePriceId: String.fromEnvironment('STRIPE_PRICE_PREMIUM'),
@@ -68,6 +79,8 @@ class SubscriptionConstants {
         'Подключение робота к вашему Binance',
         'Прямое управление на вашем балансе',
         'Приоритетная поддержка 24/7',
+        _rsvRewardsFeature,
+        _dexFeature,
       ],
       ctaLabel: 'Подключить Pro',
       stripePriceId: String.fromEnvironment('STRIPE_PRICE_PRO'),

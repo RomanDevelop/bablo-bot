@@ -53,31 +53,50 @@ class DailyNetworkImage extends StatelessWidget {
 class _DailyImageFallback extends StatelessWidget {
   const _DailyImageFallback({this.loading = false, this.expand = true});
 
+  static const _asset = 'assets/branding/app_icon.png';
+
   final bool loading;
   final bool expand;
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: AppColors.surfaceElevated,
-      child: SizedBox(
-        height: expand ? double.infinity : 220,
-        child: Center(
-          child: loading
-              ? SizedBox(
+    return SizedBox(
+      width: double.infinity,
+      height: expand ? double.infinity : 220,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          Image.asset(
+            _asset,
+            fit: BoxFit.cover,
+            width: double.infinity,
+            height: double.infinity,
+            errorBuilder: (_, __, ___) => ColoredBox(
+              color: AppColors.surfaceElevated,
+              child: Center(
+                child: Icon(
+                  Icons.image_outlined,
+                  color: AppColors.textMuted,
+                  size: 28,
+                ),
+              ),
+            ),
+          ),
+          if (loading)
+            ColoredBox(
+              color: AppColors.background.withValues(alpha: 0.35),
+              child: Center(
+                child: SizedBox(
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
                     color: AppColors.primary,
                   ),
-                )
-              : Icon(
-                  Icons.image_outlined,
-                  color: AppColors.textMuted,
-                  size: 28,
                 ),
-        ),
+              ),
+            ),
+        ],
       ),
     );
   }

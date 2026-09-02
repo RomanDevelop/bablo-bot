@@ -121,6 +121,13 @@ class RightSideMenu extends StatelessWidget {
                         ),
                         SideMenuItem(
                           palette: p,
+                          icon: Icons.science_outlined,
+                          title: 'Backtest Lab',
+                          iconColor: p.primary,
+                          onTap: () => _push(context, AppRoutes.lab),
+                        ),
+                        SideMenuItem(
+                          palette: p,
                           icon: Icons.ssid_chart_outlined,
                           title: 'Market · US Stocks',
                           iconColor: p.primary,

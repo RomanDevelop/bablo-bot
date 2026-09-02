@@ -22,6 +22,7 @@ import 'features/trading/pages/daily/daily_article_page.dart';
 import 'features/trading/pages/documents/documents_page.dart';
 import 'features/trading/pages/exchange/exchange_page.dart';
 import 'features/trading/pages/help/help_page.dart';
+import 'features/trading/pages/lab/lab_page.dart';
 import 'features/trading/pages/microloans/microloans_page.dart';
 import 'features/trading/pages/partner/partner_page.dart';
 import 'features/trading/pages/portfolio/portfolio_page.dart';
@@ -168,6 +169,8 @@ class BabloApp extends StatelessWidget {
         return _fade(settings, MicroloansPage());
       case AppRoutes.profile:
         return _fade(settings, ProfilePage());
+      case AppRoutes.lab:
+        return _fade(settings, LabPage());
       case AppRoutes.home:
       default:
         return MaterialPageRoute<void>(

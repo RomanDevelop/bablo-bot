@@ -13,6 +13,8 @@ import '../features/trading/market/market_data_provider.dart';
 import '../features/trading/repositories/chart_repository.dart';
 import '../features/trading/repositories/daily_repository.dart';
 import '../features/trading/repositories/trading_repository.dart';
+import '../features/trading/data_providers/backtest_data_provider.dart';
+import '../features/trading/repositories/backtest_repository.dart';
 
 /// Wires network, auth, and repositories for the app shell.
 class AppServices {
@@ -72,6 +74,12 @@ class AppServices {
       networkClient: networkClient,
       prefs: prefs,
     );
+    final backtestDataProvider = BacktestDataProvider(
+      networkClient: networkClient,
+    );
+    final backtestRepository = BacktestRepository(
+      dataProvider: backtestDataProvider,
+    );
 
     final dataManager = DataManager._(
       networkClient: networkClient,
@@ -80,6 +88,7 @@ class AppServices {
       marketDataProvider: marketDataProvider,
       chartRepository: chartRepository,
       dailyRepository: dailyRepository,
+      backtestRepository: backtestRepository,
     );
 
     return AppServices._(
@@ -100,6 +109,7 @@ class DataManager {
     required this.marketDataProvider,
     required this.chartRepository,
     required this.dailyRepository,
+    required this.backtestRepository,
   })  : _networkClient = networkClient,
         _tradingDataProvider = tradingDataProvider;
 
@@ -109,6 +119,7 @@ class DataManager {
   final MarketDataProvider marketDataProvider;
   final ChartRepository chartRepository;
   final DailyRepository dailyRepository;
+  final BacktestRepository backtestRepository;
 
   NetworkClient get networkClient => _networkClient;
   TradingDataProvider get tradingDataProvider => _tradingDataProvider;

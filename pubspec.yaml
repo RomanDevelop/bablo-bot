@@ -35,6 +35,7 @@ flutter:
   assets:
     - assets/partner/monobank_jar_qr.png
     - assets/branding/bablo_community_hero.png
+    - assets/branding/app_icon.png
     - assets/branding/alexander_l_hero.png
     - assets/branding/anton_the_fed_hero.png
     - assets/branding/iren_the_oracle_hero.png

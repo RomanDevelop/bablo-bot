@@ -48,12 +48,16 @@ class NetworkClient {
     String path, {
     Object? data,
     bool skipAuth = false,
+    Duration? receiveTimeout,
   }) async {
     try {
       final response = await _dio.post<T>(
         path,
         data: data,
-        options: Options(extra: {AuthInterceptor.skipAuthKey: skipAuth}),
+        options: Options(
+          extra: {AuthInterceptor.skipAuthKey: skipAuth},
+          receiveTimeout: receiveTimeout,
+        ),
       );
       return response.data as T;
     } on DioException catch (e) {

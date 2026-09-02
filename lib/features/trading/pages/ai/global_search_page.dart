@@ -21,6 +21,7 @@ class _GlobalSearchPageState extends State<GlobalSearchPage> {
     _SearchEntry('Signals', 'Крипто · Спот · US Stocks', AppRoutes.signals, Icons.bolt_outlined),
     _SearchEntry('US Stocks', 'UTEX market', AppRoutes.usStocks, Icons.ssid_chart_outlined),
     _SearchEntry('Portfolio', 'Кошелёк и позиция', AppRoutes.portfolio, Icons.account_balance_wallet_outlined),
+    _SearchEntry('Backtest Lab', 'Alligator H1 simulation', AppRoutes.lab, Icons.science_outlined),
     _SearchEntry('История / Trades', 'Сделки бота', AppRoutes.trades, Icons.history_outlined),
     _SearchEntry('Stats', 'PnL эпохи', AppRoutes.stats, Icons.insights_outlined),
     _SearchEntry('AI Assistant', 'Помощник', AppRoutes.aiAssistant, Icons.auto_awesome_outlined),

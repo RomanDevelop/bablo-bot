@@ -16,6 +16,9 @@ import 'features/trading/pages/ai/ai_assistant_page.dart';
 import 'features/trading/pages/ai/global_search_page.dart';
 import 'features/trading/models/daily_article.dart';
 import 'features/trading/pages/chart/chart_page.dart';
+import 'features/trading/pages/copy/copy_page.dart';
+import 'features/trading/pages/casino/casino_page.dart';
+import 'features/trading/pages/casino/game/casino_game_page.dart';
 import 'features/trading/pages/courses/courses_page.dart';
 import 'features/trading/pages/courses/mentor_course_page.dart';
 import 'features/trading/pages/daily/daily_article_page.dart';
@@ -130,6 +133,11 @@ class BabloApp extends StatelessWidget {
       }
     }
 
+    final casinoGameId = AppRoutes.casinoGameId(path);
+    if (casinoGameId != null) {
+      return _fade(settings, CasinoGamePage(gameId: casinoGameId));
+    }
+
     switch (path) {
       case AppRoutes.partner:
         return _fade(settings, PartnerPage());
@@ -171,6 +179,10 @@ class BabloApp extends StatelessWidget {
         return _fade(settings, ProfilePage());
       case AppRoutes.lab:
         return _fade(settings, LabPage());
+      case AppRoutes.copy:
+        return _fade(settings, CopyPage());
+      case AppRoutes.casino:
+        return _fade(settings, CasinoPage());
       case AppRoutes.home:
       default:
         return MaterialPageRoute<void>(

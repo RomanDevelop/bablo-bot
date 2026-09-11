@@ -25,11 +25,10 @@ class ExternalServicesConfig {
   static const casino = ExternalServiceLink(
     id: 'casino',
     title: 'Casino',
-    subtitle: 'Казино · внешний сервис',
-    url: String.fromEnvironment('CASINO_URL', defaultValue: ''),
+    subtitle: 'Казино · Bablo Community',
+    url: '',
     enabled: true,
-    badge: premiumBadge,
-    requiresPremium: true,
+    internalRoute: AppRoutes.casino,
   );
 
   static const sportsBetting = ExternalServiceLink(

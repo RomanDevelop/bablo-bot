@@ -26,12 +26,16 @@ class AppRoutes {
   static const microloans = '/microloans';
   static const profile = '/profile';
   static const lab = '/lab';
+  static const copy = '/copy';
+  static const casino = '/casino';
 
   static String dailyArticle(String id) => '$daily/$id';
 
   static String courseMentor(String id) => '$courses/$id';
 
   static String temkiItem(String id) => '$temki/$id';
+
+  static String casinoGame(String gameId) => '$casino/$gameId';
 
   /// Path only: strips scheme/host/query/`/` tail so web deep links match.
   static String pathOf(String? name) {
@@ -71,6 +75,14 @@ class AppRoutes {
   static String? temkiItemId(String? name) {
     final path = pathOf(name);
     const prefix = '$temki/';
+    if (!path.startsWith(prefix)) return null;
+    final id = path.substring(prefix.length).split('/').first;
+    return id.isEmpty ? null : id;
+  }
+
+  static String? casinoGameId(String? name) {
+    final path = pathOf(name);
+    const prefix = '$casino/';
     if (!path.startsWith(prefix)) return null;
     final id = path.substring(prefix.length).split('/').first;
     return id.isEmpty ? null : id;

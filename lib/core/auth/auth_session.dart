@@ -55,6 +55,12 @@ class AuthSession extends ChangeNotifier {
 
   num get earnedRsv => bootstrap?.rewards.earnedRsv ?? 0;
 
+  bool get canUseCopyTrading => bootstrap?.canUseCopyTrading ?? false;
+
+  bool get hasActiveCopyStake => bootstrap?.copy?.stake != null;
+
+  bool get canUseCasino => bootstrap?.canUseCasino ?? false;
+
   String? get activeLoanTierId => _prefs.getString(_kLoanTierId);
 
   MicroloanTier? get activeLoanTier {

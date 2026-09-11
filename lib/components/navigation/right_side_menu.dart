@@ -121,6 +121,13 @@ class RightSideMenu extends StatelessWidget {
                         ),
                         SideMenuItem(
                           palette: p,
+                          icon: Icons.sync_alt_rounded,
+                          title: 'Copy Trading',
+                          iconColor: p.primary,
+                          onTap: () => _push(context, AppRoutes.copy),
+                        ),
+                        SideMenuItem(
+                          palette: p,
                           icon: Icons.science_outlined,
                           title: 'Backtest Lab',
                           iconColor: p.primary,

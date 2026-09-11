@@ -14,7 +14,11 @@ import '../features/trading/repositories/chart_repository.dart';
 import '../features/trading/repositories/daily_repository.dart';
 import '../features/trading/repositories/trading_repository.dart';
 import '../features/trading/data_providers/backtest_data_provider.dart';
+import '../features/trading/data_providers/casino_data_provider.dart';
+import '../features/trading/data_providers/copy_data_provider.dart';
 import '../features/trading/repositories/backtest_repository.dart';
+import '../features/trading/repositories/casino_repository.dart';
+import '../features/trading/repositories/copy_repository.dart';
 
 /// Wires network, auth, and repositories for the app shell.
 class AppServices {
@@ -80,6 +84,10 @@ class AppServices {
     final backtestRepository = BacktestRepository(
       dataProvider: backtestDataProvider,
     );
+    final copyDataProvider = CopyDataProvider(networkClient: networkClient);
+    final copyRepository = CopyRepository(dataProvider: copyDataProvider);
+    final casinoDataProvider = CasinoDataProvider(networkClient: networkClient);
+    final casinoRepository = CasinoRepository(dataProvider: casinoDataProvider);
 
     final dataManager = DataManager._(
       networkClient: networkClient,
@@ -89,6 +97,8 @@ class AppServices {
       chartRepository: chartRepository,
       dailyRepository: dailyRepository,
       backtestRepository: backtestRepository,
+      copyRepository: copyRepository,
+      casinoRepository: casinoRepository,
     );
 
     return AppServices._(
@@ -110,6 +120,8 @@ class DataManager {
     required this.chartRepository,
     required this.dailyRepository,
     required this.backtestRepository,
+    required this.copyRepository,
+    required this.casinoRepository,
   })  : _networkClient = networkClient,
         _tradingDataProvider = tradingDataProvider;
 
@@ -120,6 +132,8 @@ class DataManager {
   final ChartRepository chartRepository;
   final DailyRepository dailyRepository;
   final BacktestRepository backtestRepository;
+  final CopyRepository copyRepository;
+  final CasinoRepository casinoRepository;
 
   NetworkClient get networkClient => _networkClient;
   TradingDataProvider get tradingDataProvider => _tradingDataProvider;

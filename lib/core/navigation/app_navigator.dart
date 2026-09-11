@@ -27,6 +27,18 @@ class AppNavigator {
   static Future<void> openSignals(BuildContext context) =>
       pushNamed(context, AppRoutes.signals);
 
+  static Future<void> openCopy(BuildContext context) =>
+      pushNamed(context, AppRoutes.copy);
+
+  static Future<void> openCasino(BuildContext context) =>
+      pushNamed(context, AppRoutes.casino);
+
+  static Future<void> openCasinoGame(
+    BuildContext context,
+    String gameId,
+  ) =>
+      pushNamed(context, AppRoutes.casinoGame(gameId));
+
   static Future<T?> openDaily<T extends Object?>(
     BuildContext context,
     String id, {

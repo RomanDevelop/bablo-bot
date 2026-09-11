@@ -16,6 +16,8 @@ import '../../../../core/navigation/navigate_back.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../features/auth/models/bablo_bootstrap.dart';
+import '../copy/components/copy_teaser_card.dart';
+import '../casino/components/casino_home_components.dart';
 import 'di/profile_wm_builder.dart';
 import 'profile_wm.dart';
 
@@ -142,6 +144,10 @@ class _ProfilePageState
                   paidRsv: wm.rsvBalance,
                   earnedRsv: wm.earnedRsv,
                 ),
+                const SizedBox(height: 12),
+                const CopyTeaserCard(),
+                const SizedBox(height: 12),
+                const CasinoTeaserCard(),
                 const SizedBox(height: 12),
                 _ReferralCard(referral: bootstrap.referral),
                 const SizedBox(height: 12),

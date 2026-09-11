@@ -1,4 +1,8 @@
+import '../../../core/constants/casino_constants.dart';
+import '../../../core/constants/copy_constants.dart';
 import '../../../core/utils/json_parsers.dart';
+import '../../trading/dto/casino_dto.dart';
+import '../../trading/dto/copy_dto.dart';
 
 class BabloBootstrap {
   const BabloBootstrap({
@@ -11,6 +15,8 @@ class BabloBootstrap {
     required this.referral,
     required this.trading,
     required this.permissions,
+    this.copy,
+    this.casino,
   });
 
   final BabloUser user;
@@ -22,6 +28,16 @@ class BabloBootstrap {
   final BabloReferral referral;
   final BabloTrading trading;
   final List<String> permissions;
+  final CopyStatusDto? copy;
+  final CasinoStatusDto? casino;
+
+  bool get canUseCopyTrading =>
+      permissions.contains(CopyConstants.permission) ||
+      (copy?.eligible ?? false);
+
+  bool get canUseCasino =>
+      permissions.contains(CasinoConstants.permission) ||
+      (casino?.eligible ?? false);
 
   factory BabloBootstrap.fromJson(Map<String, dynamic> json) {
     return BabloBootstrap(
@@ -36,6 +52,12 @@ class BabloBootstrap {
       referral: BabloReferral.fromJson(asMap(json['referral'])),
       trading: BabloTrading.fromJson(asMap(json['trading'])),
       permissions: _asStringList(json['permissions']),
+      copy: json['copy'] == null
+          ? null
+          : CopyStatusDto.fromJson(asMap(json['copy'])),
+      casino: json['casino'] == null
+          ? null
+          : CasinoStatusDto.fromJson(asMap(json['casino'])),
     );
   }
 
@@ -49,6 +71,8 @@ class BabloBootstrap {
         'referral': referral.toJson(),
         'trading': trading.toJson(),
         'permissions': permissions,
+        'copy': copy?.toJson(),
+        'casino': casino?.toJson(),
       };
 }
 

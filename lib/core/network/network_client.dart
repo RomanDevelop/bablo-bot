@@ -126,6 +126,13 @@ class NetworkClient {
         data: _asMap(e.response?.data),
       );
     }
+    if (status == 403) {
+      return DataError(
+        errorCode: ErrorCode.forbidden,
+        message: detail ?? 'Недостаточно прав',
+        data: _asMap(e.response?.data),
+      );
+    }
     if (status == 410) {
       return DataError(
         errorCode: ErrorCode.gone,
@@ -154,7 +161,9 @@ class NetworkClient {
       if (detail is String) return detail;
       if (detail is Map) {
         final msg = detail['message'];
-        if (msg is String) return msg;
+        if (msg is String && msg.isNotEmpty) return msg;
+        final error = detail['error'];
+        if (error is String && error.isNotEmpty) return error;
       }
       if (detail != null) return detail.toString();
     }

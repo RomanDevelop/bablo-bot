@@ -17,6 +17,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_controller.dart';
 import '../../../../core/utils/money_format.dart';
 import '../../models/bot_status_model.dart';
+import '../copy/components/copy_teaser_card.dart';
+import '../casino/components/casino_home_components.dart';
 import '../daily/widgets/daily_carousel.dart';
 import 'dashboard_wm.dart';
 import 'di/dashboard_wm_builder.dart';
@@ -123,6 +125,12 @@ class _DashboardPageState
           const SizedBox(height: 12),
         ],
         const _UserBootstrapStrip(),
+        if (context.watch<AuthSession>().isAuthenticated) ...[
+          const SizedBox(height: 12),
+          const CopyTeaserCard(),
+          const SizedBox(height: 12),
+          const CasinoTeaserCard(),
+        ],
         const SizedBox(height: 12),
         _CollapsibleTradingBlock(
           status: status,

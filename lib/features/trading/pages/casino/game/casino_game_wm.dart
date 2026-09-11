@@ -212,23 +212,26 @@ class CasinoGameWidgetModel extends WidgetModel {
       final active = status.activeSession;
       if (active != null &&
           active.gameId == gameId &&
-          active.isActive) {
+          active.isActive &&
+          _isUuid(active.id)) {
         session = active;
       }
 
+      final current = stateStream.value;
       stateStream.add(
-        stateStream.value.copyWith(
+        CasinoGameState(
           game: game,
-          balance: balance,
           session: session,
-          currency: session?.currency ?? CasinoConstants.currencyDemo,
-          bet: session?.isBonusMode == true
-              ? (session?.bonusState?.bet.toDouble() ?? bet)
-              : bet,
+          balance: balance,
           board: _emptyBoard(game),
+          currency: session?.currency ?? CasinoConstants.currencyDemo,
+          bet: session != null && session.isBonusMode
+              ? (session.bonusState?.bet.toDouble() ?? bet)
+              : bet,
+          turbo: current.turbo,
+          forcedScenario: current.forcedScenario,
           isLoading: false,
           planRequired: !(status.eligible || _auth.canUseCasino),
-          clearError: true,
         ),
       );
     } on DataError catch (e) {
@@ -260,7 +263,22 @@ class CasinoGameWidgetModel extends WidgetModel {
 
   Future<void> spinOrRespin() async {
     final state = stateStream.value;
-    if (state.busy || state.game == null) return;
+    if (state.busy) {
+      stateStream.add(
+        state.copyWith(statusLine: 'Busy — wait for current spin'),
+      );
+      return;
+    }
+    if (state.game == null) {
+      stateStream.add(
+        state.copyWith(
+          error: 'Игра ещё не загрузилась',
+          message: 'Игра ещё не загрузилась',
+          statusLine: 'Game not loaded',
+        ),
+      );
+      return;
+    }
 
     if (state.canRetry && _inFlightRequestId != null) {
       await _executeSpin(clientRequestId: _inFlightRequestId!);
@@ -307,24 +325,27 @@ class CasinoGameWidgetModel extends WidgetModel {
         clearError: true,
         clearMessage: true,
         statusLine: action == CasinoConstants.actionRespin
-            ? 'Respin…'
-            : 'Spin…',
+            ? 'Respin...'
+            : 'Spin...',
       ),
     );
 
     try {
-      var sessionId = state.session?.id;
-      if (sessionId == null || sessionId.isEmpty) {
-        final session = await _repository.startSession(
-          gameId: game.gameId,
-          currency: state.currency,
-        );
-        sessionId = session.id;
-        stateStream.add(stateStream.value.copyWith(session: session));
-      }
+      // Backend accepts missing session_id and creates/resumes session.
+      // Only send a real UUID — empty/invalid ids cause silent 422.
+      final rawSessionId = state.session?.id.trim();
+      final sessionId =
+          (rawSessionId != null && _isUuid(rawSessionId)) ? rawSessionId : null;
+
+      final resolvedGameId =
+          game.gameId.trim().isEmpty ? gameId : game.gameId.trim();
+
+      stateStream.add(
+        stateStream.value.copyWith(statusLine: 'Sending spin...'),
+      );
 
       final result = await _repository.spin(
-        gameId: game.gameId,
+        gameId: resolvedGameId,
         bet: state.bet,
         currency: state.currency,
         action: action,
@@ -333,26 +354,62 @@ class CasinoGameWidgetModel extends WidgetModel {
         forcedScenario: kDebugMode ? state.forcedScenario : null,
       );
 
+      if (result.spinId.isEmpty &&
+          result.board.isEmpty &&
+          result.events.isEmpty) {
+        throw DataError(
+          errorCode: ErrorCode.unhandled,
+          message:
+              'Пустой ответ spin (нет spin_id/board/events). Проверь API.',
+        );
+      }
+
       _inFlightRequestId = null;
 
-      stateStream.add(
-        stateStream.value.copyWith(
-          isSpinning: false,
-          isPlayingEvents: true,
-          canRetry: false,
-          session: result.session ??
-              stateStream.value.session?.copyWithNext(
-                nextAction: result.nextAction,
-                bonusState: result.bonusState,
-              ),
-        ),
-      );
+      // Apply board immediately so UI updates even if events[] is empty.
+      if (result.board.isNotEmpty) {
+        stateStream.add(
+          stateStream.value.copyWith(
+            isSpinning: false,
+            isPlayingEvents: true,
+            canRetry: false,
+            board: result.board,
+            lastWin: result.totalWin,
+            multiplier: result.multiplier,
+            session: result.session ??
+                stateStream.value.session?.copyWithNext(
+                  nextAction: result.nextAction,
+                  bonusState: result.bonusState,
+                ),
+            statusLine: result.events.isEmpty
+                ? (result.hasWin
+                    ? 'Win ${CasinoConstants.amount(result.totalWin)}'
+                    : 'No win')
+                : 'Playing...',
+          ),
+        );
+      } else {
+        stateStream.add(
+          stateStream.value.copyWith(
+            isSpinning: false,
+            isPlayingEvents: true,
+            canRetry: false,
+            session: result.session ??
+                stateStream.value.session?.copyWithNext(
+                  nextAction: result.nextAction,
+                  bonusState: result.bonusState,
+                ),
+          ),
+        );
+      }
 
-      await _eventPlayer.play(
-        events: result.events,
-        turbo: stateStream.value.turbo,
-        onEvent: _applyEvent,
-      );
+      if (result.events.isNotEmpty) {
+        await _eventPlayer.play(
+          events: result.events,
+          turbo: stateStream.value.turbo,
+          onEvent: _applyEvent,
+        );
+      }
 
       final balance = stateStream.value.balance;
       CasinoBalance? nextBalance = balance;
@@ -369,7 +426,7 @@ class CasinoGameWidgetModel extends WidgetModel {
       }
 
       final session = result.session ??
-          (result.sessionId.isEmpty
+          (result.sessionId.isEmpty || !_isUuid(result.sessionId)
               ? stateStream.value.session
               : CasinoSession(
                   id: result.sessionId,
@@ -393,6 +450,8 @@ class CasinoGameWidgetModel extends WidgetModel {
           statusLine: result.hasWin
               ? 'Win ${CasinoConstants.amount(result.totalWin)}'
               : 'No win',
+          clearError: true,
+          clearMessage: true,
         ),
       );
 
@@ -402,29 +461,81 @@ class CasinoGameWidgetModel extends WidgetModel {
     } on DataError catch (e) {
       final networkish = e.errorCode == ErrorCode.network ||
           e.errorCode == ErrorCode.unhandled;
+      final mapped = CasinoRepository.mapError(e);
       stateStream.add(
         stateStream.value.copyWith(
           isSpinning: false,
           isPlayingEvents: false,
           canRetry: networkish && _inFlightRequestId != null,
-          message: CasinoRepository.mapError(e),
-          statusLine: networkish ? 'Network error — Retry' : null,
+          error: mapped,
+          message: mapped,
+          statusLine: mapped,
         ),
       );
       if (e.apiError == 'session_not_found' ||
-          e.apiError == 'session_inactive') {
-        stateStream.add(stateStream.value.copyWith(session: null));
+          e.apiError == 'session_inactive' ||
+          mapped.contains('session_id') ||
+          mapped.toLowerCase().contains('uuid')) {
+        _clearSession();
       }
     } catch (e) {
+      final mapped = CasinoRepository.mapError(e);
       stateStream.add(
         stateStream.value.copyWith(
           isSpinning: false,
           isPlayingEvents: false,
           canRetry: _inFlightRequestId != null,
-          message: CasinoRepository.mapError(e),
+          error: mapped,
+          message: mapped,
+          statusLine: mapped,
         ),
       );
     }
+  }
+
+  void _clearSession() {
+    final current = stateStream.value;
+    stateStream.add(
+      CasinoGameState(
+        game: current.game,
+        session: null,
+        balance: current.balance,
+        board: current.board,
+        highlightPositions: current.highlightPositions,
+        removedPositions: current.removedPositions,
+        multiplier: current.multiplier,
+        lastWin: current.lastWin,
+        statusLine: current.statusLine,
+        currency: current.currency,
+        bet: current.bet,
+        turbo: current.turbo,
+        isLoading: current.isLoading,
+        isSpinning: current.isSpinning,
+        isPlayingEvents: current.isPlayingEvents,
+        canRetry: current.canRetry,
+        forcedScenario: current.forcedScenario,
+        error: current.error,
+        message: current.message,
+        needsAuth: current.needsAuth,
+        planRequired: current.planRequired,
+      ),
+    );
+  }
+
+  static bool _isUuid(String value) {
+    if (value.length != 36) return false;
+    for (var i = 0; i < 36; i++) {
+      final c = value.codeUnitAt(i);
+      if (i == 8 || i == 13 || i == 18 || i == 23) {
+        if (c != 0x2D) return false;
+        continue;
+      }
+      final hex = (c >= 0x30 && c <= 0x39) ||
+          (c >= 0x61 && c <= 0x66) ||
+          (c >= 0x41 && c <= 0x46);
+      if (!hex) return false;
+    }
+    return true;
   }
 
   Future<void> _applyEvent(CasinoEvent event) async {

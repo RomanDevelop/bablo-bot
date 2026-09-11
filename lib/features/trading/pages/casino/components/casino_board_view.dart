@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../../core/constants/casino_symbol_assets.dart';
+import '../../../../../core/theme/app_palette.dart';
 import '../../../../../core/theme/theme_controller.dart';
 import '../../../models/casino_model.dart';
 
@@ -12,6 +15,7 @@ class CasinoBoardView extends StatelessWidget {
     this.highlightPositions = const [],
     this.removedPositions = const [],
     this.bonus,
+    this.spinning = false,
   });
 
   final CasinoGame game;
@@ -19,6 +23,7 @@ class CasinoBoardView extends StatelessWidget {
   final List<List<int>> highlightPositions;
   final List<List<int>> removedPositions;
   final CasinoBonusState? bonus;
+  final bool spinning;
 
   @override
   Widget build(BuildContext context) {
@@ -35,23 +40,25 @@ class CasinoBoardView extends StatelessWidget {
       for (final pos in removedPositions) '${pos[0]}:${pos[1]}',
     };
 
+    final idle = !_hasRealSymbols(board);
+
     return AspectRatio(
       aspectRatio: cols / rows,
       child: Container(
         decoration: BoxDecoration(
           color: p.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: p.borderSubtle),
         ),
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(10),
         child: Column(
           children: List.generate(rows, (r) {
             return Expanded(
               child: Row(
                 children: List.generate(cols, (c) {
-                  final symbol = (r < board.length && c < board[r].length)
+                  final raw = (r < board.length && c < board[r].length)
                       ? board[r][c]
-                      : '·';
+                      : '';
                   final key = '$r:$c';
                   final isHit = highlight.contains(key);
                   final isRemoved = removed.contains(key);
@@ -62,36 +69,52 @@ class CasinoBoardView extends StatelessWidget {
                   return Expanded(
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
-                      margin: const EdgeInsets.all(3),
+                      margin: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
+                        gradient: idle
+                            ? null
+                            : LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  _tileBg(raw, p).withValues(alpha: 0.28),
+                                  p.card,
+                                ],
+                              ),
                         color: isRemoved
                             ? p.danger.withValues(alpha: 0.15)
                             : isHit
-                                ? p.primary.withValues(alpha: 0.22)
+                                ? p.primary.withValues(alpha: 0.28)
                                 : locked
-                                    ? p.success.withValues(alpha: 0.18)
-                                    : p.card,
-                        borderRadius: BorderRadius.circular(10),
+                                    ? p.success.withValues(alpha: 0.2)
+                                    : (idle ? p.card : null),
+                        borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isHit
                               ? p.primary
                               : locked
                                   ? p.success
                                   : p.borderSubtle,
+                          width: isHit || locked ? 1.6 : 1,
                         ),
+                        boxShadow: spinning && idle
+                            ? [
+                                BoxShadow(
+                                  color: p.primary.withValues(alpha: 0.12),
+                                  blurRadius: 8,
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Center(
                         child: AnimatedOpacity(
                           duration: const Duration(milliseconds: 160),
-                          opacity: isRemoved ? 0.25 : 1,
-                          child: Text(
-                            _label(symbol),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: p.textPrimary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: _fontSize(cols),
-                              height: 1.05,
+                          opacity: isRemoved ? 0.2 : 1,
+                          child: Padding(
+                            padding: EdgeInsets.all(cols >= 6 ? 4 : 6),
+                            child: SvgPicture.asset(
+                              CasinoSymbolAssets.pathFor(raw, idle: idle),
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
@@ -107,17 +130,27 @@ class CasinoBoardView extends StatelessWidget {
     );
   }
 
-  String _label(String symbol) {
-    if (symbol == 'EMPTY' || symbol == '·') return '·';
-    if (symbol == 'RSV_COIN') return 'RSV';
-    if (symbol.length <= 4) return symbol;
-    return symbol.substring(0, 4);
+  bool _hasRealSymbols(List<List<String>> board) {
+    for (final row in board) {
+      for (final cell in row) {
+        final s = cell.trim().toUpperCase();
+        if (s.isNotEmpty && s != '·' && s != '.' && s != 'EMPTY') {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
-  double _fontSize(int cols) {
-    if (cols >= 6) return 10;
-    if (cols >= 5) return 11;
-    return 12;
+  Color _tileBg(String symbol, AppPalette p) {
+    final s = symbol.trim().toUpperCase();
+    return switch (s) {
+      'SEVEN' || 'BABLO' || 'WILD' => p.primary,
+      'DIAMOND' || 'RSV_COIN' || 'COIN' => p.success,
+      'CHERRY' => p.danger,
+      'BAR' => p.textMuted,
+      _ => p.primary,
+    };
   }
 }
 
@@ -185,9 +218,7 @@ class CasinoBetSelector extends StatelessWidget {
         return ChoiceChip(
           label: Text(step.toString()),
           selected: selected,
-          onSelected: !enabled
-              ? null
-              : (_) => onChanged(step.toDouble()),
+          onSelected: !enabled ? null : (_) => onChanged(step.toDouble()),
           selectedColor: p.primary.withValues(alpha: 0.25),
         );
       }).toList(),

@@ -84,21 +84,20 @@ class CasinoDataProvider implements CasinoDataProviderInterface {
     required String gameId,
     required String currency,
   }) async {
-    final data = await _client.post<Map<String, dynamic>>(
+    final data = await _client.post<dynamic>(
       '$_base/sessions',
       data: {
         'game_id': gameId,
         'currency': currency,
       },
     );
-    return CasinoSessionDto.fromJson(data);
+    return CasinoSessionDto.fromJson(_asResponseMap(data));
   }
 
   @override
   Future<CasinoSessionDto> getSession(String sessionId) async {
-    final data = await _client
-        .get<Map<String, dynamic>>('$_base/sessions/$sessionId');
-    return CasinoSessionDto.fromJson(data);
+    final data = await _client.get<dynamic>('$_base/sessions/$sessionId');
+    return CasinoSessionDto.fromJson(_asResponseMap(data));
   }
 
   @override
@@ -114,24 +113,27 @@ class CasinoDataProvider implements CasinoDataProviderInterface {
     final body = <String, dynamic>{
       'game_id': gameId,
       'bet': _jsonAmount(bet),
-      'currency': currency,
-      'action': action,
+      'currency': currency.toUpperCase(),
+      'action': action.toUpperCase(),
       'client_request_id': clientRequestId,
-      'session_id': sessionId,
-      'forced_scenario': forcedScenario,
     };
-    final data = await _client.post<Map<String, dynamic>>(
-      '$_base/spin',
-      data: body,
-    );
-    return CasinoSpinResultDto.fromJson(data);
+    // OpenAPI: session_id is UUID | null — never send "".
+    final sid = sessionId?.trim();
+    if (sid != null && sid.isNotEmpty) {
+      body['session_id'] = sid;
+    }
+    final forced = forcedScenario?.trim();
+    if (forced != null && forced.isNotEmpty) {
+      body['forced_scenario'] = forced;
+    }
+    final data = await _client.post<dynamic>('$_base/spin', data: body);
+    return CasinoSpinResultDto.fromJson(_asResponseMap(data));
   }
 
   @override
   Future<CasinoSpinResultDto> getSpin(String spinId) async {
-    final data =
-        await _client.get<Map<String, dynamic>>('$_base/spins/$spinId');
-    return CasinoSpinResultDto.fromJson(data);
+    final data = await _client.get<dynamic>('$_base/spins/$spinId');
+    return CasinoSpinResultDto.fromJson(_asResponseMap(data));
   }
 
   @override
@@ -156,6 +158,23 @@ class CasinoDataProvider implements CasinoDataProviderInterface {
       return CasinoStatusDto.fromJson(asMap(json['casino']));
     }
     return CasinoStatusDto.fromJson(json);
+  }
+
+  Map<String, dynamic> _asResponseMap(dynamic data) {
+    if (data is String && data.isNotEmpty) {
+      // Should not happen with JSON transformer — keep safe.
+      return <String, dynamic>{'raw': data};
+    }
+    final map = asMap(data);
+    if (map.isEmpty) return map;
+    if (map['result'] is Map) return asMap(map['result']);
+    if (map['spin'] is Map && map['spin_id'] == null) {
+      return asMap(map['spin']);
+    }
+    if (map['data'] is Map && map['spin_id'] == null && map['board'] == null) {
+      return asMap(map['data']);
+    }
+    return map;
   }
 
   List<dynamic> _extractList(dynamic data) {

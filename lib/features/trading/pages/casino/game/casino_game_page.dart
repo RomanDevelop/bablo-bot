@@ -9,6 +9,7 @@ import '../../../../../core/constants/casino_constants.dart';
 import '../../../../../core/mwwm/core_mwwm_widget.dart';
 import '../../../../../core/navigation/app_routes.dart';
 import '../../../../../core/navigation/navigate_back.dart';
+import '../../../../../core/theme/app_palette.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/theme/theme_controller.dart';
 import '../components/casino_board_view.dart';
@@ -84,6 +85,27 @@ class _CasinoGamePageState
             ),
             title: Text(title),
             actions: [
+              if (state.balance != null)
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 4),
+                    child: Text(
+                      state.currency.toUpperCase() ==
+                              CasinoConstants.currencyDemo
+                          ? CasinoConstants.demo(
+                              state.balance!.demo.available,
+                            )
+                          : CasinoConstants.rsv(
+                              state.balance!.rsv.available,
+                            ),
+                      style: TextStyle(
+                        color: p.textSecondary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
               IconButton(
                 tooltip: 'Profile',
                 onPressed: wm.openProfile,
@@ -133,193 +155,302 @@ class _CasinoGamePageState
   Widget _gameBody(
     BuildContext context,
     CasinoGameState state,
-    dynamic p,
+    AppPalette p,
   ) {
     final game = state.game!;
     final isDemo =
         state.currency.toUpperCase() == CasinoConstants.currencyDemo;
     final balanceValue = state.balance?.availableFor(state.currency) ?? 0;
+    final committed = state.balance?.rsv.committedCopy ?? 0;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+    return Column(
       children: [
-        if (state.balance != null)
-          CasinoBalanceStrip(
-            balance: state.balance!,
-            currency: state.currency,
-            onCurrencyChanged: wm.setCurrency,
-            onResetDemo: () {},
-            isMutating: state.busy,
-            showResetDemo: false,
-          ),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            ChoiceChip(
-              label: const Text(CasinoConstants.currencyDemo),
-              selected: isDemo,
-              onSelected: state.busy || state.betLocked
-                  ? null
-                  : (_) => wm.setCurrency(CasinoConstants.currencyDemo),
-            ),
-            const SizedBox(width: 8),
-            ChoiceChip(
-              label: const Text(CasinoConstants.currencyRsv),
-              selected: !isDemo,
-              onSelected: state.busy || state.betLocked
-                  ? null
-                  : (_) => wm.setCurrency(CasinoConstants.currencyRsv),
-            ),
-            const Spacer(),
-            FilterChip(
-              label: const Text(CasinoConstants.turboLabel),
-              selected: state.turbo,
-              onSelected: wm.setTurbo,
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Balance ${CasinoConstants.amount(balanceValue)} · '
-          '×${CasinoConstants.amount(state.multiplier)}',
-          style: TextStyle(color: p.textMuted, fontSize: 12),
-        ),
-        if (state.statusLine != null) ...[
-          const SizedBox(height: 6),
-          Text(
-            state.statusLine!,
-            style: TextStyle(
-              color: p.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-        const SizedBox(height: 12),
-        if (state.session?.bonusState != null)
-          CasinoBonusOverlay(bonus: state.session!.bonusState!),
-        if (state.session?.bonusState != null) const SizedBox(height: 10),
-        CasinoBoardView(
-          game: game,
-          board: state.board,
-          highlightPositions: state.highlightPositions,
-          removedPositions: state.removedPositions,
-          bonus: state.session?.bonusState,
-        ),
-        if (game.isHoldAndWin) ...[
-          const SizedBox(height: 8),
-          Text(
-            CasinoConstants.symbolNotWallet,
-            style: TextStyle(color: p.textMuted, fontSize: 11, height: 1.3),
-          ),
-        ],
-        const SizedBox(height: 16),
-        Text(
-          CasinoConstants.betLabel,
-          style: TextStyle(
-            color: p.textMuted,
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 1.0,
-          ),
-        ),
-        const SizedBox(height: 8),
-        CasinoBetSelector(
-          steps: game.steps,
-          bet: state.bet,
-          enabled: !state.busy && !state.betLocked,
-          onChanged: wm.setBet,
-        ),
-        if (kDebugMode) ...[
-          const SizedBox(height: 16),
-          TradingCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Debug forced_scenario',
-                  style: TextStyle(
-                    color: p.textPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    for (final s in const [
-                      null,
-                      'LOSS',
-                      'GUARANTEED_WIN',
-                      'ONE_CASCADE',
-                      'MULTI_CASCADE',
-                      'BONUS_TRIGGER',
-                      'BONUS_COMPLETE',
-                    ])
-                      ChoiceChip(
-                        label: Text(s ?? 'off'),
-                        selected: state.forcedScenario == s,
-                        onSelected: (_) => wm.setForcedScenario(s),
-                      ),
-                  ],
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+            children: [
+              _CompactWalletBar(
+                balanceLabel: isDemo
+                    ? CasinoConstants.demo(balanceValue)
+                    : CasinoConstants.rsv(balanceValue),
+                committedCopy: committed,
+                isDemo: isDemo,
+                multiplier: state.multiplier,
+                turbo: state.turbo,
+                currencyLocked: state.busy || state.betLocked,
+                onCurrencyDemo: () =>
+                    wm.setCurrency(CasinoConstants.currencyDemo),
+                onCurrencyRsv: () =>
+                    wm.setCurrency(CasinoConstants.currencyRsv),
+                onTurbo: wm.setTurbo,
+              ),
+              if (state.error != null) ...[
+                const SizedBox(height: 10),
+                ErrorBanner(
+                  message: state.error!,
+                  onRetry: state.canRetry ? wm.retrySameRequest : wm.load,
                 ),
               ],
-            ),
-          ),
-        ],
-        const SizedBox(height: 20),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            onPressed: state.busy
-                ? null
-                : state.canRetry
-                    ? wm.retrySameRequest
-                    : wm.spinOrRespin,
-            style: FilledButton.styleFrom(
-              backgroundColor: p.primary,
-              foregroundColor: p.onPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.controlRadius),
-              ),
-            ),
-            child: state.busy
-                ? SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.4,
-                      color: p.onPrimary,
-                    ),
-                  )
-                : Text(
-                    state.canRetry
-                        ? CasinoConstants.retryCta
-                        : state.requiresRespin
-                            ? CasinoConstants.respinCta
-                            : CasinoConstants.spinCta,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
+              if (state.statusLine != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  width: double.infinity,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: p.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: p.primary.withValues(alpha: 0.35)),
+                  ),
+                  child: Text(
+                    state.statusLine!,
+                    style: TextStyle(
+                      color: p.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
                     ),
                   ),
+                ),
+              ],
+              if (state.lastWin > 0) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'Win ${CasinoConstants.amount(state.lastWin)}',
+                  style: TextStyle(
+                    color: p.success,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              if (state.session?.bonusState != null) ...[
+                CasinoBonusOverlay(bonus: state.session!.bonusState!),
+                const SizedBox(height: 10),
+              ],
+              CasinoBoardView(
+                game: game,
+                board: state.board,
+                highlightPositions: state.highlightPositions,
+                removedPositions: state.removedPositions,
+                bonus: state.session?.bonusState,
+                spinning: state.isPlayingEvents || state.isSpinning,
+              ),
+              if (game.isHoldAndWin) ...[
+                const SizedBox(height: 8),
+                Text(
+                  CasinoConstants.symbolNotWallet,
+                  style: TextStyle(
+                    color: p.textMuted,
+                    fontSize: 11,
+                    height: 1.3,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              Text(
+                CasinoConstants.betLabel,
+                style: TextStyle(
+                  color: p.textMuted,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.0,
+                ),
+              ),
+              const SizedBox(height: 8),
+              CasinoBetSelector(
+                steps: game.steps,
+                bet: state.bet,
+                enabled: !state.busy && !state.betLocked,
+                onChanged: wm.setBet,
+              ),
+              if (kDebugMode) ...[
+                const SizedBox(height: 16),
+                TradingCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Debug forced_scenario',
+                        style: TextStyle(
+                          color: p.textPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          for (final s in const [
+                            null,
+                            'LOSS',
+                            'GUARANTEED_WIN',
+                            'ONE_CASCADE',
+                            'MULTI_CASCADE',
+                            'BONUS_TRIGGER',
+                            'BONUS_COMPLETE',
+                          ])
+                            ChoiceChip(
+                              label: Text(s ?? 'off'),
+                              selected: state.forcedScenario == s,
+                              onSelected: (_) => wm.setForcedScenario(s),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
-        if (state.lastWin > 0) ...[
-          const SizedBox(height: 12),
-          Center(
-            child: Text(
-              'Last win ${CasinoConstants.amount(state.lastWin)}',
-              style: TextStyle(
-                color: p.success,
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: FilledButton(
+                onPressed: state.busy
+                    ? null
+                    : () {
+                        // Explicit closure — more reliable than async tear-off on web.
+                        if (state.canRetry) {
+                          wm.retrySameRequest();
+                        } else {
+                          wm.spinOrRespin();
+                        }
+                      },
+                style: FilledButton.styleFrom(
+                  backgroundColor: p.primary,
+                  foregroundColor: p.onPrimary,
+                  disabledBackgroundColor: p.primary.withValues(alpha: 0.45),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(AppTheme.controlRadius),
+                  ),
+                ),
+                child: state.busy
+                    ? SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.4,
+                          color: p.onPrimary,
+                        ),
+                      )
+                    : Text(
+                        state.canRetry
+                            ? CasinoConstants.retryCta
+                            : state.requiresRespin
+                                ? CasinoConstants.respinCta
+                                : CasinoConstants.spinCta,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
               ),
             ),
           ),
-        ],
+        ),
       ],
+    );
+  }
+}
+
+class _CompactWalletBar extends StatelessWidget {
+  const _CompactWalletBar({
+    required this.balanceLabel,
+    required this.committedCopy,
+    required this.isDemo,
+    required this.multiplier,
+    required this.turbo,
+    required this.currencyLocked,
+    required this.onCurrencyDemo,
+    required this.onCurrencyRsv,
+    required this.onTurbo,
+  });
+
+  final String balanceLabel;
+  final num committedCopy;
+  final bool isDemo;
+  final num multiplier;
+  final bool turbo;
+  final bool currencyLocked;
+  final VoidCallback onCurrencyDemo;
+  final VoidCallback onCurrencyRsv;
+  final ValueChanged<bool> onTurbo;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.watch<ThemeController>().palette;
+    return TradingCard(
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  balanceLabel,
+                  style: TextStyle(
+                    color: p.textPrimary,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+              Text(
+                '×${CasinoConstants.amount(multiplier)}',
+                style: TextStyle(
+                  color: p.textMuted,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ],
+          ),
+          if (!isDemo && committedCopy > 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              '${CasinoConstants.inCopy}: ${CasinoConstants.rsv(committedCopy)}',
+              style: TextStyle(color: p.textMuted, fontSize: 11),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              ChoiceChip(
+                label: const Text(CasinoConstants.currencyDemo),
+                selected: isDemo,
+                visualDensity: VisualDensity.compact,
+                onSelected:
+                    currencyLocked ? null : (_) => onCurrencyDemo(),
+              ),
+              const SizedBox(width: 6),
+              ChoiceChip(
+                label: const Text(CasinoConstants.currencyRsv),
+                selected: !isDemo,
+                visualDensity: VisualDensity.compact,
+                onSelected:
+                    currencyLocked ? null : (_) => onCurrencyRsv(),
+              ),
+              const Spacer(),
+              FilterChip(
+                label: const Text(CasinoConstants.turboLabel),
+                selected: turbo,
+                visualDensity: VisualDensity.compact,
+                onSelected: onTurbo,
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

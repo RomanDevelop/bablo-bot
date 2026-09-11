@@ -252,34 +252,35 @@ class CasinoSessionDto {
   final String? updatedAt;
 
   factory CasinoSessionDto.fromJson(Map<String, dynamic> json) {
-    final bonusRaw = json['bonus_state'];
+    final root = json['session'] is Map ? asMap(json['session']) : json;
+    final bonusRaw = root['bonus_state'];
     CasinoBonusStateDto? bonus;
     if (bonusRaw is Map) {
       bonus = CasinoBonusStateDto.fromJson(asMap(bonusRaw));
     } else {
-      final stateBonus = asMap(json['state'])['bonus'];
+      final stateBonus = asMap(root['state'])['bonus'];
       if (stateBonus is Map) {
         bonus = CasinoBonusStateDto.fromJson(asMap(stateBonus));
       }
     }
-    final state = asMap(json['state']);
+    final state = asMap(root['state']);
     final next = asString(
-      json['next_action'] ?? state['next_action'],
+      root['next_action'] ?? state['next_action'],
       'SPIN',
     );
     return CasinoSessionDto(
-      id: asString(json['id'] ?? json['session_id'], ''),
-      gameId: asString(json['game_id'], ''),
-      gameVersion: asString(json['game_version'], '1.0.0'),
-      currency: asString(json['currency'], 'DEMO'),
-      status: asString(json['status'], 'ACTIVE'),
+      id: asString(root['id'] ?? root['session_id'], ''),
+      gameId: asString(root['game_id'], ''),
+      gameVersion: asString(root['game_version'], '1.0.0'),
+      currency: asString(root['currency'], 'DEMO'),
+      status: asString(root['status'], 'ACTIVE'),
       state: state,
       bonusState: bonus,
       nextAction: next,
-      totalWagered: asNum(json['total_wagered']),
-      totalWon: asNum(json['total_won']),
-      startedAt: asNullableString(json['started_at']),
-      updatedAt: asNullableString(json['updated_at']),
+      totalWagered: asNum(root['total_wagered']),
+      totalWon: asNum(root['total_won']),
+      startedAt: asNullableString(root['started_at']),
+      updatedAt: asNullableString(root['updated_at']),
     );
   }
 
@@ -410,50 +411,53 @@ class CasinoSpinResultDto {
   final CasinoSessionDto? session;
 
   factory CasinoSpinResultDto.fromJson(Map<String, dynamic> json) {
+    final root = json['result'] is Map
+        ? asMap(json['result'])
+        : (json['spin'] is Map ? asMap(json['spin']) : json);
     final events = <CasinoEventDto>[];
-    final eventsRaw = json['events'];
+    final eventsRaw = root['events'];
     if (eventsRaw is List) {
       for (final e in eventsRaw) {
         events.add(CasinoEventDto.fromJson(asMap(e)));
       }
     }
     final combos = <CasinoWinComboDto>[];
-    final combosRaw = json['winning_combinations'];
+    final combosRaw = root['winning_combinations'];
     if (combosRaw is List) {
       for (final e in combosRaw) {
         combos.add(CasinoWinComboDto.fromJson(asMap(e)));
       }
     }
-    final bonusRaw = json['bonus_state'];
-    final sessionRaw = json['session'];
+    final bonusRaw = root['bonus_state'];
+    final sessionRaw = root['session'];
     return CasinoSpinResultDto(
-      spinId: asString(json['spin_id'], ''),
-      sessionId: asString(json['session_id'], ''),
-      gameId: asString(json['game_id'], ''),
-      gameVersion: asString(json['game_version'], '1.0.0'),
-      action: asString(json['action'], 'SPIN'),
-      bet: asNum(json['bet']),
-      betCharged: asNum(json['bet_charged']),
-      currency: asString(json['currency'], 'DEMO'),
-      balanceBefore: asNum(json['balance_before']),
-      balanceAfter: asNum(json['balance_after']),
-      totalWin: asNum(json['total_win']),
-      netResult: asNum(json['net_result']),
-      board: _parseBoard(json['board']),
+      spinId: asString(root['spin_id'], ''),
+      sessionId: asString(root['session_id'], ''),
+      gameId: asString(root['game_id'], ''),
+      gameVersion: asString(root['game_version'], '1.0.0'),
+      action: asString(root['action'], 'SPIN'),
+      bet: asNum(root['bet']),
+      betCharged: asNum(root['bet_charged']),
+      currency: asString(root['currency'], 'DEMO'),
+      balanceBefore: asNum(root['balance_before']),
+      balanceAfter: asNum(root['balance_after']),
+      totalWin: asNum(root['total_win']),
+      netResult: asNum(root['net_result']),
+      board: _parseBoard(root['board'] ?? root['reels'] ?? root['grid']),
       winningCombinations: List.unmodifiable(combos),
-      multiplier: asNum(json['multiplier'], 1),
-      triggeredFeatures: _stringList(json['triggered_features']),
+      multiplier: asNum(root['multiplier'], 1),
+      triggeredFeatures: _stringList(root['triggered_features']),
       bonusState: bonusRaw is Map
           ? CasinoBonusStateDto.fromJson(asMap(bonusRaw))
           : null,
-      nextAction: asString(json['next_action'], 'SPIN'),
-      roundComplete: json['round_complete'] == null
+      nextAction: asString(root['next_action'], 'SPIN'),
+      roundComplete: root['round_complete'] == null
           ? true
-          : asBool(json['round_complete']),
+          : asBool(root['round_complete']),
       events: List.unmodifiable(events),
-      gameSpecific: asMap(json['game_specific']),
-      clientRequestId: asNullableString(json['client_request_id']),
-      timestamp: asNullableString(json['timestamp']),
+      gameSpecific: asMap(root['game_specific']),
+      clientRequestId: asNullableString(root['client_request_id']),
+      timestamp: asNullableString(root['timestamp']),
       session: sessionRaw is Map
           ? CasinoSessionDto.fromJson(asMap(sessionRaw))
           : null,

@@ -51,17 +51,37 @@ class NetworkClient {
     Duration? receiveTimeout,
   }) async {
     try {
-      final response = await _dio.post<T>(
+      final response = await _dio.post<dynamic>(
         path,
         data: data,
         options: Options(
           extra: {AuthInterceptor.skipAuthKey: skipAuth},
           receiveTimeout: receiveTimeout,
+          responseType: ResponseType.json,
         ),
       );
-      return response.data as T;
+      final raw = response.data;
+      if (raw == null) {
+        throw const DataError(
+          errorCode: ErrorCode.unhandled,
+          message: 'Пустой ответ сервера',
+        );
+      }
+      if (raw is T) return raw;
+      if (raw is Map) {
+        final map = Map<String, dynamic>.from(raw);
+        return map as T;
+      }
+      return raw as T;
     } on DioException catch (e) {
       throw _mapDioError(e);
+    } on DataError {
+      rethrow;
+    } catch (e) {
+      throw DataError(
+        errorCode: ErrorCode.unhandled,
+        message: e.toString(),
+      );
     }
   }
 
@@ -164,6 +184,23 @@ class NetworkClient {
         if (msg is String && msg.isNotEmpty) return msg;
         final error = detail['error'];
         if (error is String && error.isNotEmpty) return error;
+      }
+      // FastAPI 422: detail is a list of {loc, msg, type}
+      if (detail is List && detail.isNotEmpty) {
+        final parts = <String>[];
+        for (final item in detail.take(3)) {
+          if (item is Map) {
+            final msg = item['msg']?.toString();
+            final loc = item['loc'];
+            final field = loc is List && loc.isNotEmpty
+                ? loc.last.toString()
+                : null;
+            if (msg != null && msg.isNotEmpty) {
+              parts.add(field == null ? msg : '$field: $msg');
+            }
+          }
+        }
+        if (parts.isNotEmpty) return parts.join('; ');
       }
       if (detail != null) return detail.toString();
     }

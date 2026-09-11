@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../../core/constants/casino_symbol_assets.dart';
 import '../../../../../core/theme/app_palette.dart';
 import '../../../../../core/theme/theme_controller.dart';
 import '../../../models/casino_model.dart';
+import 'casino_symbol_icon.dart';
 
 class CasinoBoardView extends StatelessWidget {
   const CasinoBoardView({
@@ -106,16 +105,15 @@ class CasinoBoardView extends StatelessWidget {
                               ]
                             : null,
                       ),
-                      child: Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(cols >= 6 ? 6 : 8),
                         child: AnimatedOpacity(
                           duration: const Duration(milliseconds: 160),
                           opacity: isRemoved ? 0.2 : 1,
-                          child: Padding(
-                            padding: EdgeInsets.all(cols >= 6 ? 4 : 6),
-                            child: SvgPicture.asset(
-                              CasinoSymbolAssets.pathFor(raw, idle: idle),
-                              fit: BoxFit.contain,
-                            ),
+                          child: CasinoSymbolIcon(
+                            symbol: raw,
+                            palette: p,
+                            idle: idle,
                           ),
                         ),
                       ),

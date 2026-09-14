@@ -39,7 +39,7 @@ class CasinoBoardView extends StatelessWidget {
       for (final pos in removedPositions) '${pos[0]}:${pos[1]}',
     };
 
-    final idle = !_hasRealSymbols(board);
+    final idleBoard = !_hasRealSymbols(board);
 
     return AspectRatio(
       aspectRatio: cols / rows,
@@ -58,6 +58,8 @@ class CasinoBoardView extends StatelessWidget {
                   final raw = (r < board.length && c < board[r].length)
                       ? board[r][c]
                       : '';
+                  // Per-cell only — never blank a real symbol because of neighbors.
+                  final cellIdle = !_isRealSymbol(raw);
                   final key = '$r:$c';
                   final isHit = highlight.contains(key);
                   final isRemoved = removed.contains(key);
@@ -70,13 +72,13 @@ class CasinoBoardView extends StatelessWidget {
                       duration: const Duration(milliseconds: 180),
                       margin: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        gradient: idle
+                        gradient: cellIdle
                             ? null
                             : LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  _tileBg(raw, p).withValues(alpha: 0.28),
+                                  _tileBg(raw, p).withValues(alpha: 0.35),
                                   p.card,
                                 ],
                               ),
@@ -86,7 +88,7 @@ class CasinoBoardView extends StatelessWidget {
                                 ? p.primary.withValues(alpha: 0.28)
                                 : locked
                                     ? p.success.withValues(alpha: 0.2)
-                                    : (idle ? p.card : null),
+                                    : (cellIdle ? p.card : null),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
                           color: isHit
@@ -96,7 +98,7 @@ class CasinoBoardView extends StatelessWidget {
                                   : p.borderSubtle,
                           width: isHit || locked ? 1.6 : 1,
                         ),
-                        boxShadow: spinning && idle
+                        boxShadow: spinning && idleBoard
                             ? [
                                 BoxShadow(
                                   color: p.primary.withValues(alpha: 0.12),
@@ -106,14 +108,14 @@ class CasinoBoardView extends StatelessWidget {
                             : null,
                       ),
                       child: Padding(
-                        padding: EdgeInsets.all(cols >= 6 ? 6 : 8),
+                        padding: EdgeInsets.all(cols >= 6 ? 4 : 6),
                         child: AnimatedOpacity(
                           duration: const Duration(milliseconds: 160),
                           opacity: isRemoved ? 0.2 : 1,
                           child: CasinoSymbolIcon(
                             symbol: raw,
                             palette: p,
-                            idle: idle,
+                            idle: cellIdle,
                           ),
                         ),
                       ),
@@ -128,13 +130,15 @@ class CasinoBoardView extends StatelessWidget {
     );
   }
 
+  bool _isRealSymbol(String cell) {
+    final s = cell.trim().toUpperCase();
+    return s.isNotEmpty && s != '·' && s != '.' && s != 'EMPTY';
+  }
+
   bool _hasRealSymbols(List<List<String>> board) {
     for (final row in board) {
       for (final cell in row) {
-        final s = cell.trim().toUpperCase();
-        if (s.isNotEmpty && s != '·' && s != '.' && s != 'EMPTY') {
-          return true;
-        }
+        if (_isRealSymbol(cell)) return true;
       }
     }
     return false;

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -39,116 +41,146 @@ class CasinoGamePage extends CoreMwwmWidget<CasinoGameWidgetModel> {
 
 class _CasinoGamePageState
     extends MwwmWidgetState<CasinoGamePage, CasinoGameWidgetModel> {
+  StreamSubscription<CasinoGameState>? _sub;
+  late CasinoGameState _state;
+
+  @override
+  void initState() {
+    super.initState();
+    _state = wm.stateStream.value;
+    _sub = wm.stateStream.listen((next) {
+      if (!mounted) return;
+      setState(() => _state = next);
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _onSpin() async {
+    try {
+      if (_state.canRetry) {
+        await wm.retrySameRequest();
+      } else {
+        await wm.spinOrRespin();
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Spin error: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = context.watch<ThemeController>().palette;
     final auth = context.watch<AuthSession>();
+    final state = _state;
 
-    return StreamBuilder<CasinoGameState>(
-      stream: wm.stateStream,
-      initialData: wm.stateStream.value,
-      builder: (context, snapshot) {
-        final state = snapshot.data ?? const CasinoGameState();
+    if (state.message != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final msg = wm.stateStream.value.message;
+        if (msg == null) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(msg),
+            behavior: SnackBarBehavior.floating,
+            action: state.canRetry
+                ? SnackBarAction(
+                    label: CasinoConstants.retryCta,
+                    onPressed: wm.retrySameRequest,
+                  )
+                : null,
+          ),
+        );
+        wm.clearMessage();
+      });
+    }
 
-        if (state.message != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (!mounted) return;
-            final msg = wm.stateStream.value.message;
-            if (msg == null) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(msg),
-                behavior: SnackBarBehavior.floating,
-                action: state.canRetry
-                    ? SnackBarAction(
-                        label: CasinoConstants.retryCta,
-                        onPressed: wm.retrySameRequest,
-                      )
-                    : null,
-              ),
-            );
-            wm.clearMessage();
-          });
-        }
+    final title = state.game?.title ?? widget.gameId;
 
-        final title = state.game?.title ?? widget.gameId;
-
-        return Scaffold(
-          backgroundColor: p.background,
-          appBar: AppBar(
-            backgroundColor: p.background,
-            foregroundColor: p.textPrimary,
-            leading: IconButton(
-              tooltip: 'Назад',
-              onPressed: () => navigateBackOrHome(context),
-              icon: const Icon(Icons.arrow_back_rounded),
-            ),
-            title: Text(title),
-            actions: [
-              if (state.balance != null)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 4),
-                    child: Text(
-                      state.currency.toUpperCase() ==
-                              CasinoConstants.currencyDemo
-                          ? CasinoConstants.demo(
-                              state.balance!.demo.available,
-                            )
-                          : CasinoConstants.rsv(
-                              state.balance!.rsv.available,
-                            ),
-                      style: TextStyle(
-                        color: p.textSecondary,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 12,
-                      ),
-                    ),
+    return Scaffold(
+      backgroundColor: p.background,
+      appBar: AppBar(
+        backgroundColor: p.background,
+        foregroundColor: p.textPrimary,
+        leading: IconButton(
+          tooltip: 'Назад',
+          onPressed: () => navigateBackOrHome(context),
+          icon: const Icon(Icons.arrow_back_rounded),
+        ),
+        title: Text(title),
+        actions: [
+          if (state.balance != null)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Text(
+                  state.currency.toUpperCase() ==
+                          CasinoConstants.currencyDemo
+                      ? CasinoConstants.demo(
+                          state.balance!.demo.available,
+                        )
+                      : CasinoConstants.rsv(
+                          state.balance!.rsv.available,
+                        ),
+                  style: TextStyle(
+                    color: p.textSecondary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
                   ),
                 ),
-              IconButton(
-                tooltip: 'Profile',
-                onPressed: wm.openProfile,
-                icon: Icon(
-                  auth.isAuthenticated
-                      ? Icons.person_rounded
-                      : Icons.person_outline_rounded,
-                ),
               ),
-            ],
+            ),
+          IconButton(
+            tooltip: 'Profile',
+            onPressed: wm.openProfile,
+            icon: Icon(
+              auth.isAuthenticated
+                  ? Icons.person_rounded
+                  : Icons.person_outline_rounded,
+            ),
           ),
-          body: state.isLoading && state.game == null
-              ? const PageLoading()
-              : state.needsAuth
+        ],
+      ),
+      body: state.isLoading && state.game == null
+          ? const PageLoading()
+          : state.needsAuth
+              ? ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    TradingCard(
+                      onTap: wm.openProfile,
+                      child: const Text(CasinoConstants.needAuth),
+                    ),
+                  ],
+                )
+              : state.planRequired
                   ? ListView(
                       padding: const EdgeInsets.all(16),
                       children: [
-                        TradingCard(
-                          onTap: wm.openProfile,
-                          child: const Text(CasinoConstants.needAuth),
-                        ),
+                        CasinoGateCard(onOpenPremium: wm.openSubscriptions),
                       ],
                     )
-                  : state.planRequired
+                  : state.error != null && state.game == null
                       ? ListView(
                           padding: const EdgeInsets.all(16),
                           children: [
-                            CasinoGateCard(onOpenPremium: wm.openSubscriptions),
+                            ErrorBanner(
+                              message: state.error!,
+                              onRetry: wm.load,
+                            ),
                           ],
                         )
-                      : state.error != null && state.game == null
-                          ? ListView(
-                              padding: const EdgeInsets.all(16),
-                              children: [
-                                ErrorBanner(
-                                  message: state.error!,
-                                  onRetry: wm.load,
-                                ),
-                              ],
-                            )
-                          : _gameBody(context, state, p),
-        );
-      },
+                      : _gameBody(context, state, p),
     );
   }
 
@@ -191,29 +223,8 @@ class _CasinoGamePageState
                   onRetry: state.canRetry ? wm.retrySameRequest : wm.load,
                 ),
               ],
-              if (state.statusLine != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: p.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: p.primary.withValues(alpha: 0.35)),
-                  ),
-                  child: Text(
-                    state.statusLine!,
-                    style: TextStyle(
-                      color: p.textPrimary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 13,
-                    ),
-                  ),
-                ),
-              ],
               if (state.lastWin > 0) ...[
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Text(
                   'Win ${CasinoConstants.amount(state.lastWin)}',
                   style: TextStyle(
@@ -222,19 +233,33 @@ class _CasinoGamePageState
                     fontSize: 15,
                   ),
                 ),
+              ] else if (state.statusLine != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  state.statusLine!,
+                  style: TextStyle(
+                    color: p.textMuted,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
               ],
               const SizedBox(height: 12),
               if (state.session?.bonusState != null) ...[
                 CasinoBonusOverlay(bonus: state.session!.bonusState!),
                 const SizedBox(height: 10),
               ],
-              CasinoBoardView(
-                game: game,
-                board: state.board,
-                highlightPositions: state.highlightPositions,
-                removedPositions: state.removedPositions,
-                bonus: state.session?.bonusState,
-                spinning: state.isPlayingEvents || state.isSpinning,
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: state.busy ? null : _onSpin,
+                child: CasinoBoardView(
+                  game: game,
+                  board: state.board,
+                  highlightPositions: state.highlightPositions,
+                  removedPositions: state.removedPositions,
+                  bonus: state.session?.bonusState,
+                  spinning: state.isPlayingEvents || state.isSpinning,
+                ),
               ),
               if (game.isHoldAndWin) ...[
                 const SizedBox(height: 8),
@@ -313,16 +338,7 @@ class _CasinoGamePageState
               width: double.infinity,
               height: 56,
               child: FilledButton(
-                onPressed: state.busy
-                    ? null
-                    : () {
-                        // Explicit closure — more reliable than async tear-off on web.
-                        if (state.canRetry) {
-                          wm.retrySameRequest();
-                        } else {
-                          wm.spinOrRespin();
-                        }
-                      },
+                onPressed: state.busy ? null : _onSpin,
                 style: FilledButton.styleFrom(
                   backgroundColor: p.primary,
                   foregroundColor: p.onPrimary,

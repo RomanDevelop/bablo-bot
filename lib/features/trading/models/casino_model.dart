@@ -320,7 +320,9 @@ class CasinoEvent {
         rows.add(row.map((e) => e.toString()).toList(growable: false));
       }
     }
-    return rows;
+    // Empty list must be null — otherwise copyWith replaces a good board with [].
+    if (rows.isEmpty) return null;
+    return List.unmodifiable(rows);
   }
 }
 

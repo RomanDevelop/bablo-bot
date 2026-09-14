@@ -119,10 +119,13 @@ class CasinoGameDto {
       }
     }
     return CasinoGameDto(
-      gameId: asString(json['game_id'], ''),
-      title: asString(json['title'], asString(json['game_id'], 'Game')),
+      gameId: asString(
+        json['game_id'] ?? json['id'] ?? json['slug'],
+        '',
+      ),
+      title: asString(json['title'], asString(json['game_id'] ?? json['id'], 'Game')),
       description: asString(json['description'], ''),
-      gameType: asString(json['game_type'], ''),
+      gameType: asString(json['game_type'] ?? json['type'], ''),
       version: asString(json['version'], '1.0.0'),
       status: asString(json['status'], 'ACTIVE'),
       supportedCurrencies: _stringList(
@@ -411,9 +414,19 @@ class CasinoSpinResultDto {
   final CasinoSessionDto? session;
 
   factory CasinoSpinResultDto.fromJson(Map<String, dynamic> json) {
-    final root = json['result'] is Map
-        ? asMap(json['result'])
-        : (json['spin'] is Map ? asMap(json['spin']) : json);
+    var root = json;
+    final alreadySpin = json['spin_id'] != null ||
+        json['board'] != null ||
+        json['events'] != null;
+    if (!alreadySpin) {
+      if (json['result'] is Map) {
+        root = asMap(json['result']);
+      } else if (json['spin'] is Map) {
+        root = asMap(json['spin']);
+      } else if (json['data'] is Map) {
+        root = asMap(json['data']);
+      }
+    }
     final events = <CasinoEventDto>[];
     final eventsRaw = root['events'];
     if (eventsRaw is List) {
@@ -590,11 +603,21 @@ List<String> _stringList(dynamic value, {List<String> fallback = const []}) {
 
 List<List<String>> _parseBoard(dynamic raw) {
   if (raw is! List) return const [];
-  final rows = <List<String>>[];
-  for (final row in raw) {
-    if (row is List) {
-      rows.add(row.map((e) => e.toString()).toList(growable: false));
+  // Row-major: [["CHERRY","COIN"], ...]
+  if (raw.isNotEmpty && raw.first is List) {
+    final rows = <List<String>>[];
+    for (final row in raw) {
+      if (row is List) {
+        rows.add(row.map((e) => e.toString()).toList(growable: false));
+      }
     }
+    return List.unmodifiable(rows);
   }
-  return List.unmodifiable(rows);
+  // Flat list of symbols — reshape is unknown; keep as single row.
+  if (raw.isNotEmpty && raw.first is! List) {
+    return List.unmodifiable([
+      raw.map((e) => e.toString()).toList(growable: false),
+    ]);
+  }
+  return const [];
 }

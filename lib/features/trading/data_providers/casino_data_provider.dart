@@ -162,18 +162,20 @@ class CasinoDataProvider implements CasinoDataProviderInterface {
 
   Map<String, dynamic> _asResponseMap(dynamic data) {
     if (data is String && data.isNotEmpty) {
-      // Should not happen with JSON transformer — keep safe.
       return <String, dynamic>{'raw': data};
     }
     final map = asMap(data);
     if (map.isEmpty) return map;
+    // Never unwrap an envelope if the spin payload is already here.
+    // A nested `result` map used to hide `board` / `spin_id`.
+    if (map['spin_id'] != null ||
+        map['board'] != null ||
+        map['events'] != null) {
+      return map;
+    }
     if (map['result'] is Map) return asMap(map['result']);
-    if (map['spin'] is Map && map['spin_id'] == null) {
-      return asMap(map['spin']);
-    }
-    if (map['data'] is Map && map['spin_id'] == null && map['board'] == null) {
-      return asMap(map['data']);
-    }
+    if (map['spin'] is Map) return asMap(map['spin']);
+    if (map['data'] is Map) return asMap(map['data']);
     return map;
   }
 

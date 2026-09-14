@@ -39,3 +39,12 @@ flutter:
     - assets/branding/alexander_l_hero.png
     - assets/branding/anton_the_fed_hero.png
     - assets/branding/iren_the_oracle_hero.png
+    - assets/casino/symbols/cherry.png
+    - assets/casino/symbols/coin.png
+    - assets/casino/symbols/bar.png
+    - assets/casino/symbols/seven.png
+    - assets/casino/symbols/diamond.png
+    - assets/casino/symbols/bablo.png
+    - assets/casino/symbols/wild.png
+    - assets/casino/symbols/rsv_coin.png
+    - assets/casino/symbols/idle.png

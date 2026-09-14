@@ -297,6 +297,7 @@ class CasinoGameWidgetModel extends WidgetModel {
       }
     }
 
+    // Do not pre-create session: POST /spin creates one when session_id is omitted.
     _inFlightRequestId = CasinoRequestId.next();
     await _executeSpin(clientRequestId: _inFlightRequestId!);
   }
@@ -319,6 +320,7 @@ class CasinoGameWidgetModel extends WidgetModel {
     stateStream.add(
       stateStream.value.copyWith(
         isSpinning: true,
+        isPlayingEvents: false,
         canRetry: false,
         highlightPositions: const [],
         removedPositions: const [],
@@ -331,11 +333,14 @@ class CasinoGameWidgetModel extends WidgetModel {
     );
 
     try {
-      // Backend accepts missing session_id and creates/resumes session.
-      // Only send a real UUID — empty/invalid ids cause silent 422.
+      // Regular SPIN must not send a stale session_id (404/422, board never
+      // arrives). RESPIN keeps the bonus session UUID.
       final rawSessionId = state.session?.id.trim();
-      final sessionId =
-          (rawSessionId != null && _isUuid(rawSessionId)) ? rawSessionId : null;
+      final sessionId = action == CasinoConstants.actionRespin &&
+              rawSessionId != null &&
+              _isUuid(rawSessionId)
+          ? rawSessionId
+          : null;
 
       final resolvedGameId =
           game.gameId.trim().isEmpty ? gameId : game.gameId.trim();
@@ -366,51 +371,23 @@ class CasinoGameWidgetModel extends WidgetModel {
 
       _inFlightRequestId = null;
 
-      // Apply board immediately so UI updates even if events[] is empty.
-      if (result.board.isNotEmpty) {
-        stateStream.add(
-          stateStream.value.copyWith(
-            isSpinning: false,
-            isPlayingEvents: true,
-            canRetry: false,
-            board: result.board,
-            lastWin: result.totalWin,
-            multiplier: result.multiplier,
-            session: result.session ??
-                stateStream.value.session?.copyWithNext(
-                  nextAction: result.nextAction,
-                  bonusState: result.bonusState,
-                ),
-            statusLine: result.events.isEmpty
-                ? (result.hasWin
-                    ? 'Win ${CasinoConstants.amount(result.totalWin)}'
-                    : 'No win')
-                : 'Playing...',
-          ),
-        );
-      } else {
-        stateStream.add(
-          stateStream.value.copyWith(
-            isSpinning: false,
-            isPlayingEvents: true,
-            canRetry: false,
-            session: result.session ??
-                stateStream.value.session?.copyWithNext(
-                  nextAction: result.nextAction,
-                  bonusState: result.bonusState,
-                ),
-          ),
-        );
+      // Snapshot board once — never let later empty event payloads wipe it.
+      var spunBoard = result.board
+          .map((row) => List<String>.from(row))
+          .toList(growable: false);
+      if (spunBoard.isEmpty) {
+        for (final event in result.events) {
+          final fromEvent = event.boardFromData;
+          if (fromEvent != null && fromEvent.isNotEmpty) {
+            spunBoard = fromEvent
+                .map((row) => List<String>.from(row))
+                .toList(growable: false);
+            break;
+          }
+        }
       }
 
-      if (result.events.isNotEmpty) {
-        await _eventPlayer.play(
-          events: result.events,
-          turbo: stateStream.value.turbo,
-          onEvent: _applyEvent,
-        );
-      }
-
+      // Balance FIRST — UI must never stay frozen if event playback fails.
       final balance = stateStream.value.balance;
       CasinoBalance? nextBalance = balance;
       if (balance != null) {
@@ -437,19 +414,53 @@ class CasinoGameWidgetModel extends WidgetModel {
                   status: 'ACTIVE',
                 ));
 
+      if (isDisposed) return;
+
+      final finalBoard =
+          spunBoard.isNotEmpty ? spunBoard : stateStream.value.board;
+
       stateStream.add(
         stateStream.value.copyWith(
+          isSpinning: false,
+          isPlayingEvents: result.events.isNotEmpty,
+          canRetry: false,
+          balance: nextBalance,
+          session: session,
+          board: finalBoard,
+          lastWin: result.totalWin,
+          multiplier: result.multiplier,
+          statusLine: _boardStatus(finalBoard, result),
+          highlightPositions: const [],
+          removedPositions: const [],
+          clearError: true,
+          clearMessage: true,
+        ),
+      );
+
+      if (result.events.isNotEmpty) {
+        try {
+          await _eventPlayer.play(
+            events: result.events,
+            turbo: stateStream.value.turbo,
+            onEvent: _applyEvent,
+          );
+        } catch (_) {
+          // Board/balance already on screen.
+        }
+      }
+
+      if (isDisposed) return;
+
+      stateStream.add(
+        stateStream.value.copyWith(
+          isSpinning: false,
           isPlayingEvents: false,
           balance: nextBalance,
           session: session,
-          board: result.board.isNotEmpty
-              ? result.board
-              : stateStream.value.board,
+          board: finalBoard,
           lastWin: result.totalWin,
           multiplier: result.multiplier,
-          statusLine: result.hasWin
-              ? 'Win ${CasinoConstants.amount(result.totalWin)}'
-              : 'No win',
+          statusLine: _boardStatus(finalBoard, result),
           clearError: true,
           clearMessage: true,
         ),
@@ -547,9 +558,12 @@ class CasinoGameWidgetModel extends WidgetModel {
       case CasinoConstants.eventBoardGenerated:
       case CasinoConstants.eventNewSymbolsDropped:
         final board = event.boardFromData;
+        // Ignore null/empty — keep the board already applied from spin result.
         stateStream.add(
           stateStream.value.copyWith(
-            board: board ?? stateStream.value.board,
+            board: (board != null && board.isNotEmpty)
+                ? board
+                : stateStream.value.board,
             removedPositions: const [],
             statusLine: type == CasinoConstants.eventNewSymbolsDropped
                 ? 'New symbols'
@@ -634,6 +648,13 @@ class CasinoGameWidgetModel extends WidgetModel {
           stateStream.value.copyWith(statusLine: type),
         );
     }
+  }
+
+  String _boardStatus(List<List<String>> board, CasinoSpinResult result) {
+    if (board.isEmpty) return 'No win';
+    return result.hasWin
+        ? 'Win ${CasinoConstants.amount(result.totalWin)}'
+        : 'No win';
   }
 
   List<List<String>> _emptyBoard(CasinoGame game) {

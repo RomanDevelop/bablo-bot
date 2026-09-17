@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../components/feedback.dart';
@@ -12,28 +13,26 @@ import '../../../../../core/mwwm/core_mwwm_widget.dart';
 import '../../../../../core/navigation/app_routes.dart';
 import '../../../../../core/navigation/navigate_back.dart';
 import '../../../../../core/theme/app_palette.dart';
-import '../../../../../core/theme/app_theme.dart';
 import '../../../../../core/theme/theme_controller.dart';
 import '../components/casino_board_view.dart';
+import '../components/casino_fx.dart';
 import '../components/casino_home_components.dart';
 import 'casino_game_wm.dart';
 import 'di/casino_game_wm_builder.dart';
 
 class CasinoGamePage extends CoreMwwmWidget<CasinoGameWidgetModel> {
-  CasinoGamePage({
-    super.key,
-    required this.gameId,
-  }) : super(
-          widgetModelBuilder: (context) =>
-              createCasinoGameWidgetModel(context, gameId: gameId),
-        );
+  CasinoGamePage({super.key, required this.gameId})
+    : super(
+        widgetModelBuilder:
+            (context) => createCasinoGameWidgetModel(context, gameId: gameId),
+      );
 
   final String gameId;
 
   static Route<void> route(String gameId) => MaterialPageRoute<void>(
-        settings: RouteSettings(name: AppRoutes.casinoGame(gameId)),
-        builder: (_) => CasinoGamePage(gameId: gameId),
-      );
+    settings: RouteSettings(name: AppRoutes.casinoGame(gameId)),
+    builder: (_) => CasinoGamePage(gameId: gameId),
+  );
 
   @override
   State<CasinoGamePage> createState() => _CasinoGamePageState();
@@ -62,6 +61,7 @@ class _CasinoGamePageState
 
   Future<void> _onSpin() async {
     try {
+      HapticFeedback.mediumImpact();
       if (_state.canRetry) {
         await wm.retrySameRequest();
       } else {
@@ -93,12 +93,13 @@ class _CasinoGamePageState
           SnackBar(
             content: Text(msg),
             behavior: SnackBarBehavior.floating,
-            action: state.canRetry
-                ? SnackBarAction(
-                    label: CasinoConstants.retryCta,
-                    onPressed: wm.retrySameRequest,
-                  )
-                : null,
+            action:
+                state.canRetry
+                    ? SnackBarAction(
+                      label: CasinoConstants.retryCta,
+                      onPressed: wm.retrySameRequest,
+                    )
+                    : null,
           ),
         );
         wm.clearMessage();
@@ -124,14 +125,9 @@ class _CasinoGamePageState
               child: Padding(
                 padding: const EdgeInsets.only(right: 4),
                 child: Text(
-                  state.currency.toUpperCase() ==
-                          CasinoConstants.currencyDemo
-                      ? CasinoConstants.demo(
-                          state.balance!.demo.available,
-                        )
-                      : CasinoConstants.rsv(
-                          state.balance!.rsv.available,
-                        ),
+                  state.currency.toUpperCase() == CasinoConstants.currencyDemo
+                      ? CasinoConstants.demo(state.balance!.demo.available)
+                      : CasinoConstants.rsv(state.balance!.rsv.available),
                   style: TextStyle(
                     color: p.textSecondary,
                     fontWeight: FontWeight.w700,
@@ -151,47 +147,38 @@ class _CasinoGamePageState
           ),
         ],
       ),
-      body: state.isLoading && state.game == null
-          ? const PageLoading()
-          : state.needsAuth
+      body:
+          state.isLoading && state.game == null
+              ? const PageLoading()
+              : state.needsAuth
               ? ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    TradingCard(
-                      onTap: wm.openProfile,
-                      child: const Text(CasinoConstants.needAuth),
-                    ),
-                  ],
-                )
+                padding: const EdgeInsets.all(16),
+                children: [
+                  TradingCard(
+                    onTap: wm.openProfile,
+                    child: const Text(CasinoConstants.needAuth),
+                  ),
+                ],
+              )
               : state.planRequired
-                  ? ListView(
-                      padding: const EdgeInsets.all(16),
-                      children: [
-                        CasinoGateCard(onOpenPremium: wm.openSubscriptions),
-                      ],
-                    )
-                  : state.error != null && state.game == null
-                      ? ListView(
-                          padding: const EdgeInsets.all(16),
-                          children: [
-                            ErrorBanner(
-                              message: state.error!,
-                              onRetry: wm.load,
-                            ),
-                          ],
-                        )
-                      : _gameBody(context, state, p),
+              ? ListView(
+                padding: const EdgeInsets.all(16),
+                children: [CasinoGateCard(onOpenPremium: wm.openSubscriptions)],
+              )
+              : state.error != null && state.game == null
+              ? ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  ErrorBanner(message: state.error!, onRetry: wm.load),
+                ],
+              )
+              : _gameBody(context, state, p),
     );
   }
 
-  Widget _gameBody(
-    BuildContext context,
-    CasinoGameState state,
-    AppPalette p,
-  ) {
+  Widget _gameBody(BuildContext context, CasinoGameState state, AppPalette p) {
     final game = state.game!;
-    final isDemo =
-        state.currency.toUpperCase() == CasinoConstants.currencyDemo;
+    final isDemo = state.currency.toUpperCase() == CasinoConstants.currencyDemo;
     final balanceValue = state.balance?.availableFor(state.currency) ?? 0;
     final committed = state.balance?.rsv.committedCopy ?? 0;
 
@@ -202,18 +189,19 @@ class _CasinoGamePageState
             padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
             children: [
               _CompactWalletBar(
-                balanceLabel: isDemo
-                    ? CasinoConstants.demo(balanceValue)
-                    : CasinoConstants.rsv(balanceValue),
+                balanceLabel:
+                    isDemo
+                        ? CasinoConstants.demo(balanceValue)
+                        : CasinoConstants.rsv(balanceValue),
                 committedCopy: committed,
                 isDemo: isDemo,
                 multiplier: state.multiplier,
                 turbo: state.turbo,
                 currencyLocked: state.busy || state.betLocked,
-                onCurrencyDemo: () =>
-                    wm.setCurrency(CasinoConstants.currencyDemo),
-                onCurrencyRsv: () =>
-                    wm.setCurrency(CasinoConstants.currencyRsv),
+                onCurrencyDemo:
+                    () => wm.setCurrency(CasinoConstants.currencyDemo),
+                onCurrencyRsv:
+                    () => wm.setCurrency(CasinoConstants.currencyRsv),
                 onTurbo: wm.setTurbo,
               ),
               if (state.error != null) ...[
@@ -225,22 +213,19 @@ class _CasinoGamePageState
               ],
               if (state.lastWin > 0) ...[
                 const SizedBox(height: 8),
-                Text(
-                  'Win ${CasinoConstants.amount(state.lastWin)}',
-                  style: TextStyle(
-                    color: p.success,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 15,
-                  ),
-                ),
+                CasinoWinBanner(amount: state.lastWin, palette: p),
               ] else if (state.statusLine != null) ...[
                 const SizedBox(height: 8),
-                Text(
-                  state.statusLine!,
-                  style: TextStyle(
-                    color: p.textMuted,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  child: Text(
+                    state.statusLine!,
+                    key: ValueKey(state.statusLine),
+                    style: TextStyle(
+                      color: p.textMuted,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               ],
@@ -258,7 +243,12 @@ class _CasinoGamePageState
                   highlightPositions: state.highlightPositions,
                   removedPositions: state.removedPositions,
                   bonus: state.session?.bonusState,
-                  spinning: state.isPlayingEvents || state.isSpinning,
+                  spinning: state.isSpinning,
+                  turbo: state.turbo,
+                  miss:
+                      !state.isSpinning &&
+                      state.lastWin <= 0 &&
+                      state.statusLine == 'No win',
                 ),
               ),
               if (game.isHoldAndWin) ...[
@@ -334,42 +324,17 @@ class _CasinoGamePageState
           top: false,
           child: Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: FilledButton(
-                onPressed: state.busy ? null : _onSpin,
-                style: FilledButton.styleFrom(
-                  backgroundColor: p.primary,
-                  foregroundColor: p.onPrimary,
-                  disabledBackgroundColor: p.primary.withValues(alpha: 0.45),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppTheme.controlRadius),
-                  ),
-                ),
-                child: state.busy
-                    ? SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.4,
-                          color: p.onPrimary,
-                        ),
-                      )
-                    : Text(
-                        state.canRetry
-                            ? CasinoConstants.retryCta
-                            : state.requiresRespin
-                                ? CasinoConstants.respinCta
-                                : CasinoConstants.spinCta,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                        ),
-                      ),
-              ),
+            child: CasinoSpinButton(
+              busy: state.busy,
+              spinning: state.isSpinning,
+              label:
+                  state.canRetry
+                      ? CasinoConstants.retryCta
+                      : state.requiresRespin
+                      ? CasinoConstants.respinCta
+                      : CasinoConstants.spinCta,
+              palette: p,
+              onPressed: state.busy ? null : _onSpin,
             ),
           ),
         ),
@@ -421,12 +386,20 @@ class _CompactWalletBar extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                '×${CasinoConstants.amount(multiplier)}',
-                style: TextStyle(
-                  color: p.textMuted,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 13,
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 280),
+                transitionBuilder: (child, anim) {
+                  return ScaleTransition(scale: anim, child: child);
+                },
+                child: Text(
+                  '×${CasinoConstants.amount(multiplier)}',
+                  key: ValueKey(multiplier),
+                  style: TextStyle(
+                    color:
+                        multiplier > 1 ? const Color(0xFFE0A020) : p.textMuted,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],
@@ -445,16 +418,14 @@ class _CompactWalletBar extends StatelessWidget {
                 label: const Text(CasinoConstants.currencyDemo),
                 selected: isDemo,
                 visualDensity: VisualDensity.compact,
-                onSelected:
-                    currencyLocked ? null : (_) => onCurrencyDemo(),
+                onSelected: currencyLocked ? null : (_) => onCurrencyDemo(),
               ),
               const SizedBox(width: 6),
               ChoiceChip(
                 label: const Text(CasinoConstants.currencyRsv),
                 selected: !isDemo,
                 visualDensity: VisualDensity.compact,
-                onSelected:
-                    currencyLocked ? null : (_) => onCurrencyRsv(),
+                onSelected: currencyLocked ? null : (_) => onCurrencyRsv(),
               ),
               const Spacer(),
               FilterChip(

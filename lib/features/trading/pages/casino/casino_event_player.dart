@@ -19,25 +19,24 @@ class CasinoEventPlayer {
   Duration _delayFor(String type, {required bool turbo}) {
     final base = switch (type) {
       CasinoConstants.eventSpinStarted ||
-      CasinoConstants.eventRespinStarted =>
-        180,
-      CasinoConstants.eventBetAccepted => 120,
-      CasinoConstants.eventBoardGenerated => 520,
-      CasinoConstants.eventWinDetected => 420,
-      CasinoConstants.eventNoWin => 280,
-      CasinoConstants.eventCascadeStarted => 200,
-      CasinoConstants.eventSymbolsRemoved => 320,
-      CasinoConstants.eventNewSymbolsDropped => 420,
-      CasinoConstants.eventMultiplierChanged => 180,
-      CasinoConstants.eventBonusTriggered => 600,
-      CasinoConstants.eventCoinLocked => 260,
-      CasinoConstants.eventRespinsReset => 220,
-      CasinoConstants.eventBonusCompleted => 700,
-      CasinoConstants.eventWinCredited => 360,
-      CasinoConstants.eventSpinCompleted => 200,
-      _ => 160,
+      CasinoConstants.eventRespinStarted => 220,
+      CasinoConstants.eventBetAccepted => 140,
+      CasinoConstants.eventBoardGenerated => 1280,
+      CasinoConstants.eventWinDetected => 720,
+      CasinoConstants.eventNoWin => 360,
+      CasinoConstants.eventCascadeStarted => 240,
+      CasinoConstants.eventSymbolsRemoved => 380,
+      CasinoConstants.eventNewSymbolsDropped => 560,
+      CasinoConstants.eventMultiplierChanged => 280,
+      CasinoConstants.eventBonusTriggered => 900,
+      CasinoConstants.eventCoinLocked => 320,
+      CasinoConstants.eventRespinsReset => 260,
+      CasinoConstants.eventBonusCompleted => 900,
+      CasinoConstants.eventWinCredited => 640,
+      CasinoConstants.eventSpinCompleted => 240,
+      _ => 180,
     };
     final ms = turbo ? (base * 0.45).round() : base;
-    return Duration(milliseconds: ms.clamp(40, 1200));
+    return Duration(milliseconds: ms.clamp(40, 1600));
   }
 }

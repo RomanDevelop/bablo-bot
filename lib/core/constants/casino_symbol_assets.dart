@@ -12,7 +12,19 @@ class CasinoSymbolAssets {
   static const bablo = '$_dir/bablo.png';
   static const wild = '$_dir/wild.png';
   static const rsvCoin = '$_dir/rsv_coin.png';
-  static const idle = '$_dir/idle.png';
+  static const idle = 'assets/branding/app_icon.png';
+
+  /// Visual-only strip while reels spin. Not used for win math.
+  static const spinCycle = <String>[
+    'CHERRY',
+    'COIN',
+    'BAR',
+    'SEVEN',
+    'DIAMOND',
+    'BABLO',
+    'WILD',
+    'RSV_COIN',
+  ];
 
   static String pathFor(String symbol, {bool idle = false}) {
     if (idle) return CasinoSymbolAssets.idle;

@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../../../../../core/constants/casino_symbol_assets.dart';
 import '../../../../../core/theme/app_palette.dart';
 
-/// Draws slot symbols with CustomPaint (works on Flutter web / Telegram).
-/// No AssetBundle — avoids missing-image / idle-"!" confusion.
+/// Premium collage crops on the reel; CustomPaint only if an asset fails.
 class CasinoSymbolIcon extends StatelessWidget {
   const CasinoSymbolIcon({
     super.key,
@@ -21,14 +21,31 @@ class CasinoSymbolIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final code = idle ? 'IDLE' : _normalize(symbol);
+    final asset = CasinoSymbolAssets.pathFor(symbol, idle: idle);
     return LayoutBuilder(
       builder: (context, constraints) {
         final side = math.min(constraints.maxWidth, constraints.maxHeight);
         final size = side.isFinite && side > 0 ? side : 48.0;
+        final box = size * ((idle || code == 'IDLE') ? 0.72 : 0.94);
         return Center(
-          child: CustomPaint(
-            size: Size.square(size * 0.92),
-            painter: _SymbolPainter(code: code, palette: palette),
+          child: Opacity(
+            opacity: (idle || code == 'IDLE') ? 0.55 : 1,
+            child: SizedBox(
+              width: box,
+              height: box,
+              child: Image.asset(
+                asset,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
+                gaplessPlayback: true,
+                errorBuilder: (context, error, stackTrace) {
+                  return CustomPaint(
+                    size: Size.square(box),
+                    painter: _SymbolPainter(code: code, palette: palette),
+                  );
+                },
+              ),
+            ),
           ),
         );
       },
@@ -83,73 +100,75 @@ class _SymbolPainter extends CustomPainter {
 
   void _cherry(Canvas canvas) {
     final stem = Paint()
-      ..color = const Color(0xFF5B8C3E)
-      ..strokeWidth = 3.5
+      ..color = const Color(0xFF7CFF6B)
+      ..strokeWidth = 3.2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
-    canvas.drawArc(const Rect.fromLTWH(24, 6, 18, 22), -1.3, 1.7, false, stem);
+    canvas.drawArc(const Rect.fromLTWH(22, 4, 20, 24), -1.35, 1.8, false, stem);
+    canvas.drawArc(const Rect.fromLTWH(28, 4, 16, 20), -0.4, 1.2, false, stem);
     canvas.drawOval(
-      const Rect.fromLTWH(8, 26, 26, 30),
-      Paint()..color = const Color(0xFFFF2D55),
+      const Rect.fromLTWH(6, 24, 28, 32),
+      Paint()..color = const Color(0xFFFF1A6D),
     );
     canvas.drawOval(
-      const Rect.fromLTWH(30, 26, 26, 30),
-      Paint()..color = const Color(0xFFE0113A),
+      const Rect.fromLTWH(30, 22, 28, 34),
+      Paint()..color = const Color(0xFFC4004A),
     );
     canvas.drawOval(
-      const Rect.fromLTWH(14, 32, 8, 10),
-      Paint()..color = const Color(0xFFFF8FA3),
+      const Rect.fromLTWH(12, 30, 9, 11),
+      Paint()..color = const Color(0xFFFF8FB8),
+    );
+    canvas.drawOval(
+      const Rect.fromLTWH(36, 28, 8, 10),
+      Paint()..color = const Color(0xFFFF5A93),
     );
   }
 
   void _coin(Canvas canvas) {
-    canvas.drawCircle(const Offset(32, 32), 24, Paint()..color = const Color(0xFFE8B923));
-    canvas.drawCircle(const Offset(32, 32), 19, Paint()..color = const Color(0xFFFFE082));
+    canvas.drawCircle(const Offset(32, 32), 25, Paint()..color = const Color(0xFFFF2D78));
+    canvas.drawCircle(const Offset(32, 32), 22, Paint()..color = const Color(0xFFFFD54A));
+    canvas.drawCircle(const Offset(32, 32), 17, Paint()..color = const Color(0xFFFFF0A8));
     canvas.drawCircle(
       const Offset(32, 32),
-      14,
+      13,
       Paint()
-        ..color = const Color(0xFFC4920A)
+        ..color = const Color(0xFFC47A00)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.5,
+        ..strokeWidth = 2.2,
     );
-    final tp = TextPainter(
-      text: const TextSpan(
-        text: '\$',
-        style: TextStyle(
-          color: Color(0xFF8A6A00),
-          fontSize: 22,
-          fontWeight: FontWeight.w900,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    tp.paint(canvas, Offset(32 - tp.width / 2, 32 - tp.height / 2));
+    final heart = Path()
+      ..moveTo(32, 42)
+      ..cubicTo(18, 32, 20, 22, 32, 26)
+      ..cubicTo(44, 22, 46, 32, 32, 42);
+    canvas.drawPath(heart, Paint()..color = const Color(0xFFFF1A6D));
   }
 
   void _bar(Canvas canvas) {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        const Rect.fromLTWH(6, 18, 52, 28),
-        const Radius.circular(6),
+        const Rect.fromLTWH(4, 16, 56, 32),
+        const Radius.circular(4),
       ),
-      Paint()..color = const Color(0xFF2A3344),
+      Paint()..color = const Color(0xFF3A0518),
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        const Rect.fromLTWH(10, 22, 44, 20),
-        const Radius.circular(4),
+        const Rect.fromLTWH(7, 19, 50, 26),
+        const Radius.circular(3),
       ),
-      Paint()..color = const Color(0xFF5A6B88),
+      Paint()
+        ..color = const Color(0xFFFF2D78)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.4,
     );
     final tp = TextPainter(
       text: const TextSpan(
         text: 'BAR',
         style: TextStyle(
-          color: Color(0xFFF4F7FF),
-          fontSize: 14,
+          color: Color(0xFFFFF1F6),
+          fontSize: 16,
           fontWeight: FontWeight.w900,
-          letterSpacing: 1,
+          letterSpacing: 2.2,
         ),
       ),
       textDirection: TextDirection.ltr,
@@ -158,63 +177,68 @@ class _SymbolPainter extends CustomPainter {
   }
 
   void _seven(Canvas canvas) {
-    final path = Path()
-      ..moveTo(14, 12)
-      ..lineTo(50, 12)
-      ..lineTo(50, 20)
-      ..lineTo(30, 52)
-      ..lineTo(18, 52)
+    final glow = Path()
+      ..moveTo(12, 10)
+      ..lineTo(52, 10)
+      ..lineTo(52, 20)
+      ..lineTo(28, 54)
+      ..lineTo(14, 54)
       ..lineTo(38, 20)
-      ..lineTo(14, 20)
+      ..lineTo(12, 20)
       ..close();
-    canvas.drawPath(path, Paint()..color = const Color(0xFF2470F5));
+    canvas.drawPath(glow, Paint()..color = const Color(0xFFFF4D9A));
     canvas.drawPath(
-      path,
+      glow,
       Paint()
-        ..color = const Color(0xFF8EC2FF)
+        ..color = const Color(0xFFFFD0E6)
         ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
+        ..strokeWidth = 2.2,
     );
   }
 
   void _diamond(Canvas canvas) {
     final outer = Path()
       ..moveTo(32, 6)
-      ..lineTo(54, 32)
+      ..lineTo(54, 26)
       ..lineTo(32, 58)
-      ..lineTo(10, 32)
+      ..lineTo(10, 26)
       ..close();
-    canvas.drawPath(outer, Paint()..color = const Color(0xFF00C853));
+    canvas.drawPath(outer, Paint()..color = const Color(0xFFFF4DA6));
+    final facet = Path()
+      ..moveTo(32, 6)
+      ..lineTo(44, 26)
+      ..lineTo(32, 26)
+      ..close();
+    canvas.drawPath(facet, Paint()..color = const Color(0xFFFFB7DC));
     final inner = Path()
-      ..moveTo(32, 16)
-      ..lineTo(44, 32)
-      ..lineTo(32, 48)
-      ..lineTo(20, 32)
+      ..moveTo(32, 26)
+      ..lineTo(44, 26)
+      ..lineTo(32, 58)
       ..close();
-    canvas.drawPath(inner, Paint()..color = const Color(0xFFB9F6CA));
+    canvas.drawPath(inner, Paint()..color = const Color(0xFFE01478));
   }
 
   void _bablo(Canvas canvas) {
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        const Rect.fromLTWH(8, 8, 48, 48),
-        const Radius.circular(14),
+        const Rect.fromLTWH(7, 7, 50, 50),
+        const Radius.circular(16),
       ),
-      Paint()..color = const Color(0xFFFFC94A),
+      Paint()..color = const Color(0xFFFF2D78),
     );
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        const Rect.fromLTWH(14, 14, 36, 36),
-        const Radius.circular(10),
+        const Rect.fromLTWH(13, 13, 38, 38),
+        const Radius.circular(12),
       ),
-      Paint()..color = const Color(0xFF2A1C05),
+      Paint()..color = const Color(0xFF1A0510),
     );
     final tp = TextPainter(
       text: const TextSpan(
         text: 'B',
         style: TextStyle(
-          color: Color(0xFFFFC94A),
-          fontSize: 26,
+          color: Color(0xFFFFD54A),
+          fontSize: 28,
           fontWeight: FontWeight.w900,
         ),
       ),
@@ -224,25 +248,34 @@ class _SymbolPainter extends CustomPainter {
   }
 
   void _wild(Canvas canvas) {
-    final path = Path();
-    for (var i = 0; i < 10; i++) {
-      final a = -math.pi / 2 + i * math.pi / 5;
-      final r = i.isEven ? 24.0 : 10.0;
-      final x = 32 + math.cos(a) * r;
-      final y = 32 + math.sin(a) * r;
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-    path.close();
-    canvas.drawPath(path, Paint()..color = const Color(0xFFFFD166));
+    // Lipstick kiss — vulgar club mark, not anatomy.
+    final lips = Path()
+      ..moveTo(12, 30)
+      ..cubicTo(16, 18, 28, 16, 32, 24)
+      ..cubicTo(36, 16, 48, 18, 52, 30)
+      ..cubicTo(48, 38, 38, 48, 32, 50)
+      ..cubicTo(26, 48, 16, 38, 12, 30)
+      ..close();
+    canvas.drawPath(lips, Paint()..color = const Color(0xFFFF1A4D));
+    canvas.drawPath(
+      Path()
+        ..moveTo(16, 30)
+        ..cubicTo(24, 36, 40, 36, 48, 30),
+      Paint()
+        ..color = const Color(0xFF8A0028)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.4
+        ..strokeCap = StrokeCap.round,
+    );
+    canvas.drawOval(
+      const Rect.fromLTWH(22, 24, 8, 5),
+      Paint()..color = const Color(0xFFFF8AA8),
+    );
   }
 
   void _rsv(Canvas canvas) {
-    canvas.drawCircle(const Offset(32, 32), 24, Paint()..color = const Color(0xFF047857));
-    canvas.drawCircle(const Offset(32, 32), 18, Paint()..color = const Color(0xFF12C97A));
+    canvas.drawCircle(const Offset(32, 32), 24, Paint()..color = const Color(0xFFFF2D78));
+    canvas.drawCircle(const Offset(32, 32), 19, Paint()..color = const Color(0xFF12C97A));
     final tp = TextPainter(
       text: const TextSpan(
         text: 'RSV',
@@ -263,12 +296,12 @@ class _SymbolPainter extends CustomPainter {
         const Rect.fromLTWH(8, 8, 48, 48),
         const Radius.circular(12),
       ),
-      Paint()..color = const Color(0xFF243044),
+      Paint()..color = const Color(0xFF1C0A14),
     );
     canvas.drawCircle(
       const Offset(32, 32),
-      6,
-      Paint()..color = palette.textMuted.withValues(alpha: 0.35),
+      7,
+      Paint()..color = const Color(0xFFFF2D78).withValues(alpha: 0.28),
     );
   }
 
@@ -278,7 +311,7 @@ class _SymbolPainter extends CustomPainter {
         const Rect.fromLTWH(8, 8, 48, 48),
         const Radius.circular(10),
       ),
-      Paint()..color = palette.primary.withValues(alpha: 0.9),
+      Paint()..color = const Color(0xFFFF2D78),
     );
     final label = code.length <= 4 ? code : code.substring(0, 4);
     final tp = TextPainter(

@@ -102,6 +102,7 @@ class SportsbookEventState {
 class SportsbookEventWidgetModel extends WidgetModel {
   SportsbookEventWidgetModel({
     required this.eventId,
+    this.preview,
     required AuthSession auth,
     required SportsbookRepository repository,
     required SportsbookNavigator navigator,
@@ -111,6 +112,7 @@ class SportsbookEventWidgetModel extends WidgetModel {
         super(const WidgetModelDependencies());
 
   final String eventId;
+  final SportsbookEvent? preview;
   final AuthSession _auth;
   final SportsbookRepository _repository;
   final SportsbookNavigator _navigator;
@@ -123,6 +125,12 @@ class SportsbookEventWidgetModel extends WidgetModel {
   @override
   void onLoad() {
     super.onLoad();
+    final seed = preview;
+    if (seed != null) {
+      stateStream.add(
+        stateStream.value.copyWith(event: seed, isLoading: true),
+      );
+    }
     load();
   }
 
@@ -181,14 +189,30 @@ class SportsbookEventWidgetModel extends WidgetModel {
 
     try {
       final status = await _repository.getStatus();
-      SportsbookEvent? event;
+      SportsbookEvent? event = preview ?? stateStream.value.event;
       SportsbookMarket? market;
+      Object? catalogError;
       try {
         final markets = await _repository.getMarkets(eventId);
         event = markets.event;
         market = markets.market;
-      } catch (_) {
-        event = await _repository.getEvent(eventId);
+      } catch (e) {
+        catalogError = e;
+        try {
+          event = await _repository.getEvent(eventId);
+          catalogError = null;
+        } catch (eventError) {
+          catalogError = eventError;
+          event ??= preview;
+        }
+      }
+
+      if (event == null) {
+        throw catalogError ??
+            const DataError(
+              errorCode: ErrorCode.unhandled,
+              message: SportsbookConstants.errorNotFound,
+            );
       }
 
       final current = stateStream.value;
@@ -196,6 +220,12 @@ class SportsbookEventWidgetModel extends WidgetModel {
       if (selected != null && market?.byProviderId(selected) == null) {
         selected = null;
       }
+
+      final linesError = market == null && catalogError != null
+          ? (SportsbookRepository.isMissingResource(catalogError)
+              ? SportsbookConstants.errorProvider
+              : SportsbookRepository.mapError(catalogError))
+          : null;
 
       stateStream.add(
         current.copyWith(
@@ -206,7 +236,8 @@ class SportsbookEventWidgetModel extends WidgetModel {
           stakeRsv: _clampStake(current.stakeRsv, status: status),
           isLoading: false,
           planRequired: !(status.eligible || _auth.canUseSportsbook),
-          clearError: true,
+          error: linesError,
+          clearError: linesError == null,
           clearSelection: selected == null && current.selectedOutcomeId != null,
         ),
       );

@@ -115,6 +115,10 @@ class SportsbookDataProvider implements SportsbookDataProviderInterface {
       for (final key in const ['items', 'events', 'bets', 'data']) {
         final value = data[key];
         if (value is List) return value;
+        if (value is Map) {
+          final nested = _extractList(value);
+          if (nested.isNotEmpty) return nested;
+        }
       }
     }
     return const [];

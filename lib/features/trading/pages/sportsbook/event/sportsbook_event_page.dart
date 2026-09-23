@@ -9,6 +9,7 @@ import '../../../../../core/mwwm/core_mwwm_widget.dart';
 import '../../../../../core/navigation/app_routes.dart';
 import '../../../../../core/navigation/navigate_back.dart';
 import '../../../../../core/theme/theme_controller.dart';
+import '../../../models/sportsbook_model.dart';
 import '../components/sportsbook_balance_strip.dart';
 import '../components/sportsbook_event_card.dart';
 import '../components/sportsbook_gate_card.dart';
@@ -17,13 +18,20 @@ import 'di/sportsbook_event_wm_builder.dart';
 import 'sportsbook_event_wm.dart';
 
 class SportsbookEventPage extends CoreMwwmWidget<SportsbookEventWidgetModel> {
-  SportsbookEventPage({super.key, required this.eventId})
-      : super(
-          widgetModelBuilder: (context) =>
-              createSportsbookEventWidgetModel(context, eventId: eventId),
+  SportsbookEventPage({
+    super.key,
+    required this.eventId,
+    this.preview,
+  }) : super(
+          widgetModelBuilder: (context) => createSportsbookEventWidgetModel(
+            context,
+            eventId: eventId,
+            preview: preview,
+          ),
         );
 
   final String eventId;
+  final SportsbookEvent? preview;
 
   static Route<void> route(String eventId) => MaterialPageRoute<void>(
         settings: RouteSettings(name: AppRoutes.sportsbookEvent(eventId)),
@@ -113,7 +121,7 @@ class _SportsbookEventPageState
       ];
     }
 
-    if (state.error != null) {
+    if (state.error != null && state.event == null) {
       return [
         ErrorBanner(message: state.error!, onRetry: () => wm.load()),
       ];
@@ -144,6 +152,10 @@ class _SportsbookEventPageState
     }
 
     return [
+      if (state.error != null) ...[
+        ErrorBanner(message: state.error!, onRetry: () => wm.load()),
+        const SizedBox(height: 12),
+      ],
       SportsbookEventCard(event: event, showPlaceCta: false),
       if (status != null) ...[
         const SizedBox(height: 12),

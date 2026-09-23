@@ -10,6 +10,7 @@ import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/navigation/navigate_back.dart';
 import '../../../../core/theme/theme_controller.dart';
 import 'components/sportsbook_balance_strip.dart';
+import 'components/sportsbook_event_card.dart';
 import 'components/sportsbook_gate_card.dart';
 import 'di/sportsbook_wm_builder.dart';
 import 'sportsbook_wm.dart';
@@ -176,6 +177,38 @@ class _SportsbookPageState
         icon: Icons.receipt_long_outlined,
         onTap: wm.openHistory,
       ),
+      const SizedBox(height: 20),
+      Text(
+        SportsbookConstants.eventsTitle,
+        style: TextStyle(
+          color: context.watch<ThemeController>().palette.textMuted,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.1,
+        ),
+      ),
+      const SizedBox(height: 10),
+      if (state.eventsError != null) ...[
+        ErrorBanner(message: state.eventsError!, onRetry: () => wm.load()),
+        const SizedBox(height: 12),
+      ],
+      if (state.events.isEmpty)
+        TradingCard(
+          child: Text(
+            SportsbookConstants.eventsEmpty,
+            style: TextStyle(
+              color: context.watch<ThemeController>().palette.textSecondary,
+            ),
+          ),
+        )
+      else
+        for (final event in state.events) ...[
+          SportsbookEventCard(
+            event: event,
+            onOpen: () => wm.openEvent(event),
+          ),
+          const SizedBox(height: 10),
+        ],
     ];
   }
 

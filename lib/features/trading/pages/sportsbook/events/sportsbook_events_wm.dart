@@ -71,7 +71,7 @@ class SportsbookEventsWidgetModel extends WidgetModel {
 
   void openProfile() => _navigator.goToProfile();
 
-  void openEvent(SportsbookEvent event) => _navigator.goToEvent(event.id);
+  void openEvent(SportsbookEvent event) => _navigator.goToEvent(event);
 
   Future<void> load() async {
     if (!_auth.isAuthenticated) {
@@ -95,19 +95,24 @@ class SportsbookEventsWidgetModel extends WidgetModel {
     );
 
     try {
-      final results = await Future.wait([
-        _repository.getStatus(),
-        _repository.getEvents(),
-      ]);
-      final status = results[0] as SportsbookStatus;
-      final events = results[1] as List<SportsbookEvent>;
+      final status = await _repository.getStatus();
+      var events = const <SportsbookEvent>[];
+      String? eventsError;
+      try {
+        events = await _repository.getEvents();
+      } catch (e) {
+        if (!SportsbookRepository.isMissingResource(e)) {
+          eventsError = SportsbookRepository.mapError(e);
+        }
+      }
       stateStream.add(
         stateStream.value.copyWith(
           status: status,
           events: events,
           isLoading: false,
           planRequired: !(status.eligible || _auth.canUseSportsbook),
-          clearError: true,
+          error: eventsError,
+          clearError: eventsError == null,
         ),
       );
     } on DataError catch (e) {

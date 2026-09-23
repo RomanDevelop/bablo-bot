@@ -99,6 +99,7 @@ class AppRoutes {
     const prefix = '$sportsbookEvents/';
     if (!path.startsWith(prefix)) return null;
     final id = path.substring(prefix.length).split('/').first;
-    return id.isEmpty ? null : id;
+    if (id.isEmpty || id == 'events' || id == 'bets') return null;
+    return id;
   }
 }

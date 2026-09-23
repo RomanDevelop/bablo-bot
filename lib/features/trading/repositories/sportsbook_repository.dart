@@ -58,6 +58,29 @@ class SportsbookRepository {
     return SportsbookBet.fromDto(dto);
   }
 
+  static bool isMissingResource(Object error) {
+    if (error is! DataError) return false;
+    switch (error.apiError) {
+      case 'event_not_found':
+      case 'bet_not_found':
+      case 'outcome_not_found':
+        return true;
+    }
+    final message = error.displayMessage.toLowerCase();
+    return message == 'не найдено' || message == 'not found';
+  }
+
+  static bool isProviderUnavailable(Object error) {
+    if (error is! DataError) return false;
+    switch (error.apiError) {
+      case 'provider_unavailable':
+      case 'provider_rate_limited':
+      case 'provider_error':
+        return true;
+    }
+    return error.errorCode == ErrorCode.exchangeUnavailable;
+  }
+
   static String mapError(Object error) {
     if (error is DataError) {
       switch (error.apiError) {

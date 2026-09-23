@@ -107,7 +107,16 @@ class _SportsbookEventsPageState
       ];
     }
 
-    if (state.error != null) {
+    if (state.error != null && state.events.isEmpty) {
+      final missing = state.error == SportsbookConstants.errorNotFound;
+      if (missing) {
+        return [
+          const EmptyState(
+            title: SportsbookConstants.eventsEmpty,
+            icon: Icons.sports_basketball_outlined,
+          ),
+        ];
+      }
       return [
         ErrorBanner(message: state.error!, onRetry: wm.load),
       ];

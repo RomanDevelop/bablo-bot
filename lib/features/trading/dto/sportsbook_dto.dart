@@ -128,7 +128,10 @@ class SportsbookEventDto {
   factory SportsbookEventDto.fromJson(Map<String, dynamic> json) {
     final root = json['event'] is Map ? asMap(json['event']) : json;
     return SportsbookEventDto(
-      id: asString(root['id'], ''),
+      id: asString(
+        root['id'] ?? root['event_id'] ?? root['sports_event_id'],
+        '',
+      ),
       sportKey: asString(root['sport_key'], 'BASKETBALL'),
       eventKind: asString(root['event_kind'], 'MATCH'),
       competition: asString(root['competition'], 'NBA'),

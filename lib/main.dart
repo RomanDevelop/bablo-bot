@@ -15,6 +15,7 @@ import 'features/trading/pages/about/about_page.dart';
 import 'features/trading/pages/ai/ai_assistant_page.dart';
 import 'features/trading/pages/ai/global_search_page.dart';
 import 'features/trading/models/daily_article.dart';
+import 'features/trading/models/sportsbook_model.dart';
 import 'features/trading/pages/chart/chart_page.dart';
 import 'features/trading/pages/copy/copy_page.dart';
 import 'features/trading/pages/casino/casino_page.dart';
@@ -144,9 +145,12 @@ class BabloApp extends StatelessWidget {
 
     final sportsbookEventId = AppRoutes.sportsbookEventId(path);
     if (sportsbookEventId != null) {
+      final preview = settings.arguments is SportsbookEvent
+          ? settings.arguments as SportsbookEvent
+          : null;
       return _fade(
         settings,
-        SportsbookEventPage(eventId: sportsbookEventId),
+        SportsbookEventPage(eventId: sportsbookEventId, preview: preview),
       );
     }
 

@@ -10,7 +10,9 @@ import 'navigation/sportsbook_navigator.dart';
 class SportsbookHubState {
   const SportsbookHubState({
     this.status,
+    this.events = const [],
     this.isLoading = true,
+    this.eventsError,
     this.error,
     this.message,
     this.needsAuth = false,
@@ -18,7 +20,9 @@ class SportsbookHubState {
   });
 
   final SportsbookStatus? status;
+  final List<SportsbookEvent> events;
   final bool isLoading;
+  final String? eventsError;
   final String? error;
   final String? message;
   final bool needsAuth;
@@ -28,17 +32,23 @@ class SportsbookHubState {
 
   SportsbookHubState copyWith({
     SportsbookStatus? status,
+    List<SportsbookEvent>? events,
     bool? isLoading,
+    String? eventsError,
     String? error,
     String? message,
     bool? needsAuth,
     bool? planRequired,
     bool clearError = false,
     bool clearMessage = false,
+    bool clearEventsError = false,
   }) {
     return SportsbookHubState(
       status: status ?? this.status,
+      events: events ?? this.events,
       isLoading: isLoading ?? this.isLoading,
+      eventsError:
+          clearEventsError ? null : (eventsError ?? this.eventsError),
       error: clearError ? null : (error ?? this.error),
       message: clearMessage ? null : (message ?? this.message),
       needsAuth: needsAuth ?? this.needsAuth,
@@ -81,6 +91,8 @@ class SportsbookWidgetModel extends WidgetModel {
 
   void openEvents() => _navigator.goToEvents();
 
+  void openEvent(SportsbookEvent event) => _navigator.goToEvent(event);
+
   void openHistory() => _navigator.goToHistory();
 
   Future<void> load({bool silent = false}) async {
@@ -108,12 +120,24 @@ class SportsbookWidgetModel extends WidgetModel {
 
     try {
       final status = await _repository.getStatus();
+      var events = const <SportsbookEvent>[];
+      String? eventsError;
+      try {
+        events = await _repository.getEvents();
+      } catch (e) {
+        if (!SportsbookRepository.isMissingResource(e)) {
+          eventsError = SportsbookRepository.mapError(e);
+        }
+      }
       stateStream.add(
         stateStream.value.copyWith(
           status: status,
+          events: events,
           isLoading: false,
           planRequired: !(status.eligible || _auth.canUseSportsbook),
+          eventsError: eventsError,
           clearError: true,
+          clearEventsError: eventsError == null,
         ),
       );
     } on DataError catch (e) {

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../../core/constants/sportsbook_constants.dart';
 import '../../../../../core/navigation/app_routes.dart';
 import '../../../../../core/theme/theme_controller.dart';
+import '../../../models/sportsbook_model.dart';
 
 class SportsbookNavigator {
   SportsbookNavigator(this._context);
@@ -22,8 +23,12 @@ class SportsbookNavigator {
     Navigator.of(_context).pushNamed(AppRoutes.sportsbookEvents);
   }
 
-  void goToEvent(String eventId) {
-    Navigator.of(_context).pushNamed(AppRoutes.sportsbookEvent(eventId));
+  void goToEvent(SportsbookEvent event) {
+    if (event.id.isEmpty) return;
+    Navigator.of(_context).pushNamed(
+      AppRoutes.sportsbookEvent(event.id),
+      arguments: event,
+    );
   }
 
   void goToHistory() {

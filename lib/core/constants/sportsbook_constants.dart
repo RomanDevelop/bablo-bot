@@ -72,6 +72,7 @@ class SportsbookConstants {
   static const errorNotFound = 'Не найдено';
   static const errorIdempotency = 'Повтори с тем же client_request_id';
   static const errorProvider = 'Линии временно недоступны';
+  static const errorLinesMissing = 'Линии ещё не открыты — обнови';
   static const errorPickRequired = 'Выбери исход';
   static const errorMarketClosed = 'Рынок закрыт';
 

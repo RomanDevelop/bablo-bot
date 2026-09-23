@@ -98,6 +98,7 @@ class SportsbookEvent {
     this.bettingEnabled = false,
     this.provider,
     this.providerEventId,
+    this.market,
   });
 
   final String id;
@@ -112,6 +113,7 @@ class SportsbookEvent {
   final bool bettingEnabled;
   final String? provider;
   final String? providerEventId;
+  final SportsbookMarket? market;
 
   factory SportsbookEvent.fromDto(SportsbookEventDto dto) {
     return SportsbookEvent(
@@ -127,7 +129,21 @@ class SportsbookEvent {
       bettingEnabled: dto.bettingEnabled,
       provider: dto.provider,
       providerEventId: dto.providerEventId,
+      market: dto.market == null ? null : SportsbookMarket.fromDto(dto.market!),
     );
+  }
+
+  List<String> get lookupIds {
+    final ids = <String>[];
+    void add(String? value) {
+      final id = value?.trim() ?? '';
+      if (id.isEmpty || ids.contains(id)) return;
+      ids.add(id);
+    }
+
+    add(id);
+    add(providerEventId);
+    return ids;
   }
 
   String get title {

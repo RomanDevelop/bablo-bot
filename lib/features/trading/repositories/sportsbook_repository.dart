@@ -29,6 +29,50 @@ class SportsbookRepository {
     return SportsbookMarkets.fromDto(dto);
   }
 
+  Future<SportsbookMarkets> resolveMarkets({
+    required String eventId,
+    SportsbookEvent? preview,
+  }) async {
+    final ids = <String>[];
+    void add(String? value) {
+      final id = value?.trim() ?? '';
+      if (id.isEmpty || ids.contains(id)) return;
+      ids.add(id);
+    }
+
+    add(eventId);
+    if (preview != null) {
+      for (final id in preview.lookupIds) {
+        add(id);
+      }
+    }
+
+    Object? lastError;
+    for (final id in ids) {
+      try {
+        final loaded = await getMarkets(id);
+        if (loaded.market.outcomes.isNotEmpty) return loaded;
+        lastError ??= const DataError(
+          errorCode: ErrorCode.unhandled,
+          message: SportsbookConstants.errorProvider,
+        );
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
+    final embedded = preview?.market;
+    if (embedded != null && embedded.outcomes.isNotEmpty) {
+      return SportsbookMarkets(event: preview!, market: embedded);
+    }
+
+    throw lastError ??
+        const DataError(
+          errorCode: ErrorCode.unhandled,
+          message: SportsbookConstants.errorProvider,
+        );
+  }
+
   Future<SportsbookBet> placeBet({
     required String eventId,
     required String providerOutcomeId,

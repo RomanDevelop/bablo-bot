@@ -48,16 +48,16 @@ class SportsbookDataProvider implements SportsbookDataProviderInterface {
 
   @override
   Future<SportsbookEventDto> getEvent(String eventId) async {
-    final data =
-        await _client.get<Map<String, dynamic>>('$_base/events/$eventId');
-    return SportsbookEventDto.fromJson(data);
+    final data = await _client.get<dynamic>('$_base/events/${_pathId(eventId)}');
+    return SportsbookEventDto.fromJson(asMap(data));
   }
 
   @override
   Future<SportsbookMarketsDto> getMarkets(String eventId) async {
-    final data = await _client
-        .get<Map<String, dynamic>>('$_base/events/$eventId/markets');
-    return SportsbookMarketsDto.fromJson(data);
+    final data = await _client.get<dynamic>(
+      '$_base/events/${_pathId(eventId)}/markets',
+    );
+    return SportsbookMarketsDto.fromJson(asMap(data));
   }
 
   @override
@@ -123,6 +123,8 @@ class SportsbookDataProvider implements SportsbookDataProviderInterface {
     }
     return const [];
   }
+
+  String _pathId(String eventId) => Uri.encodeComponent(eventId);
 
   num _jsonAmount(num amount) {
     if (amount == amount.roundToDouble()) return amount.round();

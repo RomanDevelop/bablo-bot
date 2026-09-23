@@ -110,6 +110,7 @@ class SportsbookEventDto {
     this.bettingEnabled = false,
     this.provider,
     this.providerEventId,
+    this.market,
   });
 
   final String id;
@@ -124,25 +125,41 @@ class SportsbookEventDto {
   final bool bettingEnabled;
   final String? provider;
   final String? providerEventId;
+  final SportsbookMarketDto? market;
 
   factory SportsbookEventDto.fromJson(Map<String, dynamic> json) {
-    final root = json['event'] is Map ? asMap(json['event']) : json;
+    final nested =
+        json['event'] is Map ? asMap(json['event']) : const <String, dynamic>{};
+    final id = _catalogId(json, nested);
     return SportsbookEventDto(
-      id: asString(
-        root['id'] ?? root['event_id'] ?? root['sports_event_id'],
-        '',
+      id: id,
+      sportKey: asString(
+        json['sport_key'] ?? nested['sport_key'],
+        'BASKETBALL',
       ),
-      sportKey: asString(root['sport_key'], 'BASKETBALL'),
-      eventKind: asString(root['event_kind'], 'MATCH'),
-      competition: asString(root['competition'], 'NBA'),
-      name: asString(root['name'], ''),
-      home: asString(root['home'], ''),
-      away: asString(root['away'], ''),
-      startsAt: asNullableString(root['starts_at']),
-      status: asString(root['status'], 'SCHEDULED'),
-      bettingEnabled: asBool(root['betting_enabled']),
-      provider: asNullableString(root['provider']),
-      providerEventId: asNullableString(root['provider_event_id']),
+      eventKind: asString(
+        json['event_kind'] ?? nested['event_kind'],
+        'MATCH',
+      ),
+      competition: asString(
+        json['competition'] ?? nested['competition'],
+        'NBA',
+      ),
+      name: asString(json['name'] ?? nested['name'], ''),
+      home: asString(json['home'] ?? nested['home'], ''),
+      away: asString(json['away'] ?? nested['away'], ''),
+      startsAt: asNullableString(json['starts_at'] ?? nested['starts_at']),
+      status: asString(json['status'] ?? nested['status'], 'SCHEDULED'),
+      bettingEnabled: asBool(
+        json['betting_enabled'] ?? nested['betting_enabled'],
+      ),
+      provider: asNullableString(json['provider'] ?? nested['provider']),
+      providerEventId: asNullableString(
+        json['provider_event_id'] ??
+            nested['provider_event_id'] ??
+            json['provider_id'],
+      ),
+      market: _marketFromPayload(json) ?? _marketFromPayload(nested),
     );
   }
 
@@ -159,6 +176,7 @@ class SportsbookEventDto {
         'betting_enabled': bettingEnabled,
         'provider': provider,
         'provider_event_id': providerEventId,
+        'market': market?.toJson(),
       };
 }
 
@@ -216,7 +234,7 @@ class SportsbookMarketDto {
 
   factory SportsbookMarketDto.fromJson(Map<String, dynamic> json) {
     final outcomes = <SportsbookOutcomeDto>[];
-    final raw = json['outcomes'];
+    final raw = json['outcomes'] ?? json['selections'] ?? json['options'];
     if (raw is List) {
       for (final item in raw) {
         outcomes.add(SportsbookOutcomeDto.fromJson(asMap(item)));
@@ -254,16 +272,62 @@ class SportsbookMarketsDto {
   final SportsbookMarketDto market;
 
   factory SportsbookMarketsDto.fromJson(Map<String, dynamic> json) {
-    final marketRaw = json['market'];
+    final root = json['data'] is Map ? asMap(json['data']) : json;
+    final market = _marketFromPayload(root);
     return SportsbookMarketsDto(
       event: SportsbookEventDto.fromJson(
-        json['event'] is Map ? asMap(json['event']) : json,
+        root['event'] is Map ? asMap(root['event']) : root,
       ),
-      market: SportsbookMarketDto.fromJson(
-        marketRaw is Map ? asMap(marketRaw) : json,
-      ),
+      market: market ?? SportsbookMarketDto.fromJson(root),
     );
   }
+}
+
+String _catalogId(Map<String, dynamic> json, Map<String, dynamic> nested) {
+  const keys = ['id', 'event_id', 'sports_event_id', 'uuid'];
+  final values = <String>[];
+  for (final map in [json, nested]) {
+    for (final key in keys) {
+      final value = asNullableString(map[key]);
+      if (value == null || value.isEmpty || values.contains(value)) continue;
+      values.add(value);
+    }
+  }
+  for (final value in values) {
+    if (_looksLikeUuid(value)) return value;
+  }
+  return values.isEmpty ? '' : values.first;
+}
+
+bool _looksLikeUuid(String value) {
+  final parts = value.split('-');
+  return parts.length == 5 &&
+      parts[0].length == 8 &&
+      parts[1].length == 4 &&
+      parts[2].length == 4 &&
+      parts[3].length == 4 &&
+      parts[4].length == 12;
+}
+
+SportsbookMarketDto? _marketFromPayload(Map<String, dynamic> json) {
+  if (json['market'] is Map) {
+    return SportsbookMarketDto.fromJson(asMap(json['market']));
+  }
+  for (final key in const ['markets', 'items']) {
+    final raw = json[key];
+    if (raw is! List || raw.isEmpty) continue;
+    SportsbookMarketDto? first;
+    for (final item in raw) {
+      final market = SportsbookMarketDto.fromJson(asMap(item));
+      first ??= market;
+      if (market.marketType.toUpperCase() == 'MATCH_WINNER' &&
+          market.outcomes.isNotEmpty) {
+        return market;
+      }
+    }
+    if (first != null && first.outcomes.isNotEmpty) return first;
+  }
+  return null;
 }
 
 class SportsbookBetDto {

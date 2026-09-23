@@ -190,20 +190,23 @@ class SportsbookEventWidgetModel extends WidgetModel {
     try {
       final status = await _repository.getStatus();
       SportsbookEvent? event = preview ?? stateStream.value.event;
-      SportsbookMarket? market;
+      SportsbookMarket? market = event?.market;
       Object? catalogError;
       try {
-        final markets = await _repository.getMarkets(eventId);
-        event = markets.event;
-        market = markets.market;
+        final loaded = await _repository.resolveMarkets(
+          eventId: eventId,
+          preview: event,
+        );
+        event = loaded.event.id.isEmpty ? event ?? loaded.event : loaded.event;
+        market = loaded.market.outcomes.isEmpty ? market : loaded.market;
       } catch (e) {
         catalogError = e;
         try {
           event = await _repository.getEvent(eventId);
-          catalogError = null;
-        } catch (eventError) {
-          catalogError = eventError;
+          market ??= event.market;
+        } catch (_) {
           event ??= preview;
+          market ??= event?.market;
         }
       }
 
@@ -221,9 +224,10 @@ class SportsbookEventWidgetModel extends WidgetModel {
         selected = null;
       }
 
-      final linesError = market == null && catalogError != null
+      final linesError = (market == null || market.outcomes.isEmpty) &&
+              catalogError != null
           ? (SportsbookRepository.isMissingResource(catalogError)
-              ? SportsbookConstants.errorProvider
+              ? SportsbookConstants.errorLinesMissing
               : SportsbookRepository.mapError(catalogError))
           : null;
 

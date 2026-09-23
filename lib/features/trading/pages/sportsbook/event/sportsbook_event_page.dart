@@ -183,8 +183,14 @@ class _SportsbookEventPageState
                 : SportsbookConstants.errorEventClosed,
           ),
         )
-      else if (state.market == null || status == null)
-        const TradingCard(child: Text(SportsbookConstants.errorProvider))
+      else if (state.market == null ||
+          state.market!.outcomes.isEmpty ||
+          status == null)
+        TradingCard(
+          child: Text(
+            state.error ?? SportsbookConstants.errorLinesMissing,
+          ),
+        )
       else
         SportsbookSlip(
           status: status,

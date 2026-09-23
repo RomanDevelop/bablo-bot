@@ -51,13 +51,32 @@ class SportsbookRepository {
     for (final id in ids) {
       try {
         final loaded = await getMarkets(id);
-        if (loaded.market.outcomes.isNotEmpty) return loaded;
+        if (loaded.market.outcomes.isNotEmpty) {
+          return SportsbookMarkets(
+            event: loaded.event.id.isEmpty
+                ? (preview ?? loaded.event)
+                : loaded.event,
+            market: loaded.market,
+          );
+        }
         lastError ??= const DataError(
           errorCode: ErrorCode.unhandled,
           message: SportsbookConstants.errorProvider,
         );
       } catch (e) {
         lastError = e;
+      }
+      try {
+        final event = await getEvent(id);
+        if (event.market != null && event.market!.outcomes.isNotEmpty) {
+          return SportsbookMarkets(event: event, market: event.market!);
+        }
+        if (event.id.isNotEmpty && event.id != id) {
+          final loaded = await getMarkets(event.id);
+          if (loaded.market.outcomes.isNotEmpty) return loaded;
+        }
+      } catch (_) {
+        // Keep the markets error — GET event is only a fallback.
       }
     }
 

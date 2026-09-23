@@ -187,9 +187,7 @@ class _SportsbookEventPageState
           state.market!.outcomes.isEmpty ||
           status == null)
         TradingCard(
-          child: Text(
-            state.error ?? SportsbookConstants.errorLinesMissing,
-          ),
+          child: Text(state.error ?? SportsbookConstants.errorProvider),
         )
       else
         SportsbookSlip(

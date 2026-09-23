@@ -226,9 +226,7 @@ class SportsbookEventWidgetModel extends WidgetModel {
 
       final linesError = (market == null || market.outcomes.isEmpty) &&
               catalogError != null
-          ? (SportsbookRepository.isMissingResource(catalogError)
-              ? SportsbookConstants.errorLinesMissing
-              : SportsbookRepository.mapError(catalogError))
+          ? _linesMessage(catalogError, event.id)
           : null;
 
       stateStream.add(
@@ -436,6 +434,13 @@ class SportsbookEventWidgetModel extends WidgetModel {
     } catch (_) {
       return null;
     }
+  }
+
+  String _linesMessage(Object error, String eventId) {
+    if (SportsbookRepository.isProviderUnavailable(error)) {
+      return SportsbookConstants.errorProvider;
+    }
+    return SportsbookRepository.mapError(error);
   }
 
   double _clampStake(double value, {SportsbookStatus? status}) {

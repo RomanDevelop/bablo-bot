@@ -159,7 +159,14 @@ class SportsbookEventDto {
             nested['provider_event_id'] ??
             json['provider_id'],
       ),
-      market: _marketFromPayload(json) ?? _marketFromPayload(nested),
+      market: _marketFromPayload(json) ??
+          _marketFromPayload(nested) ??
+          _marketFromTeamOdds(
+            json,
+            nested,
+            home: asString(json['home'] ?? nested['home'], ''),
+            away: asString(json['away'] ?? nested['away'], ''),
+          ),
     );
   }
 
@@ -285,28 +292,67 @@ class SportsbookMarketsDto {
 
 String _catalogId(Map<String, dynamic> json, Map<String, dynamic> nested) {
   const keys = ['id', 'event_id', 'sports_event_id', 'uuid'];
-  final values = <String>[];
-  for (final map in [json, nested]) {
-    for (final key in keys) {
-      final value = asNullableString(map[key]);
-      if (value == null || value.isEmpty || values.contains(value)) continue;
-      values.add(value);
-    }
+  for (final key in keys) {
+    final value = asNullableString(json[key]);
+    if (value != null && value.isNotEmpty) return value;
   }
-  for (final value in values) {
-    if (_looksLikeUuid(value)) return value;
+  for (final key in keys) {
+    final value = asNullableString(nested[key]);
+    if (value != null && value.isNotEmpty) return value;
   }
-  return values.isEmpty ? '' : values.first;
+  return '';
 }
 
-bool _looksLikeUuid(String value) {
-  final parts = value.split('-');
-  return parts.length == 5 &&
-      parts[0].length == 8 &&
-      parts[1].length == 4 &&
-      parts[2].length == 4 &&
-      parts[3].length == 4 &&
-      parts[4].length == 12;
+SportsbookMarketDto? _marketFromTeamOdds(
+  Map<String, dynamic> json,
+  Map<String, dynamic> nested, {
+  required String home,
+  required String away,
+}) {
+  num? pickOdds(List<String> keys) {
+    for (final map in [json, nested]) {
+      for (final key in keys) {
+        final value = map[key];
+        if (value is num && value > 1) return value;
+        if (value is String) {
+          final parsed = num.tryParse(value);
+          if (parsed != null && parsed > 1) return parsed;
+        }
+      }
+    }
+    return null;
+  }
+
+  final homeOdds = pickOdds(const [
+    'home_odds',
+    'home_price',
+    'home_decimal',
+  ]);
+  final awayOdds = pickOdds(const [
+    'away_odds',
+    'away_price',
+    'away_decimal',
+  ]);
+  if (home.isEmpty || away.isEmpty || homeOdds == null || awayOdds == null) {
+    return null;
+  }
+  return SportsbookMarketDto(
+    id: 'match_winner',
+    outcomes: [
+      SportsbookOutcomeDto(
+        providerOutcomeId: home,
+        name: home,
+        odds: homeOdds,
+        side: 'home',
+      ),
+      SportsbookOutcomeDto(
+        providerOutcomeId: away,
+        name: away,
+        odds: awayOdds,
+        side: 'away',
+      ),
+    ],
+  );
 }
 
 SportsbookMarketDto? _marketFromPayload(Map<String, dynamic> json) {

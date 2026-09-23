@@ -128,7 +128,11 @@ class SportsbookEventWidgetModel extends WidgetModel {
     final seed = preview;
     if (seed != null) {
       stateStream.add(
-        stateStream.value.copyWith(event: seed, isLoading: true),
+        stateStream.value.copyWith(
+          event: seed,
+          market: seed.market,
+          isLoading: seed.market == null || seed.market!.outcomes.isEmpty,
+        ),
       );
     }
     load();
@@ -192,22 +196,28 @@ class SportsbookEventWidgetModel extends WidgetModel {
       SportsbookEvent? event = preview ?? stateStream.value.event;
       SportsbookMarket? market = event?.market;
       Object? catalogError;
+      final hasLines = market != null && market.outcomes.isNotEmpty;
       try {
-        final loaded = await _repository.resolveMarkets(
-          eventId: eventId,
-          preview: event,
-        );
-        event = loaded.event.id.isEmpty ? event ?? loaded.event : loaded.event;
-        market = loaded.market.outcomes.isEmpty ? market : loaded.market;
+        if (hasLines) {
+          try {
+            final fresh = await _repository.getEvent(event!.id);
+            event = fresh;
+            market = fresh.market ?? market;
+          } catch (_) {
+            // List already has MATCH_WINNER — keep it.
+          }
+        } else {
+          final loaded = await _repository.resolveMarkets(
+            eventId: eventId,
+            preview: event,
+          );
+          event = loaded.event.id.isEmpty ? event ?? loaded.event : loaded.event;
+          market = loaded.market.outcomes.isEmpty ? market : loaded.market;
+        }
       } catch (e) {
         catalogError = e;
-        try {
-          event = await _repository.getEvent(eventId);
-          market ??= event.market;
-        } catch (_) {
-          event ??= preview;
-          market ??= event?.market;
-        }
+        event ??= preview;
+        market ??= event?.market;
       }
 
       if (event == null) {
@@ -317,24 +327,40 @@ class SportsbookEventWidgetModel extends WidgetModel {
     stateStream.add(state.copyWith(clearMessage: true, oddsChanged: false));
 
     try {
-      final fresh = await _repository.getMarkets(eventId);
-      final freshOutcome = fresh.market.byProviderId(outcome.providerOutcomeId);
-      if (!fresh.event.canPlaceBet || !fresh.market.isOpen || freshOutcome == null) {
+      var liveEvent = event;
+      var liveMarket = market;
+      var liveOutcome = outcome;
+      try {
+        final fresh = await _repository.getEvent(event.id);
+        final freshMarket = fresh.market;
+        final freshOutcome =
+            freshMarket?.byProviderId(outcome.providerOutcomeId);
+        if (freshMarket != null &&
+            freshMarket.outcomes.isNotEmpty &&
+            freshOutcome != null) {
+          liveEvent = fresh;
+          liveMarket = freshMarket;
+          liveOutcome = freshOutcome;
+        }
+      } catch (_) {
+        // Catalog lines from the list are enough to place.
+      }
+      if (!liveEvent.canPlaceBet || !liveMarket.isOpen) {
         stateStream.add(
           stateStream.value.copyWith(
-            event: fresh.event,
-            market: fresh.market,
+            event: liveEvent,
+            market: liveMarket,
             isMutating: false,
             message: SportsbookConstants.errorEventClosed,
           ),
         );
         return;
       }
-      if ((freshOutcome.odds - outcome.odds).abs() > 0.05) {
+      if ((liveOutcome.odds - outcome.odds).abs() > 0.05) {
         stateStream.add(
           stateStream.value.copyWith(
-            event: fresh.event,
-            market: fresh.market,
+            event: liveEvent,
+            market: liveMarket,
             isMutating: false,
             oddsChanged: true,
             message: SportsbookConstants.errorOddsChanged,
@@ -344,15 +370,15 @@ class SportsbookEventWidgetModel extends WidgetModel {
       }
 
       final confirmed = await _navigator.confirmPlaceBet(
-        outcome: freshOutcome.name,
+        outcome: liveOutcome.name,
         stake: state.stakeRsv,
-        odds: freshOutcome.odds,
+        odds: liveOutcome.odds,
       );
       if (!confirmed) {
         stateStream.add(
           stateStream.value.copyWith(
-            event: fresh.event,
-            market: fresh.market,
+            event: liveEvent,
+            market: liveMarket,
             isMutating: false,
           ),
         );
@@ -361,18 +387,18 @@ class SportsbookEventWidgetModel extends WidgetModel {
 
       stateStream.add(
         stateStream.value.copyWith(
-          event: fresh.event,
-          market: fresh.market,
+          event: liveEvent,
+          market: liveMarket,
           isMutating: true,
         ),
       );
 
       _retryRequestId = _retryRequestId ?? SportsbookRequestId.next();
       final bet = await _repository.placeBet(
-        eventId: eventId,
-        providerOutcomeId: freshOutcome.providerOutcomeId,
+        eventId: liveEvent.id,
+        providerOutcomeId: liveOutcome.providerOutcomeId,
         stake: state.stakeRsv,
-        expectedOdds: freshOutcome.odds.toDouble(),
+        expectedOdds: liveOutcome.odds.toDouble(),
         clientRequestId: _retryRequestId!,
       );
       _retryRequestId = null;
@@ -384,8 +410,8 @@ class SportsbookEventWidgetModel extends WidgetModel {
       stateStream.add(
         stateStream.value.copyWith(
           status: nextStatus,
-          event: fresh.event,
-          market: fresh.market,
+          event: liveEvent,
+          market: liveMarket,
           acceptedBet: bet,
           isMutating: false,
           oddsChanged: false,
@@ -439,6 +465,9 @@ class SportsbookEventWidgetModel extends WidgetModel {
   String _linesMessage(Object error, String eventId) {
     if (SportsbookRepository.isProviderUnavailable(error)) {
       return SportsbookConstants.errorProvider;
+    }
+    if (SportsbookRepository.isMissingResource(error)) {
+      return SportsbookConstants.errorLinesMissing;
     }
     return SportsbookRepository.mapError(error);
   }

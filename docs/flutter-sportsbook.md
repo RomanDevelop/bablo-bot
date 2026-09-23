@@ -99,6 +99,8 @@ Bootstrap:
 
 `GET /users/me/sports/events` → `{ "items": [ ... ] }`
 
+В каждом item сразу есть `market` (MATCH_WINNER + decimal odds). Каталог коммитится на этом GET — `id` стабильный, `/markets` не обязателен. Ставить можно с линий из списка.
+
 ```json
 {
   "id": "uuid",
@@ -112,7 +114,16 @@ Bootstrap:
   "status": "SCHEDULED",
   "betting_enabled": true,
   "provider": "the_odds_api",
-  "provider_event_id": "…"
+  "provider_event_id": "…",
+  "market": {
+    "id": "uuid",
+    "market_type": "MATCH_WINNER",
+    "status": "OPEN",
+    "outcomes": [
+      { "provider_outcome_id": "Los Angeles Lakers", "name": "Los Angeles Lakers", "odds": 1.85, "side": "home" },
+      { "provider_outcome_id": "Boston Celtics", "name": "Boston Celtics", "odds": 2.05, "side": "away" }
+    ]
+  }
 }
 ```
 
@@ -163,7 +174,7 @@ Bootstrap:
 - `provider_outcome_id` = имя команды. Его и слать в POST.
 - Если `market.status != OPEN` — не принимать ставку.
 
-Линии кэшируются (~90 мин). Перед confirm лучше ещё раз дернуть markets.
+Линии кэшируются (~90 мин). Тот же `market` приходит в `GET /events` и `GET /events/{id}`. `/markets` опционален. Перед confirm достаточно линий с карточки; если `odds_changed` — обновить список/карточку и confirm ещё раз.
 
 ---
 

@@ -40,10 +40,7 @@ class SportsbookDataProvider implements SportsbookDataProviderInterface {
 
   @override
   Future<List<SportsbookEventDto>> getEvents() async {
-    final data = await _client.get<dynamic>(
-      '$_base/events',
-      queryParameters: const {'include_markets': true},
-    );
+    final data = await _client.get<dynamic>('$_base/events');
     return _extractList(data)
         .map((e) => SportsbookEventDto.fromJson(asMap(e)))
         .toList(growable: false);

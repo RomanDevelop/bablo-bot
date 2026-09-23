@@ -53,6 +53,24 @@ class SportsbookEventCard extends StatelessWidget {
             starts,
             style: TextStyle(color: p.textSecondary, fontSize: 13),
           ),
+          if (event.market != null && event.market!.outcomes.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                for (final outcome in event.market!.outcomes)
+                  Expanded(
+                    child: Text(
+                      '${outcome.name}  ${SportsbookConstants.odds(outcome.odds)}',
+                      style: TextStyle(
+                        color: p.textPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
           if (showPlaceCta) ...[
             const SizedBox(height: 12),
             Align(

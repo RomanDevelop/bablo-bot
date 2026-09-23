@@ -33,6 +33,12 @@ class SportsbookRepository {
     required String eventId,
     SportsbookEvent? preview,
   }) async {
+    final embedded = preview?.market;
+    if (embedded != null && embedded.outcomes.isNotEmpty) {
+      return SportsbookMarkets(event: preview!, market: embedded);
+    }
+
+    Object? lastError;
     final ids = <String>[];
     void add(String? value) {
       final id = value?.trim() ?? '';
@@ -47,7 +53,17 @@ class SportsbookRepository {
       }
     }
 
-    Object? lastError;
+    for (final id in ids) {
+      try {
+        final event = await getEvent(id);
+        if (event.market != null && event.market!.outcomes.isNotEmpty) {
+          return SportsbookMarkets(event: event, market: event.market!);
+        }
+      } catch (e) {
+        lastError = e;
+      }
+    }
+
     for (final id in ids) {
       try {
         final loaded = await getMarkets(id);
@@ -59,30 +75,9 @@ class SportsbookRepository {
             market: loaded.market,
           );
         }
-        lastError ??= const DataError(
-          errorCode: ErrorCode.unhandled,
-          message: SportsbookConstants.errorProvider,
-        );
       } catch (e) {
         lastError = e;
       }
-      try {
-        final event = await getEvent(id);
-        if (event.market != null && event.market!.outcomes.isNotEmpty) {
-          return SportsbookMarkets(event: event, market: event.market!);
-        }
-        if (event.id.isNotEmpty && event.id != id) {
-          final loaded = await getMarkets(event.id);
-          if (loaded.market.outcomes.isNotEmpty) return loaded;
-        }
-      } catch (_) {
-        // Keep the markets error — GET event is only a fallback.
-      }
-    }
-
-    final embedded = preview?.market;
-    if (embedded != null && embedded.outcomes.isNotEmpty) {
-      return SportsbookMarkets(event: preview!, market: embedded);
     }
 
     throw lastError ??

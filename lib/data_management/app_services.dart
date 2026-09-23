@@ -16,9 +16,11 @@ import '../features/trading/repositories/trading_repository.dart';
 import '../features/trading/data_providers/backtest_data_provider.dart';
 import '../features/trading/data_providers/casino_data_provider.dart';
 import '../features/trading/data_providers/copy_data_provider.dart';
+import '../features/trading/data_providers/sportsbook_data_provider.dart';
 import '../features/trading/repositories/backtest_repository.dart';
 import '../features/trading/repositories/casino_repository.dart';
 import '../features/trading/repositories/copy_repository.dart';
+import '../features/trading/repositories/sportsbook_repository.dart';
 
 /// Wires network, auth, and repositories for the app shell.
 class AppServices {
@@ -88,6 +90,10 @@ class AppServices {
     final copyRepository = CopyRepository(dataProvider: copyDataProvider);
     final casinoDataProvider = CasinoDataProvider(networkClient: networkClient);
     final casinoRepository = CasinoRepository(dataProvider: casinoDataProvider);
+    final sportsbookDataProvider =
+        SportsbookDataProvider(networkClient: networkClient);
+    final sportsbookRepository =
+        SportsbookRepository(dataProvider: sportsbookDataProvider);
 
     final dataManager = DataManager._(
       networkClient: networkClient,
@@ -99,6 +105,7 @@ class AppServices {
       backtestRepository: backtestRepository,
       copyRepository: copyRepository,
       casinoRepository: casinoRepository,
+      sportsbookRepository: sportsbookRepository,
     );
 
     return AppServices._(
@@ -122,6 +129,7 @@ class DataManager {
     required this.backtestRepository,
     required this.copyRepository,
     required this.casinoRepository,
+    required this.sportsbookRepository,
   })  : _networkClient = networkClient,
         _tradingDataProvider = tradingDataProvider;
 
@@ -134,6 +142,7 @@ class DataManager {
   final BacktestRepository backtestRepository;
   final CopyRepository copyRepository;
   final CasinoRepository casinoRepository;
+  final SportsbookRepository sportsbookRepository;
 
   NetworkClient get networkClient => _networkClient;
   TradingDataProvider get tradingDataProvider => _tradingDataProvider;

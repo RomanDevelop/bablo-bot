@@ -34,11 +34,10 @@ class ExternalServicesConfig {
   static const sportsBetting = ExternalServiceLink(
     id: 'sports_betting',
     title: 'Ставки на спорт',
-    subtitle: 'Ставки · внешний сервис',
-    url: String.fromEnvironment('SPORTS_BETTING_URL', defaultValue: ''),
+    subtitle: 'NBA · Bablo Community',
+    url: '',
     enabled: true,
-    badge: premiumBadge,
-    requiresPremium: true,
+    internalRoute: AppRoutes.sportsbook,
   );
 
   static const temkiMutki = ExternalServiceLink(

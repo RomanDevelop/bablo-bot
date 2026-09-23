@@ -23,6 +23,13 @@ class DailyReactions {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+        'dig': dig,
+        'shit': shit,
+        'ask_guru': askGuru,
+        'ask_ai': askAi,
+      };
+
   DailyReactions incremented(String type) {
     return DailyReactions(
       dig: dig + (type == DailyReactionType.dig ? 1 : 0),
@@ -94,6 +101,24 @@ class DailyArticle {
       reactions: DailyReactions.fromJson(asMap(json['reactions'])),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'subtitle': subtitle,
+        'category': category,
+        'categoryLabel': categoryLabel,
+        'summary': summary,
+        'body': body,
+        'babloVerdict': babloVerdict,
+        'sourceUrls': sourceUrls,
+        'author': author,
+        'imageUrl': imageUrl,
+        'imageCredit': imageCredit,
+        'publishedAt': publishedAt,
+        'status': status,
+        'reactions': reactions.toJson(),
+      };
 
   DailyArticle merge(DailyArticle other) {
     return DailyArticle(

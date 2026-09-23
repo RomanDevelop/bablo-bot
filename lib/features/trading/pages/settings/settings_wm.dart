@@ -65,11 +65,21 @@ class SettingsState {
 
 class SettingsWidgetModel extends WidgetModel {
   SettingsWidgetModel(this._repository)
-      : super(const WidgetModelDependencies());
+      : stateStream = BehaviorSubject.seeded(_seed(_repository)),
+        super(const WidgetModelDependencies());
 
   final TradingRepository _repository;
-  final BehaviorSubject<SettingsState> stateStream =
-      BehaviorSubject.seeded(const SettingsState());
+  final BehaviorSubject<SettingsState> stateStream;
+
+  static SettingsState _seed(TradingRepository repository) {
+    final config = repository.peekCachedConfig();
+    if (config == null) return const SettingsState();
+    return SettingsState(
+      config: config,
+      draft: config,
+      isLoading: true,
+    );
+  }
 
   @override
   void onLoad() {
@@ -79,11 +89,21 @@ class SettingsWidgetModel extends WidgetModel {
 
   Future<void> refresh({bool forceRefresh = false}) async {
     final current = stateStream.value;
-    stateStream.add(current.copyWith(isLoading: true, clearError: true));
+    stateStream.add(
+      current.copyWith(
+        isLoading: true,
+        clearError: true,
+      ),
+    );
     try {
       final config = await _repository.getConfig(forceRefresh: forceRefresh);
+      final keepDraft = current.isDirty ? current.draft : config;
       stateStream.add(
-        SettingsState(config: config, draft: config, isLoading: false),
+        SettingsState(
+          config: config,
+          draft: keepDraft,
+          isLoading: false,
+        ),
       );
     } catch (e, st) {
       handleError(e, st);

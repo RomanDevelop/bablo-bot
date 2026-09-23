@@ -5,6 +5,7 @@ class AuthConstants {
   static const botUsername = 'Artem_Bablo_Bot';
   static const botDeepLink = 'https://t.me/$botUsername';
   static const miniAppUrl = 'https://bablo-bot.web.app';
+  static const avatarPlaceholder = 'assets/branding/avatar_placeholder.png';
 
   static const outsideTelegramTitle = 'Open in Telegram';
   static const outsideTelegramBody =

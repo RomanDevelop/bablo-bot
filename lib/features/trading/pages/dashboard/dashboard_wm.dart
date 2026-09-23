@@ -56,19 +56,31 @@ class DashboardState {
 
 class DashboardWidgetModel extends WidgetModel {
   DashboardWidgetModel(this._repository)
-      : super(const WidgetModelDependencies());
+      : stateStream = BehaviorSubject.seeded(_seed(_repository)),
+        super(const WidgetModelDependencies());
 
   final TradingRepository _repository;
-  final BehaviorSubject<DashboardState> stateStream =
-      BehaviorSubject.seeded(const DashboardState());
+  final BehaviorSubject<DashboardState> stateStream;
 
   Timer? _pollTimer;
   static const _pollInterval = Duration(seconds: 15);
 
+  static DashboardState _seed(TradingRepository repository) {
+    final status = repository.peekCachedStatus();
+    if (status == null) return const DashboardState();
+    return DashboardState(
+      health: repository.peekCachedHealth(),
+      status: status,
+      isLoading: false,
+      isRefreshing: true,
+      fetchedAt: repository.peekCachedStatusSavedAt(),
+    );
+  }
+
   @override
   void onLoad() {
     super.onLoad();
-    refresh();
+    refresh(silent: stateStream.value.status != null);
     _pollTimer = Timer.periodic(_pollInterval, (_) {
       final running = stateStream.value.status?.isRunning ?? false;
       if (running) refresh(silent: true);

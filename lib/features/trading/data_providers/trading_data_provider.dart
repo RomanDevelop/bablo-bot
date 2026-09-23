@@ -31,6 +31,10 @@ abstract class TradingDataProviderInterface {
   Future<Map<String, dynamic>> adopt();
   Future<List<String>> getPairs({String quote = 'USDT'});
   Future<void> invalidateCache();
+  HealthDto? peekCachedHealth();
+  BotStatusDto? peekCachedStatus();
+  DateTime? peekCachedStatusSavedAt();
+  BotConfigDto? peekCachedConfig();
 }
 
 class TradingDataProvider implements TradingDataProviderInterface {
@@ -209,6 +213,32 @@ class TradingDataProvider implements TradingDataProviderInterface {
   @override
   Future<void> invalidateCache() =>
       _cache?.invalidateAll(ApiCacheKeys.afterMutation) ?? Future.value();
+
+  @override
+  HealthDto? peekCachedHealth() =>
+      _peekMap(ApiCacheKeys.health, HealthDto.fromJson);
+
+  @override
+  BotStatusDto? peekCachedStatus() =>
+      _peekMap(ApiCacheKeys.status, BotStatusDto.fromJson);
+
+  @override
+  DateTime? peekCachedStatusSavedAt() =>
+      _cache?.read(ApiCacheKeys.status)?.savedAt;
+
+  @override
+  BotConfigDto? peekCachedConfig() =>
+      _peekMap(ApiCacheKeys.config, BotConfigDto.fromJson);
+
+  T? _peekMap<T>(String key, T Function(Map<String, dynamic>) parse) {
+    final cached = _cache?.read(key);
+    if (cached == null || cached.data is! Map) return null;
+    try {
+      return parse(asMap(cached.data));
+    } catch (_) {
+      return null;
+    }
+  }
 
   Future<T> _mapCached<T>(
     String key,

@@ -33,6 +33,9 @@ class AppNavigator {
   static Future<void> openCasino(BuildContext context) =>
       pushNamed(context, AppRoutes.casino);
 
+  static Future<void> openSportsbook(BuildContext context) =>
+      pushNamed(context, AppRoutes.sportsbook);
+
   static Future<void> openCasinoGame(
     BuildContext context,
     String gameId,

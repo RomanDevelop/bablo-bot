@@ -8,6 +8,7 @@ import '../../../../components/navigation/side_menu_button.dart';
 import '../../../../components/stats_action_button.dart';
 import '../../../../components/status_chip.dart';
 import '../../../../components/trading_card.dart';
+import '../../../../components/user_avatar.dart';
 import '../../../../core/auth/auth_session.dart';
 import '../../../../core/constants/exchange_constants.dart';
 import '../../../../core/mwwm/core_mwwm_widget.dart';
@@ -19,6 +20,7 @@ import '../../../../core/utils/money_format.dart';
 import '../../models/bot_status_model.dart';
 import '../copy/components/copy_teaser_card.dart';
 import '../casino/components/casino_home_components.dart';
+import '../sportsbook/components/sportsbook_teaser_card.dart';
 import '../daily/widgets/daily_carousel.dart';
 import 'dashboard_wm.dart';
 import 'di/dashboard_wm_builder.dart';
@@ -49,6 +51,16 @@ class _DashboardPageState
             backgroundColor: AppColors.background,
             foregroundColor: AppColors.textPrimary,
             titleSpacing: 0,
+            bottom: state.isRefreshing
+                ? PreferredSize(
+                    preferredSize: const Size.fromHeight(2),
+                    child: LinearProgressIndicator(
+                      minHeight: 2,
+                      color: AppColors.primary,
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.15),
+                    ),
+                  )
+                : null,
             title: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -87,34 +99,8 @@ class _DashboardPageState
   }
 
   Widget _buildBody(DashboardState state) {
-    if (state.isLoading && state.status == null) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: const [
-          SizedBox(height: 180),
-          PageLoading(),
-          SizedBox(height: 32),
-          Padding(
-            padding: EdgeInsets.fromLTRB(16, 0, 16, 120),
-            child: DailyCarousel(),
-          ),
-        ],
-      );
-    }
-
     final status = state.status;
-    if (status == null) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-        children: [
-          if (state.error != null)
-            ErrorBanner(message: state.error!, onRetry: () => wm.refresh()),
-          const SizedBox(height: 16),
-          const DailyCarousel(),
-        ],
-      );
-    }
+    final authenticated = context.watch<AuthSession>().isAuthenticated;
 
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -125,20 +111,26 @@ class _DashboardPageState
           const SizedBox(height: 12),
         ],
         const _UserBootstrapStrip(),
-        if (context.watch<AuthSession>().isAuthenticated) ...[
+        if (authenticated) ...[
           const SizedBox(height: 12),
           const CopyTeaserCard(),
           const SizedBox(height: 12),
           const CasinoTeaserCard(),
+          const SizedBox(height: 12),
+          const SportsbookTeaserCard(),
         ],
         const SizedBox(height: 12),
-        _CollapsibleTradingBlock(
-          status: status,
-          showUpdating: state.showUpdating,
-        ),
-        if (status.isHalted && status.haltReason.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          ErrorBanner(message: 'Risk halt: ${status.haltReason}'),
+        if (status == null)
+          const _HomeBalanceSkeleton()
+        else ...[
+          _CollapsibleTradingBlock(
+            status: status,
+            showUpdating: state.showUpdating,
+          ),
+          if (status.isHalted && status.haltReason.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            ErrorBanner(message: 'Risk halt: ${status.haltReason}'),
+          ],
         ],
         const SizedBox(height: 20),
         const DailyCarousel(),
@@ -326,6 +318,38 @@ class _CollapsedBalanceRow extends StatelessWidget {
   }
 }
 
+class _HomeBalanceSkeleton extends StatelessWidget {
+  const _HomeBalanceSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: const SizedBox(height: 76, width: double.infinity),
+    );
+  }
+}
+
+class _HomeAccountSkeleton extends StatelessWidget {
+  const _HomeAccountSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: const SizedBox(height: 72, width: double.infinity),
+    );
+  }
+}
+
 class _UserBootstrapStrip extends StatelessWidget {
   const _UserBootstrapStrip();
 
@@ -334,31 +358,17 @@ class _UserBootstrapStrip extends StatelessWidget {
     final auth = context.watch<AuthSession>();
     final p = context.watch<ThemeController>().palette;
 
-    if (auth.isLoading) {
-      return TradingCard(
-        child: Row(
-          children: [
-            SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2, color: p.primary),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Connecting Bablo account…',
-              style: TextStyle(color: p.textSecondary, fontSize: 13),
-            ),
-          ],
-        ),
-      );
+    if (auth.isLoading && auth.bootstrap == null) {
+      return const _HomeAccountSkeleton();
     }
 
-    if (!auth.isAuthenticated || auth.bootstrap == null) {
+    if (auth.status == AuthStatus.unauthenticated ||
+        auth.bootstrap == null) {
       return TradingCard(
         onTap: () => context.push(AppRoutes.profile),
         child: Row(
           children: [
-            Icon(Icons.person_outline_rounded, color: p.primary),
+            const UserAvatar(size: 40),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -379,6 +389,8 @@ class _UserBootstrapStrip extends StatelessWidget {
       onTap: () => context.push(AppRoutes.profile),
       child: Row(
         children: [
+          UserAvatar(url: b.user.photoUrl, size: 44),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

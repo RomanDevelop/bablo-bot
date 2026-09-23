@@ -41,6 +41,8 @@ class ProfileWidgetModel extends WidgetModel {
 
   String get handle => auth.handle;
 
+  String? get avatarUrl => auth.avatarUrl;
+
   num get rsvBalance => auth.rsvBalance;
 
   num get earnedRsv => auth.earnedRsv;

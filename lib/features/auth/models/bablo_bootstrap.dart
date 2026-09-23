@@ -1,8 +1,10 @@
 import '../../../core/constants/casino_constants.dart';
 import '../../../core/constants/copy_constants.dart';
+import '../../../core/constants/sportsbook_constants.dart';
 import '../../../core/utils/json_parsers.dart';
 import '../../trading/dto/casino_dto.dart';
 import '../../trading/dto/copy_dto.dart';
+import '../../trading/dto/sportsbook_dto.dart';
 
 class BabloBootstrap {
   const BabloBootstrap({
@@ -17,6 +19,7 @@ class BabloBootstrap {
     required this.permissions,
     this.copy,
     this.casino,
+    this.sportsbook,
   });
 
   final BabloUser user;
@@ -30,6 +33,7 @@ class BabloBootstrap {
   final List<String> permissions;
   final CopyStatusDto? copy;
   final CasinoStatusDto? casino;
+  final SportsbookStatusDto? sportsbook;
 
   bool get canUseCopyTrading =>
       permissions.contains(CopyConstants.permission) ||
@@ -38,6 +42,10 @@ class BabloBootstrap {
   bool get canUseCasino =>
       permissions.contains(CasinoConstants.permission) ||
       (casino?.eligible ?? false);
+
+  bool get canUseSportsbook =>
+      permissions.contains(SportsbookConstants.permission) ||
+      (sportsbook?.eligible ?? false);
 
   factory BabloBootstrap.fromJson(Map<String, dynamic> json) {
     return BabloBootstrap(
@@ -58,6 +66,9 @@ class BabloBootstrap {
       casino: json['casino'] == null
           ? null
           : CasinoStatusDto.fromJson(asMap(json['casino'])),
+      sportsbook: json['sportsbook'] == null
+          ? null
+          : SportsbookStatusDto.fromJson(asMap(json['sportsbook'])),
     );
   }
 
@@ -73,6 +84,7 @@ class BabloBootstrap {
         'permissions': permissions,
         'copy': copy?.toJson(),
         'casino': casino?.toJson(),
+        'sportsbook': sportsbook?.toJson(),
       };
 }
 
@@ -99,13 +111,20 @@ class BabloUser {
   final DateTime? createdAt;
   final DateTime? lastLoginAt;
 
+  /// Photo from `/users/me`. Null when Telegram has no avatar.
+  String? get photoUrl {
+    final url = avatarUrl?.trim();
+    if (url == null || url.isEmpty) return null;
+    return url;
+  }
+
   factory BabloUser.fromJson(Map<String, dynamic> json) {
     return BabloUser(
       id: asString(json['id']),
       status: asString(json['status'], 'ACTIVE'),
       role: asString(json['role'], 'USER'),
       displayName: asString(json['display_name'], 'Bablo Member'),
-      avatarUrl: json['avatar_url'] as String?,
+      avatarUrl: asNullableString(json['avatar_url']),
       locale: json['locale'] as String?,
       timezone: json['timezone'] as String?,
       createdAt: _parseDate(json['created_at']),

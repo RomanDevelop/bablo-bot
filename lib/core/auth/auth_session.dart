@@ -51,6 +51,8 @@ class AuthSession extends ChangeNotifier {
 
   String get handle => bootstrap?.telegram.handle ?? '@guest';
 
+  String? get avatarUrl => bootstrap?.user.photoUrl;
+
   num get rsvBalance => bootstrap?.rewards.paidRsv ?? 0;
 
   num get earnedRsv => bootstrap?.rewards.earnedRsv ?? 0;
@@ -60,6 +62,8 @@ class AuthSession extends ChangeNotifier {
   bool get hasActiveCopyStake => bootstrap?.copy?.stake != null;
 
   bool get canUseCasino => bootstrap?.canUseCasino ?? false;
+
+  bool get canUseSportsbook => bootstrap?.canUseSportsbook ?? false;
 
   String? get activeLoanTierId => _prefs.getString(_kLoanTierId);
 
@@ -83,11 +87,15 @@ class AuthSession extends ChangeNotifier {
     required TokenStorage tokenStorage,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    return AuthSession(
+    final session = AuthSession(
       authRepository: authRepository,
       tokenStorage: tokenStorage,
       prefs: prefs,
     );
+    if (tokenStorage.readTokens() != null) {
+      session.bootstrap = tokenStorage.readBootstrap();
+    }
+    return session;
   }
 
   /// Splash flow: Telegram ready → refresh or initData login.
@@ -95,12 +103,11 @@ class AuthSession extends ChangeNotifier {
     if (status == AuthStatus.loading) return;
     status = AuthStatus.loading;
     errorMessage = null;
+    bootstrap ??= _tokens.readBootstrap();
     notifyListeners();
 
     telegramWebApp.ready();
     telegramWebApp.expand();
-
-    bootstrap = _tokens.readBootstrap();
 
     try {
       final tokens = _tokens.readTokens();

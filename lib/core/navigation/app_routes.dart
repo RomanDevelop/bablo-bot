@@ -28,6 +28,9 @@ class AppRoutes {
   static const lab = '/lab';
   static const copy = '/copy';
   static const casino = '/casino';
+  static const sportsbook = '/sports';
+  static const sportsbookEvents = '/sports/events';
+  static const sportsbookBets = '/sports/bets';
 
   static String dailyArticle(String id) => '$daily/$id';
 
@@ -36,6 +39,9 @@ class AppRoutes {
   static String temkiItem(String id) => '$temki/$id';
 
   static String casinoGame(String gameId) => '$casino/$gameId';
+
+  static String sportsbookEvent(String eventId) =>
+      '$sportsbookEvents/$eventId';
 
   /// Path only: strips scheme/host/query/`/` tail so web deep links match.
   static String pathOf(String? name) {
@@ -83,6 +89,14 @@ class AppRoutes {
   static String? casinoGameId(String? name) {
     final path = pathOf(name);
     const prefix = '$casino/';
+    if (!path.startsWith(prefix)) return null;
+    final id = path.substring(prefix.length).split('/').first;
+    return id.isEmpty ? null : id;
+  }
+
+  static String? sportsbookEventId(String? name) {
+    final path = pathOf(name);
+    const prefix = '$sportsbookEvents/';
     if (!path.startsWith(prefix)) return null;
     final id = path.substring(prefix.length).split('/').first;
     return id.isEmpty ? null : id;

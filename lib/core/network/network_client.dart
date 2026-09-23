@@ -139,10 +139,15 @@ class NetworkClient {
         data: _asMap(e.response?.data),
       );
     }
-    if (status == 400) {
+    if (status == 400 || status == 402 || status == 404) {
       return DataError(
-        errorCode: ErrorCode.badRequest,
-        message: detail ?? 'Некорректный запрос',
+        errorCode: status == 404 ? ErrorCode.unhandled : ErrorCode.badRequest,
+        message: detail ??
+            (status == 402
+                ? 'Недостаточно available RSV'
+                : status == 404
+                    ? 'Не найдено'
+                    : 'Некорректный запрос'),
         data: _asMap(e.response?.data),
       );
     }

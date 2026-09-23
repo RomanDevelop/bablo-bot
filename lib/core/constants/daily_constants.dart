@@ -7,6 +7,7 @@ class DailyConstants {
   /// Newest N items stay in the hero carousel; the rest are list rows.
   static const carouselLimit = 3;
   static const reactorIdKey = 'daily_reactor_id';
+  static const listCachePrefix = 'daily_articles_v1_';
 
   static String shareUrl(String id) => '$webOrigin/daily/$id';
 

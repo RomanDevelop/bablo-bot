@@ -19,6 +19,10 @@ import 'features/trading/pages/chart/chart_page.dart';
 import 'features/trading/pages/copy/copy_page.dart';
 import 'features/trading/pages/casino/casino_page.dart';
 import 'features/trading/pages/casino/game/casino_game_page.dart';
+import 'features/trading/pages/sportsbook/event/sportsbook_event_page.dart';
+import 'features/trading/pages/sportsbook/events/sportsbook_events_page.dart';
+import 'features/trading/pages/sportsbook/history/sportsbook_history_page.dart';
+import 'features/trading/pages/sportsbook/sportsbook_page.dart';
 import 'features/trading/pages/courses/courses_page.dart';
 import 'features/trading/pages/courses/mentor_course_page.dart';
 import 'features/trading/pages/daily/daily_article_page.dart';
@@ -138,6 +142,14 @@ class BabloApp extends StatelessWidget {
       return _fade(settings, CasinoGamePage(gameId: casinoGameId));
     }
 
+    final sportsbookEventId = AppRoutes.sportsbookEventId(path);
+    if (sportsbookEventId != null) {
+      return _fade(
+        settings,
+        SportsbookEventPage(eventId: sportsbookEventId),
+      );
+    }
+
     switch (path) {
       case AppRoutes.partner:
         return _fade(settings, PartnerPage());
@@ -183,6 +195,12 @@ class BabloApp extends StatelessWidget {
         return _fade(settings, CopyPage());
       case AppRoutes.casino:
         return _fade(settings, CasinoPage());
+      case AppRoutes.sportsbook:
+        return _fade(settings, SportsbookPage());
+      case AppRoutes.sportsbookEvents:
+        return _fade(settings, SportsbookEventsPage());
+      case AppRoutes.sportsbookBets:
+        return _fade(settings, SportsbookHistoryPage());
       case AppRoutes.home:
       default:
         return MaterialPageRoute<void>(

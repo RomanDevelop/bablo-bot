@@ -112,6 +112,17 @@ class _SettingsPageState
                 fontWeight: FontWeight.w600,
               ),
             ),
+            bottom: state.isLoading && state.draft != null
+                ? PreferredSize(
+                    preferredSize: const Size.fromHeight(2),
+                    child: LinearProgressIndicator(
+                      minHeight: 2,
+                      color: AppColors.primary,
+                      backgroundColor:
+                          AppColors.primary.withValues(alpha: 0.15),
+                    ),
+                  )
+                : null,
             actions: [
               if (state.isDirty)
                 TextButton(
@@ -133,16 +144,17 @@ class _SettingsPageState
   }
 
   Widget _buildBody(BuildContext context, SettingsState state) {
-    if (state.isLoading && state.draft == null) {
-      return const PageLoading();
-    }
     final draft = state.draft;
     if (draft == null) {
-      return Padding(
-        padding: const EdgeInsets.all(16),
-        child: state.error != null
-            ? ErrorBanner(message: state.error!, onRetry: wm.refresh)
-            : const SizedBox.shrink(),
+      return ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+        children: [
+          if (state.error != null) ...[
+            ErrorBanner(message: state.error!, onRetry: wm.refresh),
+            const SizedBox(height: 12),
+          ],
+          const _SettingsSkeleton(),
+        ],
       );
     }
 
@@ -203,7 +215,7 @@ class _SettingsPageState
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 key: ValueKey(draft.interval),
-                initialValue: ApiConstants.binanceIntervals.contains(draft.interval)
+                value: ApiConstants.binanceIntervals.contains(draft.interval)
                     ? draft.interval
                     : '1h',
                 decoration: const InputDecoration(labelText: 'Interval'),
@@ -386,6 +398,43 @@ class _SettingsPageState
       ),
     );
     if (ok2 == true) await wm.panic();
+  }
+}
+
+class _SettingsSkeleton extends StatelessWidget {
+  const _SettingsSkeleton();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: const [
+        _SkeletonCard(height: 88),
+        SizedBox(height: 12),
+        _SkeletonCard(height: 140),
+        SizedBox(height: 12),
+        _SkeletonCard(height: 120),
+        SizedBox(height: 12),
+        _SkeletonCard(height: 220),
+      ],
+    );
+  }
+}
+
+class _SkeletonCard extends StatelessWidget {
+  const _SkeletonCard({required this.height});
+
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: SizedBox(height: height, width: double.infinity),
+    );
   }
 }
 

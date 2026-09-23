@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../components/trading_card.dart';
+import '../../../../components/user_avatar.dart';
 import '../../../../core/auth/auth_session.dart';
 import '../../../../core/constants/auth_constants.dart';
 import '../../../../core/constants/exchange_constants.dart';
@@ -95,35 +96,52 @@ class _ProfilePageState
           body: ListView(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
             children: [
-              Text(
-                'ACCOUNT',
-                style: TextStyle(
-                  color: p.textMuted,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.1,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                wm.isAuthenticated ? wm.displayName : 'Guest',
-                style: TextStyle(
-                  color: p.textPrimary,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                wm.isAuthenticated
-                    ? '${bootstrap?.subscription.plan ?? 'FREE'} · Bablo User Platform'
-                    : 'Sign in via Telegram Mini App (@${AuthConstants.botUsername})',
-                style: TextStyle(
-                  color: p.textSecondary,
-                  fontSize: 14,
-                  height: 1.4,
-                ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  UserAvatar(
+                    url: wm.avatarUrl,
+                    size: 80,
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'ACCOUNT',
+                          style: TextStyle(
+                            color: p.textMuted,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.1,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          wm.isAuthenticated ? wm.displayName : 'Guest',
+                          style: TextStyle(
+                            color: p.textPrimary,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          wm.isAuthenticated
+                              ? '${bootstrap?.subscription.plan ?? 'FREE'} · Bablo User Platform'
+                              : 'Sign in via Telegram Mini App (@${AuthConstants.botUsername})',
+                          style: TextStyle(
+                            color: p.textSecondary,
+                            fontSize: 14,
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 18),
               if (!wm.isAuthenticated)
@@ -274,22 +292,9 @@ class _IdentityCard extends StatelessWidget {
     return TradingCard(
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: p.primary.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              name.isNotEmpty ? name[0].toUpperCase() : 'B',
-              style: TextStyle(
-                color: p.primary,
-                fontWeight: FontWeight.w800,
-                fontSize: 20,
-              ),
-            ),
+          UserAvatar(
+            url: bootstrap.user.photoUrl,
+            size: 48,
           ),
           const SizedBox(width: 12),
           Expanded(

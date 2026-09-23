@@ -34,7 +34,9 @@ class _DailyCarouselState extends State<DailyCarousel> {
     super.initState();
     _repository = context.read<DataManager>().dailyRepository;
     _pageController = PageController(viewportFraction: 0.86);
-    _load();
+    _items = _repository.peekArticles();
+    _loading = _items.isEmpty;
+    _load(forceRefresh: _items.isNotEmpty);
   }
 
   @override
@@ -44,10 +46,6 @@ class _DailyCarouselState extends State<DailyCarousel> {
   }
 
   Future<void> _load({bool forceRefresh = false}) async {
-    setState(() {
-      _loading = _items.isEmpty;
-      _error = null;
-    });
     try {
       final items = await _repository.getArticles(
         category: _category.isEmpty ? null : _category,
@@ -57,16 +55,16 @@ class _DailyCarouselState extends State<DailyCarousel> {
       setState(() {
         _items = items;
         _loading = false;
-        _page = 0;
+        if (forceRefresh || _page >= items.length) _page = 0;
       });
-      if (_pageController.hasClients) {
+      if (_pageController.hasClients && _page == 0) {
         _pageController.jumpToPage(0);
       }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = e.toString();
+        if (_items.isEmpty) _error = e.toString();
       });
     }
   }
@@ -77,8 +75,15 @@ class _DailyCarouselState extends State<DailyCarousel> {
 
   void _selectCategory(String id) {
     if (id == _category) return;
-    setState(() => _category = id);
-    _load();
+    final cached = _repository.peekArticles(category: id);
+    setState(() {
+      _category = id;
+      _items = cached;
+      _loading = cached.isEmpty;
+      _page = 0;
+      _error = null;
+    });
+    _load(forceRefresh: cached.isNotEmpty);
   }
 
   @override
@@ -462,16 +467,7 @@ class _CarouselSkeleton extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTheme.cardRadius),
         border: Border.all(color: AppColors.borderSubtle),
       ),
-      child: Center(
-        child: SizedBox(
-          width: 22,
-          height: 22,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.primary,
-          ),
-        ),
-      ),
+      child: const SizedBox.expand(),
     );
   }
 }

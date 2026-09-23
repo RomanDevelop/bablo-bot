@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,7 +8,7 @@ import '../../../core/network/network_client.dart';
 import '../../../core/utils/json_parsers.dart';
 import '../models/daily_article.dart';
 
-/// In-memory list cache. Carousel loads once; detail hydrates `body` by id.
+/// Memory + disk list cache. Carousel paints last issues immediately.
 class DailyRepository {
   DailyRepository({
     required NetworkClient networkClient,
@@ -23,6 +24,16 @@ class DailyRepository {
 
   DailyArticle? cachedById(String id) => _byId[id];
 
+  List<DailyArticle> peekArticles({String? category}) {
+    final key = category ?? '';
+    final memory = _listCache[key];
+    if (memory != null) return memory;
+    final disk = _readDisk(key);
+    if (disk == null) return const [];
+    _hydrate(key, disk);
+    return disk;
+  }
+
   Future<List<DailyArticle>> getArticles({
     String? category,
     int limit = DailyConstants.listLimit,
@@ -30,8 +41,8 @@ class DailyRepository {
   }) async {
     final key = category ?? '';
     if (!forceRefresh) {
-      final cached = _listCache[key];
-      if (cached != null) return cached;
+      final cached = peekArticles(category: key);
+      if (cached.isNotEmpty) return cached;
     }
 
     final data = await _client.get<Map<String, dynamic>>(
@@ -46,10 +57,8 @@ class DailyRepository {
         .where((e) => e.id.isNotEmpty)
         .toList(growable: false);
 
-    _listCache[key] = items;
-    for (final item in items) {
-      _put(item);
-    }
+    _hydrate(key, items);
+    await _writeDisk(key, items);
     return items;
   }
 
@@ -97,6 +106,37 @@ class DailyRepository {
     final updated = base.copyWith(reactions: reactions);
     _put(updated);
     return updated;
+  }
+
+  void _hydrate(String key, List<DailyArticle> items) {
+    _listCache[key] = items;
+    for (final item in items) {
+      _put(item);
+    }
+  }
+
+  String _diskKey(String category) =>
+      '${DailyConstants.listCachePrefix}${category.isEmpty ? 'all' : category}';
+
+  List<DailyArticle>? _readDisk(String key) {
+    final raw = _prefs.getString(_diskKey(key));
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final items = asList(jsonDecode(raw))
+          .map((e) => DailyArticle.fromJson(asMap(e)))
+          .where((e) => e.id.isNotEmpty)
+          .toList(growable: false);
+      return items.isEmpty ? null : items;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _writeDisk(String key, List<DailyArticle> items) {
+    return _prefs.setString(
+      _diskKey(key),
+      jsonEncode(items.map((e) => e.toJson()).toList()),
+    );
   }
 
   void _put(DailyArticle article) {

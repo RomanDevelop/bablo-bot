@@ -22,6 +22,24 @@ class TradingRepository {
     return BotStatus.fromDto(dto);
   }
 
+  Health? peekCachedHealth() {
+    final dto = _dataProvider.peekCachedHealth();
+    return dto == null ? null : Health.fromDto(dto);
+  }
+
+  BotStatus? peekCachedStatus() {
+    final dto = _dataProvider.peekCachedStatus();
+    return dto == null ? null : BotStatus.fromDto(dto);
+  }
+
+  DateTime? peekCachedStatusSavedAt() =>
+      _dataProvider.peekCachedStatusSavedAt();
+
+  BotConfig? peekCachedConfig() {
+    final dto = _dataProvider.peekCachedConfig();
+    return dto == null ? null : BotConfig.fromDto(dto);
+  }
+
   Future<Portfolio> getPortfolio({bool forceRefresh = false}) async {
     final dto = await _dataProvider.getPortfolio(forceRefresh: forceRefresh);
     return Portfolio.fromDto(dto);

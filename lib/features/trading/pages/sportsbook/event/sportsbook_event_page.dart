@@ -156,54 +156,99 @@ class _SportsbookEventPageState
         ErrorBanner(message: state.error!, onRetry: () => wm.load()),
         const SizedBox(height: 12),
       ],
-      SportsbookEventCard(event: event, showPlaceCta: false),
+      SportsbookEventCard(
+        event: event,
+        showPlaceCta: false,
+        showOdds: state.acceptedBet == null,
+      ),
       if (status != null) ...[
         const SizedBox(height: 12),
         SportsbookBalanceStrip(status: status),
       ],
-      if (state.acceptedBet != null) ...[
-        const SizedBox(height: 12),
+      const SizedBox(height: 12),
+      ..._afterMatch(state, event, status),
+    ];
+  }
+
+  List<Widget> _afterMatch(
+    SportsbookEventState state,
+    SportsbookEvent event,
+    SportsbookStatus? status,
+  ) {
+    final accepted = state.acceptedBet;
+    if (accepted != null) {
+      return [
         TradingCard(
-          child: Text(
-            SportsbookConstants.acceptedBody(
-              odds: SportsbookConstants.odds(state.acceptedBet!.acceptedOdds),
-              payout: SportsbookConstants.plain(
-                state.acceptedBet!.potentialPayout,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                SportsbookConstants.acceptedBody(
+                  odds: SportsbookConstants.odds(accepted.acceptedOdds),
+                  payout: SportsbookConstants.plain(accepted.potentialPayout),
+                ),
+                style: const TextStyle(fontWeight: FontWeight.w800),
               ),
-            ),
+              const SizedBox(height: 8),
+              Text(
+                SportsbookConstants.acceptedLocked,
+                style: TextStyle(
+                  color: context.watch<ThemeController>().palette.textSecondary,
+                  fontSize: 13,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: TextButton(
+                  onPressed: wm.openHistory,
+                  child: const Text(SportsbookConstants.historyCta),
+                ),
+              ),
+            ],
           ),
         ),
-      ],
-      const SizedBox(height: 12),
-      if (!event.canPlaceBet)
+      ];
+    }
+
+    if (!event.canPlaceBet) {
+      return [
         TradingCard(
           child: Text(
             event.isLive
                 ? SportsbookConstants.liveBadge
                 : SportsbookConstants.errorEventClosed,
           ),
-        )
-      else if (state.market == null ||
-          state.market!.outcomes.isEmpty ||
-          status == null)
+        ),
+      ];
+    }
+
+    if (state.market == null ||
+        state.market!.outcomes.isEmpty ||
+        status == null) {
+      return [
         TradingCard(
           child: Text(state.error ?? SportsbookConstants.errorProvider),
-        )
-      else
-        SportsbookSlip(
-          status: status,
-          market: state.market!,
-          stakeRsv: state.stakeRsv,
-          selectedOutcomeId: state.selectedOutcomeId,
-          isMutating: state.isMutating,
-          canSubmit: state.canSubmit,
-          oddsChanged: state.oddsChanged,
-          onSelectOutcome: wm.selectOutcome,
-          onStakeChanged: wm.setStake,
-          onStepStake: wm.stepStake,
-          onConfirm: wm.confirm,
-          onRefreshOdds: wm.refreshMarkets,
         ),
+      ];
+    }
+
+    return [
+      SportsbookSlip(
+        status: status,
+        market: state.market!,
+        stakeRsv: state.stakeRsv,
+        selectedOutcomeId: state.selectedOutcomeId,
+        isMutating: state.isMutating,
+        canSubmit: state.canSubmit,
+        oddsChanged: state.oddsChanged,
+        onSelectOutcome: wm.selectOutcome,
+        onStakeChanged: wm.setStake,
+        onStepStake: wm.stepStake,
+        onConfirm: wm.confirm,
+        onRefreshOdds: wm.refreshMarkets,
+      ),
     ];
   }
 }

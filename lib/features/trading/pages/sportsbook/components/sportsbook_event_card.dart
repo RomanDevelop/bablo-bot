@@ -13,11 +13,13 @@ class SportsbookEventCard extends StatelessWidget {
     required this.event,
     this.onOpen,
     this.showPlaceCta = true,
+    this.showOdds = true,
   });
 
   final SportsbookEvent event;
   final VoidCallback? onOpen;
   final bool showPlaceCta;
+  final bool showOdds;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +55,9 @@ class SportsbookEventCard extends StatelessWidget {
             starts,
             style: TextStyle(color: p.textSecondary, fontSize: 13),
           ),
-          if (event.market != null && event.market!.outcomes.isNotEmpty) ...[
+          if (showOdds &&
+              event.market != null &&
+              event.market!.outcomes.isNotEmpty) ...[
             const SizedBox(height: 10),
             Row(
               children: [

@@ -58,6 +58,7 @@ class SportsbookEventState {
     if (!status.canAffordMin) return false;
     if (stakeRsv < status.minStakeRsv) return false;
     if (stakeRsv > status.stakeCeiling) return false;
+    if (acceptedBet != null) return false;
     return !isMutating;
   }
 
@@ -286,7 +287,7 @@ class SportsbookEventWidgetModel extends WidgetModel {
 
   Future<void> confirm() async {
     final state = stateStream.value;
-    if (state.isMutating) return;
+    if (state.isMutating || state.acceptedBet != null) return;
     final status = state.status;
     final event = state.event;
     final market = state.market;
@@ -415,11 +416,8 @@ class SportsbookEventWidgetModel extends WidgetModel {
           acceptedBet: bet,
           isMutating: false,
           oddsChanged: false,
-          message: SportsbookConstants.acceptedBody(
-            odds: SportsbookConstants.odds(bet.acceptedOdds),
-            payout: SportsbookConstants.plain(bet.potentialPayout),
-          ),
           clearError: true,
+          clearMessage: true,
         ),
       );
     } on DataError catch (e) {

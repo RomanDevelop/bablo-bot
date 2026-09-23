@@ -40,6 +40,7 @@ class SportsbookConstants {
   static const pickLabel = 'Исход';
   static const previewLabel = 'Возможный выигрыш ≈';
   static const acceptedLabel = 'Принято';
+  static const acceptedLocked = 'Ставка принята. Повторно на этот матч не ставим.';
   static const payoutLabel = 'Выплата';
   static const refreshOdds = 'Обновить линию';
   static const sport = 'BASKETBALL';

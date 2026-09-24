@@ -103,7 +103,7 @@ class _BetTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                bet.status.toUpperCase(),
+                SportsbookConstants.statusLabel(bet.status),
                 style: TextStyle(
                   color: statusColor,
                   fontWeight: FontWeight.w800,
@@ -111,12 +111,14 @@ class _BetTile extends StatelessWidget {
                   letterSpacing: 0.4,
                 ),
               ),
-              if (bet.isWon) ...[
+              if (bet.potentialPayout > 0 && (bet.isOpen || bet.isWon)) ...[
                 const SizedBox(height: 4),
                 Text(
-                  SportsbookConstants.rsv(bet.potentialPayout),
+                  bet.isWon
+                      ? SportsbookConstants.rsv(bet.potentialPayout)
+                      : '≈ ${SportsbookConstants.rsv(bet.potentialPayout)}',
                   style: context.tradingText.monoSmall.copyWith(
-                    color: p.success,
+                    color: bet.isWon ? p.success : p.textMuted,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

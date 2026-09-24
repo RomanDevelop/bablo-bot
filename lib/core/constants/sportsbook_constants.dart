@@ -58,6 +58,24 @@ class SportsbookConstants {
   static const statusWon = 'WON';
   static const statusLost = 'LOST';
   static const statusVoid = 'VOID';
+
+  static const statusOpenLabel = 'Принята';
+  static const statusWonLabel = 'Выигрыш';
+  static const statusLostLabel = 'Проигрыш';
+  static const statusVoidLabel = 'Возврат';
+
+  static String statusLabel(String status) {
+    switch (status.toUpperCase()) {
+      case statusWon:
+        return statusWonLabel;
+      case statusLost:
+        return statusLostLabel;
+      case statusVoid:
+        return statusVoidLabel;
+      default:
+        return statusOpenLabel;
+    }
+  }
   static const eventScheduled = 'SCHEDULED';
   static const eventLive = 'LIVE';
   static const eventFinished = 'FINISHED';

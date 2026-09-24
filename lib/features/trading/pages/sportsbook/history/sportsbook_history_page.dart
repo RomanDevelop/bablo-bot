@@ -107,7 +107,7 @@ class _SportsbookHistoryPageState
     }
 
     return [
-      SportsbookHistoryList(items: state.bets),
+      SportsbookHistoryList(items: state.bets, showTitle: false),
     ];
   }
 }
